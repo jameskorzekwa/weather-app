@@ -37,7 +37,7 @@ export default function Home() {
                 const lastCurrent: LocalStorageCurrent = JSON.parse(localStorageCurrent)
                 if (moment.unix(lastCurrent.time).isAfter(moment().subtract(5, "minutes"))) {
                     setCurrent(lastCurrent.current)
-                    setIsNight(moment().isAfter(moment.unix(lastCurrent.current.sys.sunset)))
+                    setIsNight(moment().isAfter(moment.unix(lastCurrent.current.sys.sunset)) || moment().isBefore(moment.unix(lastCurrent.current.sys.sunrise)))
                     return
                 }
             } catch (e) {
@@ -47,7 +47,7 @@ export default function Home() {
         const result = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${latLon?.lat}&lon=${latLon?.lon}&appid=${appid}`)
         const data = await result.json()
         setCurrent(data)
-        setIsNight(data ? moment().isAfter(moment.unix(data.sys.sunset)) : false)
+        setIsNight(data ? moment().isAfter(moment.unix(data.sys.sunset)) || moment().isBefore(moment.unix(data.sys.sunrise)) : false)
         const store: LocalStorageCurrent = {time: moment().unix(), current: data}
         localStorage.setItem("current", JSON.stringify(store))
     }
@@ -114,7 +114,7 @@ export default function Home() {
     useInterval(() => {
         const now = moment()
         setDatetime(now)
-        setIsNight(current ? now.isAfter(moment.unix(current.sys.sunset)) : false)
+        setIsNight(current ? now.isAfter(moment.unix(current.sys.sunset)) || now.isBefore(moment.unix(current.sys.sunrise)) : false)
     }, 1000)
 
     useInterval(() => {
