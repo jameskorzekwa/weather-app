@@ -17,6 +17,7 @@ import {
 import {getPrecipitationPercent, getTemp} from "@/app/helpers";
 import {useSearchParams} from "next/navigation";
 
+
 export default function Home() {
     const [datetime, setDatetime] = useState<moment.Moment>(moment())
     const [isNight, setIsNight] = useState<boolean>(false)
@@ -154,7 +155,8 @@ export default function Home() {
             <div style={{position: "absolute", height: "100vh", width: "100vw"}}
                  className="flex flex-col justify-between grow p-16">
                 <div className="flex flex-row justify-between">
-                    <div className="text text-7xl">{location?.features[0].properties.city || forecast.city.name}</div>
+                    <div
+                        className="text text-7xl">{location?.features[0].properties.city || forecast.city.name}</div>
                     <div className="flex flex-col items-end gap-4">
                         <div className="text text-3xl">{datetime.format("dddd, MMMM Do YYYY")}</div>
                         <div className="text text-5xl">{datetime.format("h:mm A")}</div>
@@ -198,6 +200,6 @@ export default function Home() {
                 </div>
             </div>
         </main>
-    ) : null;
+    ) : null
 }
 
