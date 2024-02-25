@@ -121,37 +121,30 @@
 }
 
 @keyframes fall {
-
     100% {
         transform: translateY(100%);
     }
-
 }
 
 @keyframes diagonal {
-
     0% {
-        transform: translatex(-20%) translatey(0%)
+        transform: translatex(-20%) translatey(0%);
     }
     100% {
         transform: translatex(-70%) translatey(120%);
     }
-
 }
 
 @keyframes sideways {
     100% {
-        transform: translateX(100%)
+        transform: translateX(100%);
     }
-
 }
 
 @keyframes thunder {
-
     100% {
         transform: translateX(100%);
     }
-
 }
 
 @keyframes flash {

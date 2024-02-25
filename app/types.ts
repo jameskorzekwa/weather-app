@@ -21,19 +21,19 @@ export type Current = {
         humidity: number;
         sea_level: number;
         grnd_level: number;
-    }
+    };
     visibility: number;
     wind: {
         speed: number;
         deg: number;
         gust: number;
-    }
+    };
     rain: {
-        "1h": number;
-    }
+        '1h': number;
+    };
     clouds: {
         all: number;
-    }
+    };
     dt: number;
     sys: {
         type: number;
@@ -41,12 +41,12 @@ export type Current = {
         country: string;
         sunrise: number;
         sunset: number;
-    }
+    };
     timezone: number;
     id: number;
     name: string;
     cod: number;
-}
+};
 
 export type Forecast = {
     cod: number;
@@ -58,13 +58,13 @@ export type Forecast = {
         coord: {
             lat: number;
             lon: number;
-        }
+        };
         country: string;
         population: number;
         timezone: number;
         sunrise: number;
         sunset: number;
-    }
+    };
     list: [
         {
             dt: number;
@@ -77,13 +77,13 @@ export type Forecast = {
                 night: number;
                 eve: number;
                 morn: number;
-            }
+            };
             feels_like: {
                 day: number;
                 night: number;
                 eve: number;
                 morn: number;
-            }
+            };
             pressure: number;
             humidity: number;
             weather: [
@@ -91,9 +91,9 @@ export type Forecast = {
                     id: number;
                     main: string;
                     description: string;
-                    icon: string
+                    icon: string;
                 }
-            ]
+            ];
             speed: number;
             deg: number;
             gust: number;
@@ -101,8 +101,8 @@ export type Forecast = {
             pop: number;
             rain: number;
         }
-    ]
-}
+    ];
+};
 
 export type Weather = {
     lat: number;
@@ -124,19 +124,21 @@ export type Weather = {
         wind_speed: number;
         wind_deg: number;
         wind_gust: number;
-        weather: [{
-            id: number;
-            main: string;
-            description: string;
-            icon: string;
-        }]
-    }
+        weather: [
+            {
+                id: number;
+                main: string;
+                description: string;
+                icon: string;
+            }
+        ];
+    };
     minutely: [
         {
             dt: number;
             precipitation: number;
         }
-    ]
+    ];
     hourly: [
         {
             dt: number;
@@ -151,15 +153,17 @@ export type Weather = {
             wind_speed: number;
             wind_deg: number;
             wind_gust: number;
-            weather: [{
-                id: number;
-                main: string;
-                description: string;
-                icon: string;
-            }]
+            weather: [
+                {
+                    id: number;
+                    main: string;
+                    description: string;
+                    icon: string;
+                }
+            ];
             pop: number;
         }
-    ]
+    ];
     daily: [
         {
             dt: number;
@@ -176,151 +180,155 @@ export type Weather = {
                 night: number;
                 eve: number;
                 morn: number;
-            }
+            };
             feels_like: {
                 day: number;
                 night: number;
                 eve: number;
                 morn: number;
-            }
+            };
             pressure: number;
             humidity: number;
             dew_point: number;
             wind_speed: number;
             wind_deg: number;
             wind_gust: number;
-            weather: [{
-                id: number;
-                main: string;
-                description: string;
-                icon: string;
-            }]
+            weather: [
+                {
+                    id: number;
+                    main: string;
+                    description: string;
+                    icon: string;
+                }
+            ];
             clouds: number;
             pop: number;
             rain: number;
             uvi: number;
         }
-    ]
-    alerts: [{
-        sender_name: string;
-        event: string;
-        start: number;
-        end: number;
-        description: string;
-        tags: string[];
-    }]
-}
+    ];
+    alerts: [
+        {
+            sender_name: string;
+            event: string;
+            start: number;
+            end: number;
+            description: string;
+            tags: string[];
+        }
+    ];
+};
 
 export type Location = {
-    "datasource": {
-        "sourcename": string,
-        "attribution": string,
-        "license": string,
-        "url": string
-    },
-    "country": string,
-    "country_code": string,
-    "state": string,
-    "county": string,
-    "postcode": string,
-    "street": string,
-    "housenumber": string,
-    "lon": number,
-    "lat": number,
-    "state_code": string,
-    "distance": number,
-    "result_type": string,
-    "city": string,
-    "formatted": string,
-    "address_line1": string,
-    "address_line2": string,
-    "timezone": {
-        "name": string,
-        "offset_STD": string,
-        "offset_STD_seconds": number,
-        "offset_DST": string,
-        "offset_DST_seconds": number,
-        "abbreviation_STD": string,
-        "abbreviation_DST": string
-    },
-    "plus_code": string,
-    "rank": {
-        "importance": number,
-        "popularity": number
-    },
-    "place_id": string
-}
+    datasource: {
+        sourcename: string;
+        attribution: string;
+        license: string;
+        url: string;
+    };
+    country: string;
+    country_code: string;
+    state: string;
+    county: string;
+    postcode: string;
+    street: string;
+    housenumber: string;
+    lon: number;
+    lat: number;
+    state_code: string;
+    distance: number;
+    result_type: string;
+    city: string;
+    formatted: string;
+    address_line1: string;
+    address_line2: string;
+    timezone: {
+        name: string;
+        offset_STD: string;
+        offset_STD_seconds: number;
+        offset_DST: string;
+        offset_DST_seconds: number;
+        abbreviation_STD: string;
+        abbreviation_DST: string;
+    };
+    plus_code: string;
+    rank: {
+        importance: number;
+        popularity: number;
+    };
+    place_id: string;
+};
 
 export type ReverseLocation = {
-    "type": string,
-    "features": [
+    type: string;
+    features: [
         {
-            "type": string,
-            "properties": Location,
-            "geometry": {
-                "type": string,
-                "coordinates": number[]
-            },
-            "bbox": number[]
+            type: string;
+            properties: Location;
+            geometry: {
+                type: string;
+                coordinates: number[];
+            };
+            bbox: number[];
         }
-    ],
-    "query": {
-        "lat": number,
-        "lon": number,
-        "plus_code": string
-    }
-}
+    ];
+    query: {
+        lat: number;
+        lon: number;
+        plus_code: string;
+    };
+};
 
 export type ZipcodeLocation = {
-    "results": Location[]
-    "query": {
-        "text": string,
-        "parsed": {
-            "postcode": string,
-            "expected_type": string
-        }
-    }
-}
+    results: Location[];
+    query: {
+        text: string;
+        parsed: {
+            postcode: string;
+            expected_type: string;
+        };
+    };
+};
 
 export type LocalStorageCurrent = {
     current: Current;
     time: number;
-}
+};
 
 export type LocalStorageWeather = {
     weather: Weather;
     time: number;
-}
+};
 
 export type LocalStorageForecast = {
     forecast: Forecast;
     time: number;
-}
+};
 
 export type LocalStorageLocation = {
     location: Location;
     time: number;
-}
+};
 
 export type LocalStorageTempSensor = {
     tempSensor: TempSensor;
     time: number;
-}
+};
 
 export type LatLon = {
-    lat: number
-    lon: number
-}
+    lat: number;
+    lon: number;
+};
 
 export type TempSensor = {
-    "statusCode": number,
-    "body": {
-        "deviceId": string,
-        "deviceType": string,
-        "humidity": number,
-        "temperature": number,
-        "version": string,
-        "battery": number
-    },
-    "message": string
-}
+    statusCode: number;
+    body: {
+        deviceId: string;
+        deviceType: string;
+        humidity: number;
+        temperature: number;
+        version: string;
+        battery: number;
+    };
+    message: string;
+};
