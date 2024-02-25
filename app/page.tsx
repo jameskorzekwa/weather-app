@@ -3,7 +3,7 @@ import '/css/weather-icons.css';
 import { useInterval } from 'usehooks-ts';
 import moment from 'moment';
 import { useEffect, useState } from 'react';
-import Background from './background';
+import Background from '@/components/background';
 import {
     Current,
     Forecast,
@@ -20,11 +20,24 @@ import {
     ZipcodeLocation
 } from '@/app/types';
 import { roundTo } from '@/app/helpers';
-import { useSearchParams } from 'next/navigation';
-import WeeklyWeather from '@/app/components/weeklyWeather';
-import CurrentWeather from '@/app/components/currentWeather';
+import WeeklyWeather from '@/components/weeklyWeather';
+import CurrentWeather from '@/components/currentWeather';
+import DateTime from '@/components/dateTime';
+import Loading from '@/components/loading';
 
-export default function Home() {
+export default function Home({
+    searchParams
+}: {
+    searchParams?: {
+        zipcode?: string;
+        apikey: string;
+        appid: string;
+        token: string;
+        secretKey: string;
+        lat?: string;
+        lon?: string;
+    };
+}) {
     const [datetime, setDatetime] = useState<moment.Moment>(moment());
     const [isNight, setIsNight] = useState<boolean>(false);
     const [apikey, setApikey] = useState<string | null>(null);
@@ -39,8 +52,6 @@ export default function Home() {
     const [zipcode, setZipcode] = useState<string | null>();
     const [tempSensor, setTempSensor] = useState<TempSensor | null>(null);
 
-    const searchParams = useSearchParams();
-
     let getTempSensor = async (secretKey: string, token: string) => {
         const localStorageTempSensor = localStorage.getItem('tempSensor');
         if (localStorageTempSensor) {
@@ -51,7 +62,7 @@ export default function Home() {
                 if (
                     moment
                         .unix(last.time)
-                        .isAfter(moment().subtract(1, 'minutes'))
+                        .isAfter(moment().subtract(5, 'minutes'))
                 ) {
                     setTempSensor(last.tempSensor);
                     return;
@@ -75,7 +86,6 @@ export default function Home() {
         };
         localStorage.setItem('tempSensor', JSON.stringify(store));
     };
-
     let getCurrent = async (location: Location, force: boolean = false) => {
         const localStorageCurrent = localStorage.getItem('current');
         if (localStorageCurrent) {
@@ -161,7 +171,6 @@ export default function Home() {
         };
         localStorage.setItem('weather', JSON.stringify(store));
     };
-
     let getForecast = async (location: Location, force: boolean = false) => {
         const localStorageForecast = localStorage.getItem('forecast');
         if (localStorageForecast) {
@@ -197,7 +206,6 @@ export default function Home() {
         };
         localStorage.setItem('forecast', JSON.stringify(store));
     };
-
     let getReverseLocation = async (latLon: LatLon) => {
         const localStorageLocation = localStorage.getItem('location');
         if (localStorageLocation) {
@@ -228,7 +236,6 @@ export default function Home() {
         };
         localStorage.setItem('location', JSON.stringify(store));
     };
-
     let getZipcodeLocation = async () => {
         const localStorageLocation = localStorage.getItem('location');
         if (localStorageLocation) {
@@ -275,13 +282,13 @@ export default function Home() {
 
     useEffect(() => {
         if (searchParams) {
-            setAppid(searchParams.get('appid'));
-            setApikey(searchParams.get('apikey'));
-            setSecretKey(searchParams.get('secretKey'));
-            setToken(searchParams.get('token'));
-            const zipcode = searchParams.get('zipcode');
-            const lat = searchParams.get('lat');
-            const lon = searchParams.get('lon');
+            setAppid(searchParams.appid);
+            setApikey(searchParams.apikey);
+            setSecretKey(searchParams.secretKey);
+            setToken(searchParams.token);
+            const zipcode = searchParams.zipcode;
+            const lat = searchParams.lat;
+            const lon = searchParams.lon;
             if (lat && Number(lat) && lon && Number(lon)) {
                 setLatLon({ lat: parseFloat(lat), lon: parseFloat(lon) });
             } else if (zipcode) {
@@ -339,14 +346,7 @@ export default function Home() {
                     <div className="text text-7xl">
                         {location?.city || forecast.city.name}
                     </div>
-                    <div className="flex flex-col items-end gap-4">
-                        <div className="text text-3xl">
-                            {datetime.format('dddd, MMMM Do YYYY')}
-                        </div>
-                        <div className="text text-5xl">
-                            {datetime.format('h:mm A')}
-                        </div>
-                    </div>
+                    <DateTime datetime={datetime} />
                 </div>
                 <CurrentWeather
                     current={current}
@@ -356,5 +356,7 @@ export default function Home() {
                 <WeeklyWeather weather={weather} />
             </div>
         </main>
-    ) : null;
+    ) : (
+        <Loading />
+    );
 }
