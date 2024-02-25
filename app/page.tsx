@@ -20,24 +20,13 @@ import {
     ZipcodeLocation
 } from '@/app/types';
 import { roundTo } from '@/app/helpers';
+import { useSearchParams } from 'next/navigation';
 import WeeklyWeather from '@/app/components/weeklyWeather';
 import CurrentWeather from '@/app/components/currentWeather';
 import DateTime from '@/app/components/dateTime';
 import Loading from '@/app/components/loading';
 
-export default function Home({
-    searchParams
-}: {
-    searchParams?: {
-        zipcode?: string;
-        apikey: string;
-        appid: string;
-        token: string;
-        secretKey: string;
-        lat?: string;
-        lon?: string;
-    };
-}) {
+export default function Home() {
     const [datetime, setDatetime] = useState<moment.Moment>(moment());
     const [isNight, setIsNight] = useState<boolean>(false);
     const [apikey, setApikey] = useState<string | null>(null);
@@ -51,6 +40,8 @@ export default function Home({
     const [location, setLocation] = useState<Location | null>(null);
     const [zipcode, setZipcode] = useState<string | null>();
     const [tempSensor, setTempSensor] = useState<TempSensor | null>(null);
+
+    const searchParams = useSearchParams();
 
     let getTempSensor = async (secretKey: string, token: string) => {
         const localStorageTempSensor = localStorage.getItem('tempSensor');
@@ -282,13 +273,13 @@ export default function Home({
 
     useEffect(() => {
         if (searchParams) {
-            setAppid(searchParams.appid);
-            setApikey(searchParams.apikey);
-            setSecretKey(searchParams.secretKey);
-            setToken(searchParams.token);
-            const zipcode = searchParams.zipcode;
-            const lat = searchParams.lat;
-            const lon = searchParams.lon;
+            setAppid(searchParams.get('appid'));
+            setApikey(searchParams.get('apikey'));
+            setSecretKey(searchParams.get('secretKey'));
+            setToken(searchParams.get('token'));
+            const zipcode = searchParams.get('zipcode');
+            const lat = searchParams.get('lat');
+            const lon = searchParams.get('lon');
             if (lat && Number(lat) && lon && Number(lon)) {
                 setLatLon({ lat: parseFloat(lat), lon: parseFloat(lon) });
             } else if (zipcode) {
