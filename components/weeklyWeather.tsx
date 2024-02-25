@@ -11,7 +11,7 @@ interface Props {
 export default function WeeklyWeather({ weather }: Props) {
     return (
         <div className="flex flex-row justify-between gap-4 flex-wrap">
-            {Array.from(Array(5), (e, i) => {
+            {Array.from(Array(5), (_e, i) => {
                 return (
                     <div
                         key={i}

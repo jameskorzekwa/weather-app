@@ -21,24 +21,19 @@ export default function Background({ id, isNight }: Props) {
             savedCallback.current = callback;
         }, [callback]);
         React.useEffect(() => {
-            let isEnabled =
-                typeof minDelay === 'number' && typeof maxDelay === 'number';
-            if (isEnabled) {
-                const handleTick = () => {
-                    const nextTickAt = random(minDelay, maxDelay);
-                    timeoutId.current = window.setTimeout(() => {
-                        savedCallback.current();
-                        handleTick();
-                    }, nextTickAt);
-                };
-                handleTick();
-            }
+            const handleTick = () => {
+                const nextTickAt = random(minDelay, maxDelay);
+                timeoutId.current = window.setTimeout(() => {
+                    savedCallback.current();
+                    handleTick();
+                }, nextTickAt);
+            };
+            handleTick();
             return () => window.clearTimeout(timeoutId.current);
         }, [minDelay, maxDelay]);
-        const cancel = React.useCallback(function () {
+        return React.useCallback(function () {
             window.clearTimeout(timeoutId.current);
         }, []);
-        return cancel;
     };
 
     useRandomInterval(
@@ -415,7 +410,7 @@ export default function Background({ id, isNight }: Props) {
                             transform={`translate(0, -120) rotate(${diagonal ? 10 : 0})`}
                         >
                             <g>
-                                {Array.from(Array(amount), (e, i) => {
+                                {Array.from(Array(amount), (_e, i) => {
                                     return (
                                         <rect
                                             className={styles.rainTopLayer}
@@ -446,7 +441,7 @@ export default function Background({ id, isNight }: Props) {
                             transform={`translate(0, -120) rotate(${diagonal ? 10 : 0})`}
                         >
                             <g>
-                                {Array.from(Array(amount), (e, i) => {
+                                {Array.from(Array(amount), (_e, i) => {
                                     return (
                                         <rect
                                             className={styles.rainBottomLayer}
@@ -510,7 +505,6 @@ export default function Background({ id, isNight }: Props) {
                                         fillRule: 'nonzero',
                                         opacity: '1'
                                     }}
-                                    vector-effect="non-scaling-stroke"
                                     cx="0"
                                     cy="0"
                                     r="35"
@@ -533,7 +527,6 @@ export default function Background({ id, isNight }: Props) {
                                         fillRule: 'nonzero',
                                         opacity: '1'
                                     }}
-                                    vector-effect="non-scaling-stroke"
                                     cx="0"
                                     cy="0"
                                     r="35"
@@ -556,7 +549,6 @@ export default function Background({ id, isNight }: Props) {
                                         fillRule: 'nonzero',
                                         opacity: '1'
                                     }}
-                                    vector-effect="non-scaling-stroke"
                                     cx="0"
                                     cy="0"
                                     r="35"
@@ -579,7 +571,6 @@ export default function Background({ id, isNight }: Props) {
                                         fillRule: 'nonzero',
                                         opacity: '1'
                                     }}
-                                    vector-effect="non-scaling-stroke"
                                     cx="0"
                                     cy="0"
                                     r="35"
@@ -602,7 +593,6 @@ export default function Background({ id, isNight }: Props) {
                                         fillRule: 'nonzero',
                                         opacity: '1'
                                     }}
-                                    vector-effect="non-scaling-stroke"
                                     cx="0"
                                     cy="0"
                                     r="35"
@@ -625,7 +615,6 @@ export default function Background({ id, isNight }: Props) {
                                         fillRule: 'nonzero',
                                         opacity: '1'
                                     }}
-                                    vector-effect="non-scaling-stroke"
                                     cx="0"
                                     cy="0"
                                     r="35"
@@ -648,7 +637,6 @@ export default function Background({ id, isNight }: Props) {
                                         fillRule: 'nonzero',
                                         opacity: '1'
                                     }}
-                                    vector-effect="non-scaling-stroke"
                                     cx="0"
                                     cy="0"
                                     r="35"
@@ -671,7 +659,6 @@ export default function Background({ id, isNight }: Props) {
                                         fillRule: 'nonzero',
                                         opacity: '1'
                                     }}
-                                    vector-effect="non-scaling-stroke"
                                     cx="0"
                                     cy="0"
                                     r="35"
@@ -694,7 +681,6 @@ export default function Background({ id, isNight }: Props) {
                                         fillRule: 'nonzero',
                                         opacity: '1'
                                     }}
-                                    vector-effect="non-scaling-stroke"
                                     cx="0"
                                     cy="0"
                                     r="35"
@@ -717,7 +703,6 @@ export default function Background({ id, isNight }: Props) {
                                         fillRule: 'nonzero',
                                         opacity: '1'
                                     }}
-                                    vector-effect="non-scaling-stroke"
                                     cx="0"
                                     cy="0"
                                     r="35"
@@ -740,7 +725,6 @@ export default function Background({ id, isNight }: Props) {
                                         fillRule: 'nonzero',
                                         opacity: '1'
                                     }}
-                                    vector-effect="non-scaling-stroke"
                                     x="-33.085"
                                     y="-33.085"
                                     rx="0"
@@ -770,7 +754,6 @@ export default function Background({ id, isNight }: Props) {
                                         fillRule: 'nonzero',
                                         opacity: '1'
                                     }}
-                                    vector-effect="non-scaling-stroke"
                                     cx="0"
                                     cy="0"
                                     r="35"
@@ -793,7 +776,6 @@ export default function Background({ id, isNight }: Props) {
                                         fillRule: 'nonzero',
                                         opacity: '1'
                                     }}
-                                    vector-effect="non-scaling-stroke"
                                     cx="0"
                                     cy="0"
                                     r="35"
@@ -816,7 +798,6 @@ export default function Background({ id, isNight }: Props) {
                                         fillRule: 'nonzero',
                                         opacity: '1'
                                     }}
-                                    vector-effect="non-scaling-stroke"
                                     cx="0"
                                     cy="0"
                                     r="35"
@@ -839,7 +820,6 @@ export default function Background({ id, isNight }: Props) {
                                         fillRule: 'nonzero',
                                         opacity: '1'
                                     }}
-                                    vector-effect="non-scaling-stroke"
                                     cx="0"
                                     cy="0"
                                     r="35"
@@ -862,7 +842,6 @@ export default function Background({ id, isNight }: Props) {
                                         fillRule: 'nonzero',
                                         opacity: '1'
                                     }}
-                                    vector-effect="non-scaling-stroke"
                                     cx="0"
                                     cy="0"
                                     r="35"
@@ -885,7 +864,6 @@ export default function Background({ id, isNight }: Props) {
                                         fillRule: 'nonzero',
                                         opacity: '1'
                                     }}
-                                    vector-effect="non-scaling-stroke"
                                     cx="0"
                                     cy="0"
                                     r="35"
@@ -908,7 +886,6 @@ export default function Background({ id, isNight }: Props) {
                                         fillRule: 'nonzero',
                                         opacity: '1'
                                     }}
-                                    vector-effect="non-scaling-stroke"
                                     cx="0"
                                     cy="0"
                                     r="35"
@@ -931,7 +908,6 @@ export default function Background({ id, isNight }: Props) {
                                         fillRule: 'nonzero',
                                         opacity: '1'
                                     }}
-                                    vector-effect="non-scaling-stroke"
                                     cx="0"
                                     cy="0"
                                     r="35"
@@ -954,7 +930,6 @@ export default function Background({ id, isNight }: Props) {
                                         fillRule: 'nonzero',
                                         opacity: '1'
                                     }}
-                                    vector-effect="non-scaling-stroke"
                                     cx="0"
                                     cy="0"
                                     r="35"
@@ -977,7 +952,6 @@ export default function Background({ id, isNight }: Props) {
                                         fillRule: 'nonzero',
                                         opacity: '1'
                                     }}
-                                    vector-effect="non-scaling-stroke"
                                     cx="0"
                                     cy="0"
                                     r="35"
@@ -1000,7 +974,6 @@ export default function Background({ id, isNight }: Props) {
                                         fillRule: 'nonzero',
                                         opacity: '1'
                                     }}
-                                    vector-effect="non-scaling-stroke"
                                     x="-33.085"
                                     y="-33.085"
                                     rx="0"
@@ -1030,7 +1003,6 @@ export default function Background({ id, isNight }: Props) {
                                         fillRule: 'nonzero',
                                         opacity: '1'
                                     }}
-                                    vector-effect="non-scaling-stroke"
                                     cx="0"
                                     cy="0"
                                     r="35"
@@ -1053,7 +1025,6 @@ export default function Background({ id, isNight }: Props) {
                                         fillRule: 'nonzero',
                                         opacity: '1'
                                     }}
-                                    vector-effect="non-scaling-stroke"
                                     cx="0"
                                     cy="0"
                                     r="35"
@@ -1076,7 +1047,6 @@ export default function Background({ id, isNight }: Props) {
                                         fillRule: 'nonzero',
                                         opacity: '1'
                                     }}
-                                    vector-effect="non-scaling-stroke"
                                     cx="0"
                                     cy="0"
                                     r="35"
@@ -1099,7 +1069,6 @@ export default function Background({ id, isNight }: Props) {
                                         fillRule: 'nonzero',
                                         opacity: '1'
                                     }}
-                                    vector-effect="non-scaling-stroke"
                                     cx="0"
                                     cy="0"
                                     r="35"
@@ -1122,7 +1091,6 @@ export default function Background({ id, isNight }: Props) {
                                         fillRule: 'nonzero',
                                         opacity: '1'
                                     }}
-                                    vector-effect="non-scaling-stroke"
                                     cx="0"
                                     cy="0"
                                     r="35"
@@ -1145,7 +1113,6 @@ export default function Background({ id, isNight }: Props) {
                                         fillRule: 'nonzero',
                                         opacity: '1'
                                     }}
-                                    vector-effect="non-scaling-stroke"
                                     cx="0"
                                     cy="0"
                                     r="35"
@@ -1168,7 +1135,6 @@ export default function Background({ id, isNight }: Props) {
                                         fillRule: 'nonzero',
                                         opacity: '1'
                                     }}
-                                    vector-effect="non-scaling-stroke"
                                     cx="0"
                                     cy="0"
                                     r="35"
@@ -1191,7 +1157,6 @@ export default function Background({ id, isNight }: Props) {
                                         fillRule: 'nonzero',
                                         opacity: '1'
                                     }}
-                                    vector-effect="non-scaling-stroke"
                                     cx="0"
                                     cy="0"
                                     r="35"
@@ -1214,7 +1179,6 @@ export default function Background({ id, isNight }: Props) {
                                         fillRule: 'nonzero',
                                         opacity: '1'
                                     }}
-                                    vector-effect="non-scaling-stroke"
                                     cx="0"
                                     cy="0"
                                     r="35"
@@ -1237,7 +1201,6 @@ export default function Background({ id, isNight }: Props) {
                                         fillRule: 'nonzero',
                                         opacity: '1'
                                     }}
-                                    vector-effect="non-scaling-stroke"
                                     cx="0"
                                     cy="0"
                                     r="35"
@@ -1260,7 +1223,6 @@ export default function Background({ id, isNight }: Props) {
                                         fillRule: 'nonzero',
                                         opacity: '1'
                                     }}
-                                    vector-effect="non-scaling-stroke"
                                     x="-33.085"
                                     y="-33.085"
                                     rx="0"
@@ -1290,7 +1252,6 @@ export default function Background({ id, isNight }: Props) {
                                         fillRule: 'nonzero',
                                         opacity: '1'
                                     }}
-                                    vector-effect="non-scaling-stroke"
                                     cx="0"
                                     cy="0"
                                     r="35"
@@ -1313,7 +1274,6 @@ export default function Background({ id, isNight }: Props) {
                                         fillRule: 'nonzero',
                                         opacity: '1'
                                     }}
-                                    vector-effect="non-scaling-stroke"
                                     cx="0"
                                     cy="0"
                                     r="35"
@@ -1336,7 +1296,6 @@ export default function Background({ id, isNight }: Props) {
                                         fillRule: 'nonzero',
                                         opacity: '1'
                                     }}
-                                    vector-effect="non-scaling-stroke"
                                     cx="0"
                                     cy="0"
                                     r="35"
@@ -1359,7 +1318,6 @@ export default function Background({ id, isNight }: Props) {
                                         fillRule: 'nonzero',
                                         opacity: '1'
                                     }}
-                                    vector-effect="non-scaling-stroke"
                                     cx="0"
                                     cy="0"
                                     r="35"
@@ -1382,7 +1340,6 @@ export default function Background({ id, isNight }: Props) {
                                         fillRule: 'nonzero',
                                         opacity: '1'
                                     }}
-                                    vector-effect="non-scaling-stroke"
                                     cx="0"
                                     cy="0"
                                     r="35"
@@ -1405,7 +1362,6 @@ export default function Background({ id, isNight }: Props) {
                                         fillRule: 'nonzero',
                                         opacity: '1'
                                     }}
-                                    vector-effect="non-scaling-stroke"
                                     cx="0"
                                     cy="0"
                                     r="35"
@@ -1428,7 +1384,6 @@ export default function Background({ id, isNight }: Props) {
                                         fillRule: 'nonzero',
                                         opacity: '1'
                                     }}
-                                    vector-effect="non-scaling-stroke"
                                     cx="0"
                                     cy="0"
                                     r="35"
@@ -1451,7 +1406,6 @@ export default function Background({ id, isNight }: Props) {
                                         fillRule: 'nonzero',
                                         opacity: '1'
                                     }}
-                                    vector-effect="non-scaling-stroke"
                                     cx="0"
                                     cy="0"
                                     r="35"
@@ -1474,7 +1428,6 @@ export default function Background({ id, isNight }: Props) {
                                         fillRule: 'nonzero',
                                         opacity: '1'
                                     }}
-                                    vector-effect="non-scaling-stroke"
                                     cx="0"
                                     cy="0"
                                     r="35"
@@ -1497,7 +1450,6 @@ export default function Background({ id, isNight }: Props) {
                                         fillRule: 'nonzero',
                                         opacity: '1'
                                     }}
-                                    vector-effect="non-scaling-stroke"
                                     cx="0"
                                     cy="0"
                                     r="35"
@@ -1520,7 +1472,6 @@ export default function Background({ id, isNight }: Props) {
                                         fillRule: 'nonzero',
                                         opacity: '1'
                                     }}
-                                    vector-effect="non-scaling-stroke"
                                     x="-33.085"
                                     y="-33.085"
                                     rx="0"

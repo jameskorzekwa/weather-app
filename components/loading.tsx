@@ -4,7 +4,7 @@ export default function Loading() {
             <svg
                 id="Layer_1"
                 viewBox="-38.5 -38.5 200 200"
-                className="w-96 h-96 motion-safe:animate-spin"
+                className="w-96 h-96 animate-pulse"
             >
                 <title>sun-color</title>
                 <path

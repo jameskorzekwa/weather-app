@@ -110,8 +110,6 @@
     background-color: white;
     -webkit-filter: brightness(3);
     filter: brightness(3);
-    -o-filter: brightness(3);
-    -moz-filter: brightness(3);
 }
 
 /*Now just a opacity animation*/
