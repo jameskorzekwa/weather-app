@@ -23,7 +23,6 @@ import { roundTo } from '@/app/helpers';
 import WeeklyWeather from '@/components/weeklyWeather';
 import CurrentWeather from '@/components/currentWeather';
 import DateTime from '@/components/dateTime';
-import Loading from '@/components/loading';
 
 export default function Home({
     searchParams
@@ -356,7 +355,5 @@ export default function Home({
                 <WeeklyWeather weather={weather} />
             </div>
         </main>
-    ) : (
-        <Loading />
-    );
+    ) : null;
 }
