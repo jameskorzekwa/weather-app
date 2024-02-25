@@ -53,7 +53,7 @@ export default function Home() {
                 if (
                     moment
                         .unix(last.time)
-                        .isAfter(moment().subtract(5, 'minutes'))
+                        .isAfter(moment().subtract(1, 'minutes'))
                 ) {
                     setTempSensor(last.tempSensor);
                     return;
@@ -269,6 +269,9 @@ export default function Home() {
             void getWeather(location);
             void getCurrent(location);
         }
+        if (secretKey && token) {
+            void getTempSensor(secretKey, token);
+        }
     }, 60000);
 
     useEffect(() => {
@@ -305,6 +308,12 @@ export default function Home() {
             void getZipcodeLocation();
         }
     }, [zipcode]);
+
+    useEffect(() => {
+        if (secretKey && token) {
+            void getTempSensor(secretKey, token);
+        }
+    }, [secretKey, token]);
 
     useEffect(() => {
         if (location) {
