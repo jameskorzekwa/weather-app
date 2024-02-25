@@ -3,7 +3,7 @@ import '/css/weather-icons.css';
 import { useInterval } from 'usehooks-ts';
 import moment from 'moment';
 import { useEffect, useState } from 'react';
-import Background from '@/app/components/background';
+import Background from '@/components/background';
 import {
     Current,
     Forecast,
@@ -18,13 +18,13 @@ import {
     TempSensor,
     Weather,
     ZipcodeLocation
-} from '@/app/types';
-import { roundTo } from '@/app/helpers';
+} from '@/types';
+import { roundTo } from '@/lib/utils';
 import { useSearchParams } from 'next/navigation';
-import WeeklyWeather from '@/app/components/weeklyWeather';
-import CurrentWeather from '@/app/components/currentWeather';
-import DateTime from '@/app/components/dateTime';
-import Loading from '@/app/components/loading';
+import WeeklyWeather from '@/components/weeklyWeather';
+import CurrentWeather from '@/components/currentWeather';
+import DateTime from '@/components/dateTime';
+import Loading from '@/components/loading';
 
 export default function Home() {
     const [datetime, setDatetime] = useState<moment.Moment>(moment());

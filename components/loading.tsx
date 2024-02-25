@@ -1,6 +1,9 @@
 export default function Loading() {
     return (
-        <div className="flex min-h-screen items-center justify-center bg-sky-600">
+        <div
+            style={{ backgroundColor: 'rgb(55,114,180)' }}
+            className="flex min-h-screen items-center justify-center"
+        >
             <svg
                 id="Layer_1"
                 viewBox="-38.5 -38.5 200 200"

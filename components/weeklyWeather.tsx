@@ -1,8 +1,8 @@
 'use client';
 import '/css/weather-icons.css';
 import moment from 'moment';
-import { Weather } from '@/app/types';
-import { getPrecipitationPercent, getTemp } from '@/app/helpers';
+import { Weather } from '@/types';
+import { getPrecipitationPercent, getTemp } from '@/lib/utils';
 
 interface Props {
     weather: Weather;

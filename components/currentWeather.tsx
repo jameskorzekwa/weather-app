@@ -1,7 +1,7 @@
 'use client';
 import '/css/weather-icons.css';
-import { Current, TempSensor } from '@/app/types';
-import { getTemp } from '@/app/helpers';
+import { Current, TempSensor } from '@/types';
+import { getTemp } from '@/lib/utils';
 
 interface Props {
     current: Current;
