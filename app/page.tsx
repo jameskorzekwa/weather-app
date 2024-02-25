@@ -3,7 +3,7 @@ import '/css/weather-icons.css';
 import { useInterval } from 'usehooks-ts';
 import moment from 'moment';
 import { useEffect, useState } from 'react';
-import Background from '@/components/background';
+import Background from '@/app/components/background';
 import {
     Current,
     Forecast,
@@ -20,9 +20,10 @@ import {
     ZipcodeLocation
 } from '@/app/types';
 import { roundTo } from '@/app/helpers';
-import WeeklyWeather from '@/components/weeklyWeather';
-import CurrentWeather from '@/components/currentWeather';
-import DateTime from '@/components/dateTime';
+import WeeklyWeather from '@/app/components/weeklyWeather';
+import CurrentWeather from '@/app/components/currentWeather';
+import DateTime from '@/app/components/dateTime';
+import Loading from '@/app/components/loading';
 
 export default function Home({
     searchParams
@@ -355,5 +356,7 @@ export default function Home({
                 <WeeklyWeather weather={weather} />
             </div>
         </main>
-    ) : null;
+    ) : (
+        <Loading />
+    );
 }
