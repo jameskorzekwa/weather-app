@@ -7,5 +7,9 @@ export const getTemp = (temp: number, type: string) => {
 }
 
 export const getPrecipitationPercent = (pop: number) => {
-    return pop * 100 + "%"
+    return Math.round(pop * 100) + "%"
+}
+
+export const roundTo = (number: number, count: number) => {
+    return Math.round(number * 10 ^ count) / 10 ^ count
 }

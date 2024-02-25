@@ -212,49 +212,51 @@ export type Weather = {
 }
 
 export type Location = {
+    "datasource": {
+        "sourcename": string,
+        "attribution": string,
+        "license": string,
+        "url": string
+    },
+    "country": string,
+    "country_code": string,
+    "state": string,
+    "county": string,
+    "postcode": string,
+    "street": string,
+    "housenumber": string,
+    "lon": number,
+    "lat": number,
+    "state_code": string,
+    "distance": number,
+    "result_type": string,
+    "city": string,
+    "formatted": string,
+    "address_line1": string,
+    "address_line2": string,
+    "timezone": {
+        "name": string,
+        "offset_STD": string,
+        "offset_STD_seconds": number,
+        "offset_DST": string,
+        "offset_DST_seconds": number,
+        "abbreviation_STD": string,
+        "abbreviation_DST": string
+    },
+    "plus_code": string,
+    "rank": {
+        "importance": number,
+        "popularity": number
+    },
+    "place_id": string
+}
+
+export type ReverseLocation = {
     "type": string,
     "features": [
         {
             "type": string,
-            "properties": {
-                "datasource": {
-                    "sourcename": string,
-                    "attribution": string,
-                    "license": string,
-                    "url": string
-                },
-                "country": string,
-                "country_code": string,
-                "state": string,
-                "county": string,
-                "postcode": string,
-                "street": string,
-                "housenumber": string,
-                "lon": number,
-                "lat": number,
-                "state_code": string,
-                "distance": number,
-                "result_type": string,
-                "city": string,
-                "formatted": string,
-                "address_line1": string,
-                "address_line2": string,
-                "timezone": {
-                    "name": string,
-                    "offset_STD": string,
-                    "offset_STD_seconds": number,
-                    "offset_DST": string,
-                    "offset_DST_seconds": number,
-                    "abbreviation_STD": string,
-                    "abbreviation_DST": string
-                },
-                "plus_code": string,
-                "rank": {
-                    "importance": number,
-                    "popularity": number
-                },
-                "place_id": string
-            },
+            "properties": Location,
             "geometry": {
                 "type": string,
                 "coordinates": number[]
@@ -266,6 +268,17 @@ export type Location = {
         "lat": number,
         "lon": number,
         "plus_code": string
+    }
+}
+
+export type ZipcodeLocation = {
+    "results": Location[]
+    "query": {
+        "text": string,
+        "parsed": {
+            "postcode": string,
+            "expected_type": string
+        }
     }
 }
 
@@ -287,4 +300,27 @@ export type LocalStorageForecast = {
 export type LocalStorageLocation = {
     location: Location;
     time: number;
+}
+
+export type LocalStorageTempSensor = {
+    tempSensor: TempSensor;
+    time: number;
+}
+
+export type LatLon = {
+    lat: number
+    lon: number
+}
+
+export type TempSensor = {
+    "statusCode": number,
+    "body": {
+        "deviceId": string,
+        "deviceType": string,
+        "humidity": number,
+        "temperature": number,
+        "version": string,
+        "battery": number
+    },
+    "message": string
 }

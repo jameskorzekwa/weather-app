@@ -47,7 +47,7 @@ export default function Background({id, isNight}: Props) {
             element.classList.add(styles.lightning)
         }
 
-    }, 60000, 60000 * 5)
+    }, 1000, 5000)
 
     const randomCoords1 = [{"y": 47, "x": 772}, {"y": 1346, "x": 385}, {"y": 1218, "x": 942}, {
         "y": 37,
