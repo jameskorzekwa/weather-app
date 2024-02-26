@@ -6,7 +6,7 @@ import styled from 'styled-components';
 import ThunderCloud from '@/components/thunderCloud';
 
 interface Props {
-    id: number;
+    id: 200 | 201 | 202 | 210 | 211 | 212 | 221 | 230 | 231 | 232;
     isNight: boolean;
 }
 
@@ -66,6 +66,19 @@ const Clouds = styled.g<{ fill: string; delay: number; y: number }>`
 export default function Thunderstorm({ id, isNight }: Props) {
     const [animate, setAnimate] = useState<boolean>(true);
 
+    const settings = {
+        200: { amount: 20, diagonal: false },
+        201: { amount: 50, diagonal: false },
+        202: { amount: 100, diagonal: false },
+        210: { amount: 20, diagonal: false },
+        211: { amount: 50, diagonal: false },
+        212: { amount: 100, diagonal: false },
+        221: { amount: 100, diagonal: true },
+        230: { amount: 20, diagonal: false },
+        231: { amount: 50, diagonal: false },
+        232: { amount: 100, diagonal: false }
+    };
+
     useRandomInterval(
         () => {
             setAnimate(false);
@@ -90,7 +103,10 @@ export default function Thunderstorm({ id, isNight }: Props) {
             }}
         >
             <Lightning animate={animate} />
-            <Raining amount={100} diagonal={true} />
+            <Raining
+                amount={settings[id].amount}
+                diagonal={settings[id].diagonal}
+            />
             <div style={{ position: 'absolute', width: '100vw' }}>
                 <svg viewBox="10 500 600 500">
                     <ThunderCloud y={0} delay={0} fill="#2d2d2d" />
