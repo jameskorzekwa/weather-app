@@ -25,7 +25,6 @@ import WeeklyWeather from '@/components/weeklyWeather';
 import CurrentWeather from '@/components/currentWeather';
 import DateTime from '@/components/dateTime';
 import Loading from '@/components/loading';
-import { fakeWeather } from '@/constants/data';
 
 export default function Home() {
     const [datetime, setDatetime] = useState<moment.Moment>(moment());
@@ -43,7 +42,7 @@ export default function Home() {
     const [tempSensor, setTempSensor] = useState<TempSensor | null>(null);
 
     const searchParams = useSearchParams();
-    const fakeCurrent: Current | undefined = fakeWeather.clouds;
+    const fakeCurrent: Current | null = null;
 
     let getTempSensor = async (secretKey: string, token: string) => {
         const localStorageTempSensor = localStorage.getItem('tempSensor');
@@ -333,9 +332,9 @@ export default function Home() {
         }
     }, [location]);
 
-    return (fakeCurrent || current) && weather && forecast && latLon ? (
+    return current && weather && forecast && latLon ? (
         <main className="flex min-h-screen flex-col ">
-            <Background current={fakeCurrent || current} isNight={isNight} />
+            <Background current={current} isNight={isNight} />
             <div
                 style={{
                     position: 'absolute',
@@ -351,7 +350,7 @@ export default function Home() {
                     <DateTime datetime={datetime} />
                 </div>
                 <CurrentWeather
-                    current={fakeCurrent || current}
+                    current={current}
                     isNight={isNight}
                     tempSensor={tempSensor}
                 />
