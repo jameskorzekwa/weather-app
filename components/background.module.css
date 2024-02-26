@@ -18,13 +18,11 @@
 
 .snowTopLayer {
     will-change: transform;
-    transform: translateY(-768px);
     animation: fall 22.5s infinite linear;
 }
 
 .snowBottomLayer {
     will-change: transform;
-    transform: translateY(-768px);
     animation: fall 45s infinite linear;
 }
 
@@ -94,11 +92,11 @@
     animation-delay: -120000ms;
 }
 
-.clouds circle {
+.clouds * {
     fill: #7a7a7e !important;
 }
 
-.clouds2 circle {
+.clouds2 * {
     fill: #2d2d2d !important;
 }
 
