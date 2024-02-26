@@ -14,7 +14,7 @@ interface Props {
 }
 
 export default function Background({ current, isNight }: Props) {
-    const id = 200; //current.weather[0].id;
+    const id = current.weather[0].id;
     let getWeatherType = (id: number) => {
         if (id >= 200 && id <= 299) {
             return <Thunderstorm id={id} isNight={isNight} />;
