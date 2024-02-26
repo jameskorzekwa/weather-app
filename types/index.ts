@@ -308,6 +308,7 @@ export type LocalStorageForecast = {
 export type LocalStorageLocation = {
     location: Location;
     time: number;
+    source: 'zipcode' | 'latlon';
 };
 
 export type LocalStorageTempSensor = {

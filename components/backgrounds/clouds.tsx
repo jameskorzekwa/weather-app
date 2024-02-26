@@ -15,7 +15,7 @@ export default function Clouds({ id, isNight }: Props) {
         803: { count: 16, seed: 'seed8', color: 'rgba(76,82,86,0.54)' },
         804: { count: 25, seed: 'seed8', color: 'rgba(76,82,86,0.54)' }
     };
-    
+
     const colors = [
         '#737779',
         '#839192',
@@ -41,7 +41,6 @@ export default function Clouds({ id, isNight }: Props) {
     const y = Array.from(Array(cloudSettings[id].count), (_e, i) =>
         seededRandomNumber(rdm, -20, 110)
     );
-    console.log('y', y);
     return (
         <div
             style={{

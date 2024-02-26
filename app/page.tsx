@@ -19,7 +19,6 @@ import {
     Weather,
     ZipcodeLocation
 } from '@/types';
-import { roundTo } from '@/lib/utils';
 import { useSearchParams } from 'next/navigation';
 import WeeklyWeather from '@/components/weeklyWeather';
 import CurrentWeather from '@/components/currentWeather';
@@ -89,10 +88,10 @@ export default function Home() {
                     moment
                         .unix(lastCurrent.time)
                         .isAfter(moment().subtract(5, 'minutes')) &&
-                    roundTo(lastCurrent.current.coord.lat, 6) ===
-                        roundTo(location?.lat, 6) &&
-                    roundTo(lastCurrent.current.coord.lon, 6) ===
-                        roundTo(location?.lon, 6)
+                    lastCurrent.current.coord.lat.toFixed(6) ===
+                        location?.lat.toFixed(6) &&
+                    lastCurrent.current.coord.lon.toFixed(6) ===
+                        location?.lon.toFixed(6)
                 ) {
                     setCurrent(lastCurrent.current);
                     setIsNight(
@@ -138,10 +137,10 @@ export default function Home() {
                     moment
                         .unix(lastWeather.time)
                         .isAfter(moment().subtract(1, 'hours')) &&
-                    roundTo(lastWeather.weather.lat, 6) ===
-                        roundTo(location?.lat, 6) &&
-                    roundTo(lastWeather.weather.lon, 6) ===
-                        roundTo(location?.lon, 6)
+                    lastWeather.weather.lat.toFixed(6) ===
+                        location?.lat.toFixed(6) &&
+                    lastWeather.weather.lon.toFixed(6) ===
+                        location?.lon.toFixed(6)
                 ) {
                     setWeather(lastWeather.weather);
                     return;
@@ -174,10 +173,10 @@ export default function Home() {
                     moment
                         .unix(lastForecast.time)
                         .isAfter(moment().subtract(10, 'minutes')) &&
-                    roundTo(lastForecast.forecast.city.coord.lat, 6) ===
-                        roundTo(location?.lat, 6) &&
-                    roundTo(lastForecast.forecast.city.coord.lon, 6) ===
-                        roundTo(location?.lon, 6)
+                    lastForecast.forecast.city.coord.lat.toFixed(6) ===
+                        location?.lat.toFixed(6) &&
+                    lastForecast.forecast.city.coord.lon.toFixed(6) ===
+                        location?.lon.toFixed(6)
                 ) {
                     setForecast(lastForecast.forecast);
                     return;
@@ -205,10 +204,11 @@ export default function Home() {
                 const lastLocation: LocalStorageLocation =
                     JSON.parse(localStorageLocation);
                 if (
-                    roundTo(lastLocation.location.lat, 4) ===
-                        roundTo(latLon?.lat, 4) &&
-                    roundTo(lastLocation.location.lon, 4) ===
-                        roundTo(latLon?.lon, 4)
+                    lastLocation.location.lat.toFixed(6) ===
+                        latLon?.lat.toFixed(6) &&
+                    lastLocation.location.lon.toFixed(6) ===
+                        latLon?.lon.toFixed(6) &&
+                    lastLocation.source === 'latlon'
                 ) {
                     setLocation(lastLocation.location);
                     return;
@@ -224,17 +224,21 @@ export default function Home() {
         setLocation(data.features[0].properties);
         const store: LocalStorageLocation = {
             time: moment().unix(),
-            location: data.features[0].properties
+            location: data.features[0].properties,
+            source: 'latlon'
         };
         localStorage.setItem('location', JSON.stringify(store));
     };
-    let getZipcodeLocation = async () => {
+    let getZipcodeLocation = async (zipcode: string) => {
         const localStorageLocation = localStorage.getItem('location');
         if (localStorageLocation) {
             try {
                 const lastLocation: LocalStorageLocation =
                     JSON.parse(localStorageLocation);
-                if (lastLocation.location.postcode === zipcode) {
+                if (
+                    lastLocation.location.postcode === zipcode &&
+                    lastLocation.source === 'zipcode'
+                ) {
                     setLocation(lastLocation.location);
                     return;
                 }
@@ -249,7 +253,8 @@ export default function Home() {
         setLocation(data.results[0]);
         const store: LocalStorageLocation = {
             time: moment().unix(),
-            location: data.results[0]
+            location: data.results[0],
+            source: 'zipcode'
         };
         localStorage.setItem('location', JSON.stringify(store));
     };
@@ -305,8 +310,8 @@ export default function Home() {
     }, [latLon]);
 
     useEffect(() => {
-        if (apikey && zipcode) {
-            void getZipcodeLocation();
+        if (apikey && zipcode && !location) {
+            void getZipcodeLocation(zipcode);
         }
     }, [zipcode]);
 

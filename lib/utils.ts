@@ -13,7 +13,7 @@ export const getPrecipitationPercent = (pop: number) => {
 };
 
 export const roundTo = (number: number, count: number) => {
-    return (Math.round((number * 10) ^ count) / 10) ^ count;
+    return Math.round((number * 10) ^ count) / (10 ^ count);
 };
 
 export const seededRandomNumber = (
