@@ -14,6 +14,7 @@ export default function CurrentWeather({
     isNight,
     tempSensor
 }: Props) {
+    const temp = tempSensor?.body?.temperature || current.main.temp;
     return (
         <div style={{ height: '100%' }} className="flex">
             <div className="flex flex-row items-center gap-8 py-12">
@@ -27,18 +28,29 @@ export default function CurrentWeather({
                 </div>
                 <div className="flex flex-col items-center gap-2">
                     <div className="text text-9xl">
-                        {getTemp(
-                            tempSensor?.body?.temperature || current.main.temp,
-                            'f'
-                        )}
+                        {getTemp(temp, 'f')}
                         °F
                     </div>
                     <div
                         style={{ width: '100%' }}
                         className="text flex flex-row grow items-center justify-between text-5xl gap-2"
                     >
-                        <div>H {getTemp(current.main.temp_max, 'f')}°</div>
-                        <div>L {getTemp(current.main.temp_min, 'f')}°</div>
+                        <div>
+                            H{' '}
+                            {getTemp(
+                                Math.max(current.main.temp_max, temp),
+                                'f'
+                            )}
+                            °
+                        </div>
+                        <div>
+                            L{' '}
+                            {getTemp(
+                                Math.min(current.main.temp_min, temp),
+                                'f'
+                            )}
+                            °
+                        </div>
                     </div>
                 </div>
             </div>
