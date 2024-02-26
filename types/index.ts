@@ -332,3 +332,13 @@ export type TempSensor = {
     };
     message: string;
 };
+
+export type FakeWeather = {
+    thunderstorm: Current;
+    drizzle: Current;
+    rain: Current;
+    snow: Current;
+    atmosphere: Current;
+    clear: Current;
+    clouds: Current;
+};
