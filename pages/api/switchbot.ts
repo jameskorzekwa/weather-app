@@ -27,7 +27,6 @@ export default async function handler(
         t: t.toString(),
         sign
     };
-    console.log('headers', headers);
     const result = await fetch(
         `https://api.switch-bot.com/v1.1/devices/ED505FE38F0D/status`,
         {

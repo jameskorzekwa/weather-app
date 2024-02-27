@@ -25,6 +25,28 @@ import CurrentWeather from '@/components/currentWeather';
 import DateTime from '@/components/dateTime';
 import Loading from '@/components/loading';
 
+if (typeof window !== 'undefined') {
+    const { fetch: originalFetch } = window;
+    window.fetch = async (...args) => {
+        let [resource, config] = args;
+
+        let response = await originalFetch(resource, config);
+        let reqVersion = response.headers.get('x-version');
+
+        if (reqVersion) {
+            const prevVersion = localStorage.getItem('version');
+            if (!prevVersion) {
+                localStorage.setItem('version', reqVersion);
+            } else if (prevVersion !== reqVersion) {
+                localStorage.setItem('version', reqVersion);
+                window.location.reload();
+            }
+        }
+
+        return response;
+    };
+}
+
 export default function Home() {
     const [datetime, setDatetime] = useState<moment.Moment>(moment());
     const [isNight, setIsNight] = useState<boolean>(false);
@@ -62,7 +84,6 @@ export default function Home() {
                 console.log(e);
             }
         }
-
         const result = await fetch(
             `/api/switchbot?secret=${secretKey}&token=${token}`
         );
