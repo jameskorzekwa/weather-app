@@ -36,9 +36,9 @@ const SnowContainer = styled.div`
 const SnowFlake = styled.ellipse<{ $speed: number; $scale: boolean }>`
     transform: scale(${({ $scale }) => ($scale ? 1.5 : 1)});
     will-change: transform;
-    animation: ${({ $speed }) => `animate ${$speed}ms infinite linear`};
+    animation: ${({ $speed }) => `snow ${$speed}ms infinite linear`};
     animation-delay: ${({ $speed }) => `${($speed - 80000) * 10}ms`};
-    @keyframes animate {
+    @keyframes snow {
         100% {
             transform: translateY(100%);
         }

@@ -22,9 +22,9 @@ const RainContainer = styled.div`
 
 const RainDrop = styled.rect<{ $speed: number }>`
     will-change: transform;
-    animation: ${({ $speed }) => `animate ${$speed}ms infinite linear`};
+    animation: ${({ $speed }) => `rain ${$speed}ms infinite linear`};
     animation-delay: ${({ $speed }) => `${($speed - 3000) * 5}ms`};
-    @keyframes animate {
+    @keyframes rain {
         100% {
             transform: translateY(100%);
         }

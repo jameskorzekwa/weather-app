@@ -12,9 +12,9 @@ const StyledCloud = styled.g<{ $duration: number; $delay: number }>`
     width: 100%;
     will-change: transform;
     transform: translateX(-42%);
-    animation: ${({ $duration }) => `animate ${$duration}ms infinite linear`};
+    animation: ${({ $duration }) => `clouds ${$duration}ms infinite linear`};
     animation-delay: ${({ $delay }) => `${$delay}ms`};
-    @keyframes animate {
+    @keyframes clouds {
         100% {
             transform: translateX(120%);
         }
