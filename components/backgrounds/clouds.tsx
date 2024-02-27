@@ -36,7 +36,7 @@ export default function Clouds({ id, isNight }: Props) {
         seededRandomNumber(rdm, 60000, 120000)
     );
     const delays = Array.from(Array(cloudSettings[id].count), (_e, i) =>
-        seededRandomNumber(rdm, -20000, 20000)
+        seededRandomNumber(rdm, -420000, -20000)
     );
     const y = Array.from(Array(cloudSettings[id].count), (_e, i) =>
         seededRandomNumber(rdm, -20, 110)
