@@ -4,20 +4,21 @@ import Raining from '@/components/raining';
 import { useRandomInterval } from '@/hooks/useRandomInterval';
 import styled from 'styled-components';
 import ThunderCloud from '@/components/thunderCloud';
+import { ThunderstormId } from '@/types';
 
 interface Props {
-    id: 200 | 201 | 202 | 210 | 211 | 212 | 221 | 230 | 231 | 232;
+    id: ThunderstormId;
     isNight: boolean;
 }
 
-const Lightning = styled.div<{ animate: boolean }>`
+const Lightning = styled.div<{ $animate: boolean }>`
     position: absolute;
     width: 100vw;
     height: 100vh;
     opacity: 0;
     background-color: white;
     filter: brightness(3);
-    ${({ animate }) => (animate ? 'animation: 5s flash ease-out;' : '')}
+    ${({ $animate }) => ($animate ? 'animation: 5s flash ease-out;' : '')}
     animation-iteration-count: 1;
 
     @keyframes flash {
@@ -45,38 +46,26 @@ const Lightning = styled.div<{ animate: boolean }>`
     }
 `;
 
-const Clouds = styled.g<{ fill: string; delay: number; y: number }>`
-    will-change: transform;
-    transform: translate(-800px, ${({ y }) => `${y}px`});
-    animation: thunder 200s infinite linear;
-    animation-delay: ${({ delay }) => `${delay}ms`};
-
-    circle,
-    rect {
-        fill: ${({ fill }) => `${fill} !important`};
-    }
-
-    @keyframes thunder {
-        100% {
-            transform: translateX(100%);
-        }
-    }
-`;
-
 export default function Thunderstorm({ id, isNight }: Props) {
     const [animate, setAnimate] = useState<boolean>(true);
 
-    const settings = {
-        200: { amount: 20, diagonal: false },
-        201: { amount: 50, diagonal: false },
-        202: { amount: 100, diagonal: false },
-        210: { amount: 20, diagonal: false },
-        211: { amount: 50, diagonal: false },
-        212: { amount: 100, diagonal: false },
-        221: { amount: 100, diagonal: true },
-        230: { amount: 20, diagonal: false },
-        231: { amount: 50, diagonal: false },
-        232: { amount: 100, diagonal: false }
+    const settings: {
+        [_ in ThunderstormId]: {
+            amount: number;
+            diagonal: boolean;
+            size: 'small' | 'large';
+        };
+    } = {
+        200: { amount: 20, diagonal: false, size: 'large' },
+        201: { amount: 50, diagonal: false, size: 'large' },
+        202: { amount: 100, diagonal: false, size: 'large' },
+        210: { amount: 20, diagonal: false, size: 'large' },
+        211: { amount: 50, diagonal: false, size: 'large' },
+        212: { amount: 100, diagonal: false, size: 'large' },
+        221: { amount: 100, diagonal: true, size: 'large' },
+        230: { amount: 20, diagonal: false, size: 'small' },
+        231: { amount: 50, diagonal: false, size: 'small' },
+        232: { amount: 100, diagonal: false, size: 'small' }
     };
 
     useRandomInterval(
@@ -102,10 +91,11 @@ export default function Thunderstorm({ id, isNight }: Props) {
                 overflow: 'hidden'
             }}
         >
-            <Lightning animate={animate} />
+            <Lightning $animate={animate} />
             <Raining
                 amount={settings[id].amount}
                 diagonal={settings[id].diagonal}
+                size={settings[id].size}
             />
             <div style={{ position: 'absolute', width: '100vw' }}>
                 <svg viewBox="10 500 600 500">

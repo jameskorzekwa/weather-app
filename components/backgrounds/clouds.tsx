@@ -2,9 +2,10 @@ import React from 'react';
 import Cloud from '@/components/cloud';
 import seedrandom from 'seedrandom';
 import { seededRandomNumber } from '@/lib/utils';
+import { CloudId } from '@/types';
 
 interface Props {
-    id: 801 | 802 | 803 | 804;
+    id: CloudId;
     isNight: boolean;
 }
 

@@ -1,8 +1,9 @@
 import styles from '@/components/background.module.css';
 import React from 'react';
+import { AtmosphereId } from '@/types';
 
 interface Props {
-    id: number;
+    id: AtmosphereId;
     isNight: boolean;
 }
 
@@ -10,7 +11,7 @@ export default function Atmosphere({ id, isNight }: Props) {
     return (
         <div
             style={{
-                backgroundColor: isNight ? 'rgb(23,23,23)' : 'rgb(147,114,104)',
+                backgroundColor: isNight ? 'rgb(23,23,23)' : 'rgb(119,103,88)',
                 height: '100vh',
                 width: '100vw'
             }}

@@ -6,6 +6,7 @@ import styled from 'styled-components';
 interface Props {
     diagonal: boolean;
     amount: number;
+    size: 'small' | 'large';
 }
 
 const RainContainer = styled.div`
@@ -19,10 +20,10 @@ const RainContainer = styled.div`
     overflow: hidden;
 `;
 
-const RainDrop = styled.rect<{ speed: number }>`
+const RainDrop = styled.rect<{ $speed: number }>`
     will-change: transform;
-    animation: ${({ speed }) => `animate ${speed}ms infinite linear`};
-    animation-delay: ${({ speed }) => `${(speed - 3000) * 5}ms`};
+    animation: ${({ $speed }) => `animate ${$speed}ms infinite linear`};
+    animation-delay: ${({ $speed }) => `${($speed - 3000) * 5}ms`};
     @keyframes animate {
         100% {
             transform: translateY(100%);
@@ -30,19 +31,14 @@ const RainDrop = styled.rect<{ speed: number }>`
     }
 `;
 
-export default function Raining({ diagonal, amount }: Props) {
+export default function Raining({ diagonal, amount, size }: Props) {
     const rainAmount = amount * 2;
     const rdm = seedrandom('seed');
-    const speeds = Array.from(Array(rainAmount), (_e, i) =>
+    const speeds = Array.from(Array(rainAmount), (_e) =>
         seededRandomNumber(rdm, 3000, 4000)
     );
 
-    const randomCoords1 = Array.from(Array(rainAmount), (_e, i) => ({
-        x: seededRandomNumber(rdm, 1, 1024),
-        y: seededRandomNumber(rdm, 1, 1536)
-    }));
-
-    const randomCoords2 = Array.from(Array(rainAmount), (_e, i) => ({
+    const randomCoords1 = Array.from(Array(rainAmount), (_e) => ({
         x: seededRandomNumber(rdm, 1, 1024),
         y: seededRandomNumber(rdm, 1, 1536)
     }));
@@ -71,11 +67,11 @@ export default function Raining({ diagonal, amount }: Props) {
                             {Array.from(Array(rainAmount), (_e, i) => {
                                 return (
                                     <RainDrop
-                                        speed={speeds[i]}
+                                        $speed={speeds[i]}
                                         x={randomCoords1[i].x * 1.5}
                                         y={0}
                                         width="5"
-                                        height="15"
+                                        height={size == 'small' ? 5 : 15}
                                         rx="3"
                                         key={i}
                                     />

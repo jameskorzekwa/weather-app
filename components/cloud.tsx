@@ -8,12 +8,12 @@ interface Props {
     delay: number;
 }
 
-const StyledCloud = styled.g<{ duration: number; delay: number }>`
+const StyledCloud = styled.g<{ $duration: number; $delay: number }>`
     width: 100%;
     will-change: transform;
     transform: translateX(-42%);
-    animation: ${({ duration }) => `animate ${duration}ms infinite linear`};
-    animation-delay: ${({ delay }) => `${delay}ms`};
+    animation: ${({ $duration }) => `animate ${$duration}ms infinite linear`};
+    animation-delay: ${({ $delay }) => `${$delay}ms`};
     @keyframes animate {
         100% {
             transform: translateX(120%);
@@ -38,7 +38,7 @@ const StyledPath = styled.path`
 
 export default function Cloud({ y, fill, duration, delay }: Props) {
     return (
-        <StyledCloud duration={duration} delay={delay}>
+        <StyledCloud $duration={duration} $delay={delay}>
             <StyledPath
                 d={`M 0 ${y}
                    a 20,20 1 0,0 0,40

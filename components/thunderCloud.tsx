@@ -7,15 +7,15 @@ interface Props {
     delay: number;
 }
 
-const Clouds = styled.g<{ fill: string; delay: number; y: number }>`
+const Clouds = styled.g<{ $fill: string; $delay: number; $y: number }>`
     will-change: transform;
-    transform: translate(-800px, ${({ y }) => `${y}px`});
+    transform: translate(-800px, ${({ $y }) => `${$y}px`});
     animation: thunder 200s infinite linear;
-    animation-delay: ${({ delay }) => `${delay}ms`};
+    animation-delay: ${({ $delay }) => `${$delay}ms`};
 
     circle,
     rect {
-        fill: ${({ fill }) => `${fill} !important`};
+        fill: ${({ $fill }) => `${$fill} !important`};
     }
 
     @keyframes thunder {
@@ -27,7 +27,7 @@ const Clouds = styled.g<{ fill: string; delay: number; y: number }>`
 
 export default function ThunderCloud({ y, delay, fill }: Props) {
     return (
-        <Clouds y={y} delay={delay} fill={fill}>
+        <Clouds $y={y} $delay={delay} $fill={fill}>
             <g
                 transform="matrix(1.81 0 0 1.81 66.26 492.31)"
                 id="13ed9b94-3354-4884-bfc1-071349735225"

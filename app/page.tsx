@@ -63,7 +63,6 @@ export default function Home() {
     const [tempSensor, setTempSensor] = useState<TempSensor | null>(null);
 
     const searchParams = useSearchParams();
-    const fakeCurrent: Current | null = null;
 
     let getTempSensor = async (secretKey: string, token: string) => {
         const localStorageTempSensor = localStorage.getItem('tempSensor');
