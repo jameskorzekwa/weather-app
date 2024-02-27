@@ -29,7 +29,8 @@ export default function WeeklyWeather({ weather }: Props) {
                                 <div>
                                     {moment
                                         .unix(weather.daily[i + 1].dt)
-                                        .format('ddd')}
+                                        .format('ddd')
+                                        .toUpperCase()}
                                 </div>
                                 <div>
                                     {getPrecipitationPercent(
