@@ -2,6 +2,7 @@
 import '/css/weather-icons.css';
 import { Current, TempSensor } from '@/types';
 import { getTemp } from '@/lib/utils';
+import moment from 'moment';
 
 interface Props {
     current: Current;
@@ -21,19 +22,19 @@ export default function CurrentWeather({
                 <div className="flex flex-col items-center gap-8">
                     <i
                         className={`text wi wi-owm-${isNight ? 'night' : 'day'}-${current.weather[0].id} text-9xl`}
-                    ></i>
+                    />
                     <div className="text text-4xl">
                         {current.weather[0].main}
                     </div>
                 </div>
-                <div className="flex flex-col items-center gap-2">
+                <div className="flex flex-col items-center gap-6">
                     <div className="text text-9xl">
                         {getTemp(temp, 'f')}
                         °F
                     </div>
                     <div
                         style={{ width: '100%' }}
-                        className="text flex flex-row grow items-center justify-between text-5xl gap-2"
+                        className="text flex flex-row grow items-center justify-around text-5xl gap-2"
                     >
                         <div>
                             H{' '}
@@ -50,6 +51,23 @@ export default function CurrentWeather({
                                 'f'
                             )}
                             °
+                        </div>
+                    </div>
+                    <div
+                        style={{ width: '100%' }}
+                        className="text flex flex-row grow items-center justify-between text-5xl gap-4"
+                    >
+                        <div className="flex flex-row gap-2">
+                            <i className={`text wi wi-sunrise text-4xl`} />
+                            <div className={`text text-3xl`}>
+                                {moment.unix(current.sys.sunrise).format('LT')}
+                            </div>
+                        </div>
+                        <div className="flex flex-row gap-2">
+                            <i className={`text wi wi-sunset text-4xl`} />
+                            <div className={`text text-3xl`}>
+                                {moment.unix(current.sys.sunset).format('LT')}
+                            </div>
                         </div>
                     </div>
                 </div>
