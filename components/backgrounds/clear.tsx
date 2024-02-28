@@ -1,12 +1,34 @@
-import styles from '@/components/background.module.css';
 import React from 'react';
+import Cloud from '@/components/cloud';
+import seedrandom from 'seedrandom';
+import { seededRandomNumber } from '@/lib/utils';
 
 interface Props {
     id: number;
     isNight: boolean;
 }
 
-export default function Clear({ id, isNight }: Props) {
+export default function Clear({ isNight }: Props) {
+    const colors = [
+        '#839192',
+        '#B3B6B7',
+        '#A6ACAF',
+        '#898b8c',
+        '#868e93',
+        '#bccdd3'
+    ];
+    const rdm = seedrandom('seed14');
+    const fills = Array.from(
+        Array(6),
+        () => colors[seededRandomNumber(rdm, 0, 5)]
+    );
+    const durations = Array.from(Array(6), () =>
+        seededRandomNumber(rdm, 120000, 240000)
+    );
+    const delays = Array.from(Array(6), () =>
+        seededRandomNumber(rdm, -240000, 0)
+    );
+    const y = Array.from(Array(6), () => seededRandomNumber(rdm, 0, 200));
     return (
         <div
             style={{
@@ -27,56 +49,15 @@ export default function Clear({ id, isNight }: Props) {
                 />
                 {isNight
                     ? null
-                    : [
-                          <g key="cloudsLayer1" className={styles.cloudsLayer1}>
-                              <path
-                                  fill="#839192"
-                                  d="M 10,230
-                    a 20,20 1 0,0 0,40
-                    h 50
-                    a 20,20 1 0,0 0,-40
-                    a 10,10 1 0,0 -15,-10
-                    a 15,15 1 0,0 -35,10
-                    z"
-                              />
-                          </g>,
-                          <g key="cloudsLayer2" className={styles.cloudsLayer2}>
-                              <path
-                                  fill="#A6ACAF"
-                                  d="M 0,30
-                   a 20,20 1 0,0 0,40
-                   h 50
-                   a 20,20 1 0,0 0,-40
-                   a 10,10 1 0,0 -15,-10
-                   a 15,15 1 0,0 -35,10
-                   z"
-                              />
-                          </g>,
-                          <g key="cloudsLayer3" className={styles.cloudsLayer3}>
-                              <path
-                                  fill="#7F8C8D"
-                                  d="M -50,800
-                    a 20,20 1 0,0 0,40
-                    h 50
-                    a 20,20 1 0,0 0,-40
-                    a 10,10 1 0,0 -15,-10
-                    a 15,15 1 0,0 -35,10
-                    z"
-                              />
-                          </g>,
-                          <g key="cloudsLayer4" className={styles.cloudsLayer4}>
-                              <path
-                                  fill="#B3B6B7"
-                                  d="M -40,150
-                   a 20,20 1 0,0 0,40
-                   h 50
-                   a 20,20 1 0,0 0,-40
-                   a 10,10 1 0,0 -15,-10
-                   a 15,15 1 0,0 -35,10
-                   z"
-                              />
-                          </g>
-                      ]}
+                    : Array.from(Array(6), (_e, i) => (
+                          <Cloud
+                              key={i}
+                              y={y[i]}
+                              fill={fills[i]}
+                              duration={durations[i]}
+                              delay={delays[i]}
+                          />
+                      ))}
             </svg>
         </div>
     );
