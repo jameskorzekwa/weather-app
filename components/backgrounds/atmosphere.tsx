@@ -1,6 +1,8 @@
-import styles from '@/components/background.module.css';
 import React from 'react';
 import { AtmosphereId } from '@/types';
+import Cloud from '@/components/cloud';
+import seedrandom from 'seedrandom';
+import { seededRandomNumber } from '@/lib/utils';
 
 interface Props {
     id: AtmosphereId;
@@ -8,6 +10,27 @@ interface Props {
 }
 
 export default function Atmosphere({ id, isNight }: Props) {
+    const colors = [
+        '#839192',
+        '#B3B6B7',
+        '#A6ACAF',
+        '#898b8c',
+        '#868e93',
+        '#bccdd3'
+    ];
+    const rdm = seedrandom('seed2');
+    const fills = Array.from(
+        Array(6),
+        () => colors[seededRandomNumber(rdm, 0, 5)]
+    );
+    const durations = Array.from(Array(6), () =>
+        seededRandomNumber(rdm, 120000, 240000)
+    );
+    const delays = Array.from(Array(6), () =>
+        seededRandomNumber(rdm, -240000, 0)
+    );
+    const y = Array.from(Array(6), () => seededRandomNumber(rdm, 0, 300));
+
     return (
         <div
             style={{
@@ -62,144 +85,16 @@ export default function Atmosphere({ id, isNight }: Props) {
                 />
                 {isNight
                     ? null
-                    : [
-                          <g key={1} className={styles.cloudsLayer1}>
-                              <path
-                                  fill="rgba(131,145,146,0.25)"
-                                  d="m 0,75
-                    a 20,20 1 0,0 0,40
-                    h 50
-                    a 20,20 1 0,0 0,-40
-                    a 10,10 1 0,0 -15,-10
-                    a 15,15 1 0,0 -35,10
-                    z"
-                              />
-                              <path
-                                  transform="scale(.75)"
-                                  fill="rgba(131,145,146,0.5)"
-                                  d="m 7, 105
-                    a 20,20 1 0,0 0,40
-                    h 50
-                    a 20,20 1 0,0 0,-40
-                    a 10,10 1 0,0 -15,-10
-                    a 15,15 1 0,0 -35,10
-                    z"
-                              />
-                              <path
-                                  transform="scale(.5)"
-                                  fill="#839192"
-                                  d="m 25, 165
-                    a 20,20 1 0,0 0,40
-                    h 50
-                    a 20,20 1 0,0 0,-40
-                    a 10,10 1 0,0 -15,-10
-                    a 15,15 1 0,0 -35,10
-                    z"
-                              />
-                          </g>,
-                          <g key={2} className={styles.cloudsLayer2}>
-                              <path
-                                  fill="rgba(166,172,175,0.25)"
-                                  d="M 0, 20
-                    a 20,20 1 0,0 0,40
-                    h 50
-                    a 20,20 1 0,0 0,-40
-                    a 10,10 1 0,0 -15,-10
-                    a 15,15 1 0,0 -35,10
-                    z"
-                              />
-                              <path
-                                  transform="scale(.75)"
-                                  fill="rgba(166,172,175,0.5)"
-                                  d="M 7, 30
-                    a 20,20 1 0,0 0,40
-                    h 50
-                    a 20,20 1 0,0 0,-40
-                    a 10,10 1 0,0 -15,-10
-                    a 15,15 1 0,0 -35,10
-                    z"
-                              />
-                              <path
-                                  transform="scale(.5)"
-                                  fill="#A6ACAF"
-                                  d="M 25, 50
-                    a 20,20 1 0,0 0,40
-                    h 50
-                    a 20,20 1 0,0 0,-40
-                    a 10,10 1 0,0 -15,-10
-                    a 15,15 1 0,0 -35,10
-                    z"
-                              />
-                          </g>,
-                          <g key={3} className={styles.cloudsLayer3}>
-                              <path
-                                  fill="rgba(127,140,141,0.25)"
-                                  d="M 0,160
-                    a 20,20 1 0,0 0,40
-                    h 50
-                    a 20,20 1 0,0 0,-40
-                    a 10,10 1 0,0 -15,-10
-                    a 15,15 1 0,0 -35,10
-                    z"
-                              />
-                              <path
-                                  transform="scale(.75)"
-                                  fill="rgba(127,140,141,0.5)"
-                                  d="M 7, 216
-                    a 20,20 1 0,0 0,40
-                    h 50
-                    a 20,20 1 0,0 0,-40
-                    a 10,10 1 0,0 -15,-10
-                    a 15,15 1 0,0 -35,10
-                    z"
-                              />
-                              <path
-                                  transform="scale(.5)"
-                                  fill="#7F8C8D"
-                                  d="M 25, 330
-                    a 20,20 1 0,0 0,40
-                    h 50
-                    a 20,20 1 0,0 0,-40
-                    a 10,10 1 0,0 -15,-10
-                    a 15,15 1 0,0 -35,10
-                    z"
-                              />
-                          </g>,
-                          <g key={4} className={styles.cloudsLayer4}>
-                              <path
-                                  fill="rgba(179,182,183,0.25)"
-                                  d="M 0,230
-                    a 20,20 1 0,0 0,40
-                    h 50
-                    a 20,20 1 0,0 0,-40
-                    a 10,10 1 0,0 -15,-10
-                    a 15,15 1 0,0 -35,10
-                    z"
-                              />
-                              <path
-                                  transform="scale(.75)"
-                                  fill="rgba(179,182,183,0.5)"
-                                  d="M 7, 310
-                    a 20,20 1 0,0 0,40
-                    h 50
-                    a 20,20 1 0,0 0,-40
-                    a 10,10 1 0,0 -15,-10
-                    a 15,15 1 0,0 -35,10
-                    z"
-                              />
-                              <path
-                                  transform="scale(.5)"
-                                  fill="#B3B6B7"
-                                  d="M 25, 470
-                    a 20,20 1 0,0 0,40
-                    h 50
-                    a 20,20 1 0,0 0,-40
-                    a 10,10 1 0,0 -15,-10
-                    a 15,15 1 0,0 -35,10
-                    z"
-                              />
-                          </g>
-                      ]}
+                    : Array.from(Array(6), (_e, i) => (
+                          <Cloud
+                              key={i}
+                              y={y[i]}
+                              fill={fills[i]}
+                              duration={durations[i]}
+                              delay={delays[i]}
+                              fuzzy={true}
+                          />
+                      ))}
             </svg>
         </div>
     );

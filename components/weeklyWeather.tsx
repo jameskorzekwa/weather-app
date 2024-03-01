@@ -1,14 +1,13 @@
 'use client';
 import '/css/weather-icons.css';
-import moment from 'moment';
-import { Weather } from '@/types';
+import { Forecast } from '@/types';
 import { getPrecipitationPercent, getTemp } from '@/lib/utils';
 
 interface Props {
-    weather: Weather;
+    forecast: Forecast;
 }
 
-export default function WeeklyWeather({ weather }: Props) {
+export default function WeeklyWeather({ forecast }: Props) {
     return (
         <div className="flex flex-row justify-between gap-4 flex-wrap">
             {Array.from(Array(5), (_e, i) => {
@@ -22,37 +21,28 @@ export default function WeeklyWeather({ weather }: Props) {
                         className="flex flex-row grow justify-center items-center gap-2 py-4 px-1"
                     >
                         <i
-                            className={`text wi wi-owm-${weather.daily[i + 1].weather[0].id} text-5xl`}
+                            className={`text wi wi-owm-${forecast.daily[i].id} text-5xl`}
                         ></i>
                         <div className="text flex flex-col">
                             <div className="flex flex-row justify-between">
                                 <div>
-                                    {moment
-                                        .unix(weather.daily[i + 1].dt)
+                                    {forecast.daily[i].dt
                                         .format('ddd')
                                         .toUpperCase()}
                                 </div>
                                 <div>
                                     {getPrecipitationPercent(
-                                        weather.daily[i + 1].pop
+                                        forecast.daily[i].pop
                                     )}
                                 </div>
                             </div>
                             <div className="text flex flex-row justify-center items-center gap-2">
                                 <div>
-                                    H{' '}
-                                    {getTemp(
-                                        weather.daily[i + 1].temp.max,
-                                        'f'
-                                    )}
+                                    H {getTemp(forecast.daily[i].max_temp, 'f')}
                                     °
                                 </div>
                                 <div>
-                                    L{' '}
-                                    {getTemp(
-                                        weather.daily[i + 1].temp.min,
-                                        'f'
-                                    )}
+                                    L {getTemp(forecast.daily[i].min_temp, 'f')}
                                     °
                                 </div>
                             </div>

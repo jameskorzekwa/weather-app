@@ -31,15 +31,15 @@ export default function Clouds({ id, isNight }: Props) {
     const rdm = seedrandom('seed8');
     const fills = Array.from(
         Array(cloudSettings[id].count),
-        (_e, i) => colors[seededRandomNumber(rdm, 0, 7)]
+        (_e) => colors[seededRandomNumber(rdm, 0, 7)]
     );
-    const durations = Array.from(Array(cloudSettings[id].count), (_e, i) =>
+    const durations = Array.from(Array(cloudSettings[id].count), (_e) =>
         seededRandomNumber(rdm, 60000, 120000)
     );
-    const delays = Array.from(Array(cloudSettings[id].count), (_e, i) =>
+    const delays = Array.from(Array(cloudSettings[id].count), (_e) =>
         seededRandomNumber(rdm, -420000, -20000)
     );
-    const y = Array.from(Array(cloudSettings[id].count), (_e, i) =>
+    const y = Array.from(Array(cloudSettings[id].count), (_e) =>
         seededRandomNumber(rdm, -20, 110)
     );
     return (
@@ -79,6 +79,7 @@ export default function Clouds({ id, isNight }: Props) {
                             fill={fills[i]}
                             duration={durations[i]}
                             delay={delays[i]}
+                            fuzzy={false}
                         />
                     ))}
                 </svg>

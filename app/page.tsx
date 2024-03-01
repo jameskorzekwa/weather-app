@@ -9,14 +9,14 @@ import {
     Forecast,
     LatLon,
     LocalStorageCurrent,
-    LocalStorageForecast,
     LocalStorageLocation,
     LocalStorageTempSensor,
     LocalStorageWeather,
     Location,
+    OWCurrent,
+    OWWeather,
     ReverseLocation,
     TempSensor,
-    Weather,
     ZipcodeLocation
 } from '@/types';
 import { useSearchParams } from 'next/navigation';
@@ -24,6 +24,7 @@ import WeeklyWeather from '@/components/weeklyWeather';
 import CurrentWeather from '@/components/currentWeather';
 import DateTime from '@/components/dateTime';
 import Loading from '@/components/loading';
+import { owCurrentToCurrent, owWeatherToForecast } from '@/lib/utils';
 
 if (typeof window !== 'undefined') {
     const { fetch: originalFetch } = window;
@@ -57,7 +58,6 @@ export default function Home() {
     const [latLon, setLatLon] = useState<LatLon | null>(null);
     const [forecast, setForecast] = useState<Forecast | null>(null);
     const [current, setCurrent] = useState<Current | null>(null);
-    const [weather, setWeather] = useState<Weather | null>(null);
     const [location, setLocation] = useState<Location | null>(null);
     const [zipcode, setZipcode] = useState<string | null>();
     const [tempSensor, setTempSensor] = useState<TempSensor | null>(null);
@@ -113,7 +113,7 @@ export default function Home() {
                     lastCurrent.current.coord.lon.toFixed(6) ===
                         location?.lon.toFixed(6)
                 ) {
-                    setCurrent(lastCurrent.current);
+                    setCurrent(owCurrentToCurrent(lastCurrent.current));
                     setIsNight(
                         moment().isAfter(
                             moment.unix(lastCurrent.current.sys.sunset)
@@ -131,9 +131,9 @@ export default function Home() {
         const result = await fetch(
             `https://api.openweathermap.org/data/2.5/weather?lat=${location.lat}&lon=${location.lon}&appid=${appid}`
         );
-        const data: Current = await result.json();
+        const data: OWCurrent = await result.json();
         data.coord = { lat: location.lat, lon: location.lon };
-        setCurrent(data);
+        setCurrent(owCurrentToCurrent(data));
         setIsNight(
             data
                 ? moment().isAfter(moment.unix(data.sys.sunset)) ||
@@ -146,7 +146,7 @@ export default function Home() {
         };
         localStorage.setItem('current', JSON.stringify(store));
     };
-    let getWeather = async (location: Location, force: boolean = false) => {
+    let getForecast = async (location: Location, force: boolean = false) => {
         const localStorageWeather = localStorage.getItem('weather');
         if (localStorageWeather) {
             try {
@@ -162,7 +162,7 @@ export default function Home() {
                     lastWeather.weather.lon.toFixed(6) ===
                         location?.lon.toFixed(6)
                 ) {
-                    setWeather(lastWeather.weather);
+                    setForecast(owWeatherToForecast(lastWeather.weather));
                     return;
                 }
             } catch (e) {
@@ -172,51 +172,17 @@ export default function Home() {
         const result = await fetch(
             `https://api.openweathermap.org/data/3.0/onecall?lat=${location.lat}&lon=${location.lon}&appid=${appid}`
         );
-        const data: Weather = await result.json();
+        const data: OWWeather = await result.json();
         data.lat = location.lat;
         data.lon = location.lon;
-        setWeather(data);
+        setForecast(owWeatherToForecast(data));
         const store: LocalStorageWeather = {
             time: moment().unix(),
             weather: data
         };
         localStorage.setItem('weather', JSON.stringify(store));
     };
-    let getForecast = async (location: Location, force: boolean = false) => {
-        const localStorageForecast = localStorage.getItem('forecast');
-        if (localStorageForecast) {
-            try {
-                const lastForecast: LocalStorageForecast =
-                    JSON.parse(localStorageForecast);
-                if (
-                    !force &&
-                    moment
-                        .unix(lastForecast.time)
-                        .isAfter(moment().subtract(10, 'minutes')) &&
-                    lastForecast.forecast.city.coord.lat.toFixed(6) ===
-                        location?.lat.toFixed(6) &&
-                    lastForecast.forecast.city.coord.lon.toFixed(6) ===
-                        location?.lon.toFixed(6)
-                ) {
-                    setForecast(lastForecast.forecast);
-                    return;
-                }
-            } catch (e) {
-                console.log(e);
-            }
-        }
-        const result = await fetch(
-            `https://api.openweathermap.org/data/2.5/forecast?lat=${location.lat}&lon=${location.lon}&appid=${appid}`
-        );
-        const data: Forecast = await result.json();
-        data.city.coord = { lat: location.lat, lon: location.lon };
-        setForecast(data);
-        const store: LocalStorageForecast = {
-            time: moment().unix(),
-            forecast: data
-        };
-        localStorage.setItem('forecast', JSON.stringify(store));
-    };
+
     let getReverseLocation = async (latLon: LatLon) => {
         const localStorageLocation = localStorage.getItem('location');
         if (localStorageLocation) {
@@ -284,15 +250,14 @@ export default function Home() {
         setDatetime(now);
         setIsNight(
             current
-                ? now.isAfter(moment.unix(current.sys.sunset)) ||
-                      now.isBefore(moment.unix(current.sys.sunrise))
+                ? now.isAfter(current.sunset) || now.isBefore(current.sunrise)
                 : false
         );
     }, 1000);
 
     useInterval(() => {
         if (appid && location) {
-            void getWeather(location);
+            void getForecast(location);
             void getCurrent(location);
         }
         if (secretKey && token) {
@@ -351,13 +316,12 @@ export default function Home() {
             }
             if (appid && location) {
                 void getCurrent(location);
-                void getWeather(location);
                 void getForecast(location);
             }
         }
     }, [location]);
 
-    return current && weather && forecast && latLon ? (
+    return current && forecast && location ? (
         <main className="flex min-h-screen flex-col ">
             <Background current={current} isNight={isNight} />
             <div
@@ -369,9 +333,7 @@ export default function Home() {
                 className="flex flex-col justify-between grow p-16"
             >
                 <div className="flex flex-row justify-between">
-                    <div className="text text-7xl">
-                        {location?.city || forecast.city.name}
-                    </div>
+                    <div className="text text-7xl">{location.city}</div>
                     <DateTime datetime={datetime} />
                 </div>
                 <CurrentWeather
@@ -379,7 +341,7 @@ export default function Home() {
                     isNight={isNight}
                     tempSensor={tempSensor}
                 />
-                <WeeklyWeather weather={weather} />
+                <WeeklyWeather forecast={forecast} />
             </div>
         </main>
     ) : (

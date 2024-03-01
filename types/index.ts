@@ -1,4 +1,28 @@
-export type Current = {
+import moment from 'moment';
+
+export type Weather = {
+    id: number;
+    min_temp: number;
+    max_temp: number;
+    sunrise: moment.Moment;
+    sunset: moment.Moment;
+    description: string;
+};
+
+export type Current = Weather & {
+    temp: number;
+};
+
+export type Daily = Weather & {
+    dt: moment.Moment;
+    pop: number;
+};
+
+export type Forecast = {
+    daily: Daily[];
+};
+
+export type OWCurrent = {
     coord: {
         lon: number;
         lat: number;
@@ -48,7 +72,7 @@ export type Current = {
     cod: number;
 };
 
-export type Forecast = {
+export type OWForecast = {
     cod: number;
     message: number;
     cnt: number;
@@ -104,7 +128,7 @@ export type Forecast = {
     ];
 };
 
-export type Weather = {
+export type OWWeather = {
     lat: number;
     lon: number;
     timezone: string;
@@ -291,17 +315,17 @@ export type ZipcodeLocation = {
 };
 
 export type LocalStorageCurrent = {
-    current: Current;
+    current: OWCurrent;
     time: number;
 };
 
 export type LocalStorageWeather = {
-    weather: Weather;
+    weather: OWWeather;
     time: number;
 };
 
 export type LocalStorageForecast = {
-    forecast: Forecast;
+    forecast: OWForecast;
     time: number;
 };
 
@@ -335,13 +359,13 @@ export type TempSensor = {
 };
 
 export type FakeWeather = {
-    thunderstorm: Current;
-    drizzle: Current;
-    rain: Current;
-    snow: Current;
-    atmosphere: Current;
-    clear: Current;
-    clouds: Current;
+    thunderstorm: OWCurrent;
+    drizzle: OWCurrent;
+    rain: OWCurrent;
+    snow: OWCurrent;
+    atmosphere: OWCurrent;
+    clear: OWCurrent;
+    clouds: OWCurrent;
 };
 
 export type DrizzleId = 300 | 301 | 302 | 310 | 311 | 312 | 313 | 314 | 321;

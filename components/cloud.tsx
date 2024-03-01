@@ -6,7 +6,12 @@ interface Props {
     fill: string;
     duration: number;
     delay: number;
+    fuzzy: boolean;
 }
+
+const CloudWrapper = styled.g<{ $y: number }>`
+    transform: translateY(${({ $y }) => `${$y}px`});
+`;
 
 const StyledCloud = styled.g<{ $duration: number; $delay: number }>`
     width: 100%;
@@ -21,34 +26,69 @@ const StyledCloud = styled.g<{ $duration: number; $delay: number }>`
     }
 `;
 
-const StyledPath = styled.path`
+const StyledPath = styled.path<{ $scale: number; $opacity: number }>`
+    transform: scale(${({ $scale }) => `${$scale}`});
     animation: fadeInAnimation ease 3s;
     animation-iteration-count: 1;
     animation-fill-mode: forwards;
+    opacity: ${({ $opacity }) => `${$opacity}`} !important;
 
     @keyframes fadeInAnimation {
         0% {
             opacity: 0;
         }
+
         100% {
             opacity: 1;
         }
     }
 `;
 
-export default function Cloud({ y, fill, duration, delay }: Props) {
+export default function Cloud({ y, fill, duration, delay, fuzzy }: Props) {
     return (
-        <StyledCloud $duration={duration} $delay={delay}>
-            <StyledPath
-                d={`M 0 ${y}
+        <CloudWrapper $y={y}>
+            <StyledCloud $duration={duration} $delay={delay}>
+                <StyledPath
+                    d={`M 0 0
                    a 20,20 1 0,0 0,40
                    h 50
                    a 20,20 1 0,0 0,-40
                    a 10,10 1 0,0 -15,-10
                    a 15,15 1 0,0 -35,10
                    z`}
-                fill={fill}
-            />
-        </StyledCloud>
+                    $scale={1}
+                    $opacity={fuzzy ? 0.2 : 0.9}
+                    fill={fill}
+                />
+                {fuzzy && [
+                    <StyledPath
+                        key={1}
+                        d={`M 7 5
+                   a 20,20 1 0,0 0,40
+                   h 50
+                   a 20,20 1 0,0 0,-40
+                   a 10,10 1 0,0 -15,-10
+                   a 15,15 1 0,0 -35,10
+                   z`}
+                        $scale={0.75}
+                        $opacity={0.5}
+                        fill={fill}
+                    />,
+                    <StyledPath
+                        key={2}
+                        d={`M 23 15
+                   a 20,20 1 0,0 0,40
+                   h 50
+                   a 20,20 1 0,0 0,-40
+                   a 10,10 1 0,0 -15,-10
+                   a 15,15 1 0,0 -35,10
+                   z`}
+                        $opacity={1}
+                        $scale={0.5}
+                        fill={fill}
+                    />
+                ]}
+            </StyledCloud>
+        </CloudWrapper>
     );
 }
