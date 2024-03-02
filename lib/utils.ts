@@ -17,11 +17,11 @@ export const getTemp = (temp: number, from: string, to: string): number => {
         temp = temp + 273.15;
     }
     if (to === 'c') {
-        return Math.round(temp - 273);
+        temp = temp - 273;
     } else if (to === 'f') {
-        return Math.round((temp - 273) * (9 / 5) + 32);
+        temp = (temp - 273) * (9 / 5) + 32;
     }
-    return temp;
+    return Math.round(temp);
 };
 
 export const getPrecipitationPercent = (pop: number): number => {
@@ -186,8 +186,16 @@ export const omWeatherToForecast = (weather: OMWeather): Forecast => {
             id: omWeatherCodeToId(
                 weather.daily.weather_code[i + 1] as OMWeatherCode
             ),
-            min_temp: weather.daily.temperature_2m_min[i + 1],
-            max_temp: weather.daily.temperature_2m_max[i + 1],
+            min_temp: getTemp(
+                weather.daily.temperature_2m_min[i + 1],
+                'f',
+                'f'
+            ),
+            max_temp: getTemp(
+                weather.daily.temperature_2m_max[i + 1],
+                'f',
+                'f'
+            ),
             sunrise: moment(weather.daily.sunrise[i + 1]).unix(),
             sunset: moment(weather.daily.sunset[i + 1]).unix(),
             description: omWeatherCodeToDescription(
