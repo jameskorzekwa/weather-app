@@ -57,7 +57,7 @@ if (typeof window !== 'undefined') {
 
 export default function Home() {
     const [datetime, setDatetime] = useState<moment.Moment>(moment());
-    const [isNight, setIsNight] = useState<boolean>(false);
+    const [isNight, setIsNight] = useState<boolean | null>(null);
     const [apikey, setApikey] = useState<string | null>(null);
     const [appid, setAppid] = useState<string | null>(null);
     const [secretKey, setSecretKey] = useState<string | null>(null);
@@ -133,14 +133,6 @@ export default function Home() {
                 ) {
                     setCurrent(lastCurrent.current);
                     setForecast(lastForecast.forecast);
-                    setIsNight(
-                        moment().isAfter(
-                            moment.unix(lastCurrent.current.sunset)
-                        ) ||
-                            moment().isBefore(
-                                moment.unix(lastCurrent.current.sunrise)
-                            )
-                    );
                     return;
                 }
             } catch (e) {
@@ -155,12 +147,6 @@ export default function Home() {
         data.longitude = location.lon;
         setCurrent(omWeatherToCurrent(data));
         setForecast(omWeatherToForecast(data));
-        setIsNight(
-            data
-                ? moment().isAfter(moment(data.daily.sunset[0])) ||
-                      moment().isBefore(moment(data.daily.sunrise[0]))
-                : false
-        );
         const curr: LocalStorageCurrent = {
             time: moment().unix(),
             current: omWeatherToCurrent(data)
@@ -189,14 +175,6 @@ export default function Home() {
                         location?.lon.toFixed(6)
                 ) {
                     setCurrent(lastCurrent.current);
-                    setIsNight(
-                        moment().isAfter(
-                            moment.unix(lastCurrent.current.sunset)
-                        ) ||
-                            moment().isBefore(
-                                moment.unix(lastCurrent.current.sunrise)
-                            )
-                    );
                     return;
                 }
             } catch (e) {
@@ -209,12 +187,6 @@ export default function Home() {
         const data: OWCurrent = await result.json();
         data.coord = { lat: location.lat, lon: location.lon };
         setCurrent(owCurrentToCurrent(data));
-        setIsNight(
-            data
-                ? moment().isAfter(moment.unix(data.sys.sunset)) ||
-                      moment().isBefore(moment.unix(data.sys.sunrise))
-                : false
-        );
         const store: LocalStorageCurrent = {
             time: moment().unix(),
             current: owCurrentToCurrent(data)
@@ -406,7 +378,18 @@ export default function Home() {
         }
     }, [location]);
 
-    return current && forecast && location ? (
+    useEffect(() => {
+        if (current) {
+            setIsNight(
+                current
+                    ? moment().isAfter(moment.unix(current.sunset)) ||
+                          moment().isBefore(moment.unix(current.sunrise))
+                    : false
+            );
+        }
+    }, [current]);
+
+    return current && forecast && location && isNight !== null ? (
         <main className="flex min-h-screen flex-col ">
             <Background current={current} isNight={isNight} />
             <div
