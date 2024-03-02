@@ -412,7 +412,7 @@ export default function Home() {
                 window.location.href = '?' + queryParams.toString();
             }
         }
-    }, [zipcode, apikey, secretKey, token, appid]);
+    }, [zipcode, apikey, secretKey, token, appid, latLon]);
 
     useEffect(() => {
         if (secretKey && token) {
@@ -433,6 +433,12 @@ export default function Home() {
             }
         }
     }, [location]);
+
+    useEffect(() => {
+        if (location) {
+            getAppWeather(location);
+        }
+    }, [weatherSource]);
 
     useEffect(() => {
         if (current) {
