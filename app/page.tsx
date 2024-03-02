@@ -352,7 +352,8 @@ export default function Home() {
             const lon = searchParams.get('lon');
             if (lat && Number(lat) && lon && Number(lon)) {
                 setLatLon({ lat: parseFloat(lat), lon: parseFloat(lon) });
-            } else if (zipcode) {
+            }
+            if (zipcode) {
                 setZipcode(zipcode);
             }
         }
@@ -371,7 +372,12 @@ export default function Home() {
     }, [latLon]);
 
     useEffect(() => {
-        if (apikey && zipcode && (!location || location.postcode !== zipcode)) {
+        if (
+            apikey &&
+            zipcode &&
+            !latLon &&
+            (!location || location.postcode !== zipcode)
+        ) {
             void getZipcodeLocation(zipcode);
         }
     }, [zipcode]);
@@ -391,6 +397,9 @@ export default function Home() {
             (appid === '' && appid !== searchParams?.get('appid'))
         ) {
             const queryObj = {
+                ...(latLon
+                    ? { lat: latLon.lat.toString(), lon: latLon.lon.toString() }
+                    : {}),
                 ...(zipcode ? { zipcode } : {}),
                 ...(appid ? { appid } : {}),
                 ...(apikey ? { apikey } : {}),
