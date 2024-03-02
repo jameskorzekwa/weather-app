@@ -1,7 +1,7 @@
 'use client';
 import '/css/weather-icons.css';
 import { Forecast } from '@/types';
-import { getPrecipitationPercent, getTemp } from '@/lib/utils';
+import moment from 'moment-timezone';
 
 interface Props {
     forecast: Forecast;
@@ -26,25 +26,16 @@ export default function WeeklyWeather({ forecast }: Props) {
                         <div className="text flex flex-col">
                             <div className="flex flex-row justify-between">
                                 <div>
-                                    {forecast.daily[i].dt
+                                    {moment
+                                        .unix(forecast.daily[i].dt)
                                         .format('ddd')
                                         .toUpperCase()}
                                 </div>
-                                <div>
-                                    {getPrecipitationPercent(
-                                        forecast.daily[i].pop
-                                    )}
-                                </div>
+                                <div>{forecast.daily[i].pop}%</div>
                             </div>
                             <div className="text flex flex-row justify-center items-center gap-2">
-                                <div>
-                                    H {getTemp(forecast.daily[i].max_temp, 'f')}
-                                    °
-                                </div>
-                                <div>
-                                    L {getTemp(forecast.daily[i].min_temp, 'f')}
-                                    °
-                                </div>
+                                <div>H {forecast.daily[i].max_temp}°</div>
+                                <div>L {forecast.daily[i].min_temp}°</div>
                             </div>
                         </div>
                     </div>

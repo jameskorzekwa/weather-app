@@ -57,7 +57,7 @@ export default function Cloud({ y, fill, duration, delay, fuzzy }: Props) {
                    a 15,15 1 0,0 -35,10
                    z`}
                     $scale={1}
-                    $opacity={fuzzy ? 0.2 : 0.9}
+                    $opacity={fuzzy ? 0.2 : 0.7}
                     fill={fill}
                 />
                 {fuzzy && [

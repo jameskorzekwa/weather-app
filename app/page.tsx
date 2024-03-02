@@ -1,7 +1,7 @@
 'use client';
 import '/css/weather-icons.css';
 import { useInterval } from 'usehooks-ts';
-import moment from 'moment';
+import moment from 'moment-timezone';
 import { useEffect, useState } from 'react';
 import Background from '@/components/background';
 import {
@@ -9,10 +9,11 @@ import {
     Forecast,
     LatLon,
     LocalStorageCurrent,
+    LocalStorageForecast,
     LocalStorageLocation,
     LocalStorageTempSensor,
-    LocalStorageWeather,
     Location,
+    OMWeather,
     OWCurrent,
     OWWeather,
     ReverseLocation,
@@ -24,7 +25,13 @@ import WeeklyWeather from '@/components/weeklyWeather';
 import CurrentWeather from '@/components/currentWeather';
 import DateTime from '@/components/dateTime';
 import Loading from '@/components/loading';
-import { owCurrentToCurrent, owWeatherToForecast } from '@/lib/utils';
+import {
+    getTemp,
+    omWeatherToCurrent,
+    omWeatherToForecast,
+    owCurrentToCurrent,
+    owWeatherToForecast
+} from '@/lib/utils';
 
 if (typeof window !== 'undefined') {
     const { fetch: originalFetch } = window;
@@ -88,7 +95,7 @@ export default function Home() {
         );
         const resp: TempSensor = await result.json();
         if (resp.body?.temperature) {
-            resp.body.temperature = resp.body.temperature + 273;
+            resp.body.temperature = getTemp(resp.body.temperature, 'c', 'f');
         }
         setTempSensor(resp);
         const store: LocalStorageTempSensor = {
@@ -96,6 +103,72 @@ export default function Home() {
             tempSensor: resp
         };
         localStorage.setItem('tempSensor', JSON.stringify(store));
+    };
+    let getWeather = async (location: Location, force: boolean = false) => {
+        const localStorageCurrent = localStorage.getItem('current');
+        const localStorageForecast = localStorage.getItem('forecast');
+
+        if (localStorageCurrent && localStorageForecast) {
+            try {
+                const lastCurrent: LocalStorageCurrent =
+                    JSON.parse(localStorageCurrent);
+                const lastForecast: LocalStorageForecast =
+                    JSON.parse(localStorageForecast);
+                if (
+                    !force &&
+                    (moment
+                        .unix(lastCurrent.time)
+                        .isAfter(moment().subtract(5, 'minutes')) ||
+                        moment
+                            .unix(lastForecast.time)
+                            .isAfter(moment().subtract(5, 'minutes'))) &&
+                    lastCurrent.current.lat.toFixed(6) ===
+                        location?.lat.toFixed(6) &&
+                    lastCurrent.current.lon.toFixed(6) ===
+                        location?.lon.toFixed(6) &&
+                    lastForecast.forecast.daily[0].lat?.toFixed(6) ===
+                        location?.lat.toFixed(6) &&
+                    lastForecast.forecast.daily[0].lon?.toFixed(6) ===
+                        location?.lon.toFixed(6)
+                ) {
+                    setCurrent(lastCurrent.current);
+                    setForecast(lastForecast.forecast);
+                    setIsNight(
+                        moment().isAfter(moment(lastCurrent.current.sunset)) ||
+                            moment().isBefore(
+                                moment(lastCurrent.current.sunrise)
+                            )
+                    );
+                    return;
+                }
+            } catch (e) {
+                console.log(e);
+            }
+        }
+        const result = await fetch(
+            `https://api.open-meteo.com/v1/forecast?latitude=${location.lat}&longitude=${location.lon}&current=temperature,weather_code&daily=temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_mean,weather_code&timezone=${moment.tz.guess()}&temperature_unit=fahrenheit`
+        );
+        const data: OMWeather = await result.json();
+        data.latitude = location.lat;
+        data.longitude = location.lon;
+        setCurrent(omWeatherToCurrent(data));
+        setForecast(omWeatherToForecast(data));
+        setIsNight(
+            data
+                ? moment().isAfter(moment(data.daily.sunset[0])) ||
+                      moment().isBefore(moment(data.daily.sunrise[0]))
+                : false
+        );
+        const curr: LocalStorageCurrent = {
+            time: moment().unix(),
+            current: omWeatherToCurrent(data)
+        };
+        const fore: LocalStorageForecast = {
+            time: moment().unix(),
+            forecast: omWeatherToForecast(data)
+        };
+        localStorage.setItem('current', JSON.stringify(curr));
+        localStorage.setItem('forecast', JSON.stringify(fore));
     };
     let getCurrent = async (location: Location, force: boolean = false) => {
         const localStorageCurrent = localStorage.getItem('current');
@@ -108,18 +181,16 @@ export default function Home() {
                     moment
                         .unix(lastCurrent.time)
                         .isAfter(moment().subtract(5, 'minutes')) &&
-                    lastCurrent.current.coord.lat.toFixed(6) ===
+                    lastCurrent.current.lat.toFixed(6) ===
                         location?.lat.toFixed(6) &&
-                    lastCurrent.current.coord.lon.toFixed(6) ===
+                    lastCurrent.current.lon.toFixed(6) ===
                         location?.lon.toFixed(6)
                 ) {
-                    setCurrent(owCurrentToCurrent(lastCurrent.current));
+                    setCurrent(lastCurrent.current);
                     setIsNight(
-                        moment().isAfter(
-                            moment.unix(lastCurrent.current.sys.sunset)
-                        ) ||
+                        moment().isAfter(moment(lastCurrent.current.sunset)) ||
                             moment().isBefore(
-                                moment.unix(lastCurrent.current.sys.sunrise)
+                                moment(lastCurrent.current.sunrise)
                             )
                     );
                     return;
@@ -142,27 +213,27 @@ export default function Home() {
         );
         const store: LocalStorageCurrent = {
             time: moment().unix(),
-            current: data
+            current: owCurrentToCurrent(data)
         };
         localStorage.setItem('current', JSON.stringify(store));
     };
     let getForecast = async (location: Location, force: boolean = false) => {
-        const localStorageWeather = localStorage.getItem('weather');
-        if (localStorageWeather) {
+        const localStorageForecast = localStorage.getItem('forecast');
+        if (localStorageForecast) {
             try {
-                const lastWeather: LocalStorageWeather =
-                    JSON.parse(localStorageWeather);
+                const lastWeather: LocalStorageForecast =
+                    JSON.parse(localStorageForecast);
                 if (
                     !force &&
                     moment
                         .unix(lastWeather.time)
                         .isAfter(moment().subtract(1, 'hours')) &&
-                    lastWeather.weather.lat.toFixed(6) ===
+                    lastWeather.forecast.daily[0].lat.toFixed(6) ===
                         location?.lat.toFixed(6) &&
-                    lastWeather.weather.lon.toFixed(6) ===
+                    lastWeather.forecast.daily[0].lon.toFixed(6) ===
                         location?.lon.toFixed(6)
                 ) {
-                    setForecast(owWeatherToForecast(lastWeather.weather));
+                    setForecast(lastWeather.forecast);
                     return;
                 }
             } catch (e) {
@@ -176,11 +247,11 @@ export default function Home() {
         data.lat = location.lat;
         data.lon = location.lon;
         setForecast(owWeatherToForecast(data));
-        const store: LocalStorageWeather = {
+        const store: LocalStorageForecast = {
             time: moment().unix(),
-            weather: data
+            forecast: owWeatherToForecast(data)
         };
-        localStorage.setItem('weather', JSON.stringify(store));
+        localStorage.setItem('forecast', JSON.stringify(store));
     };
 
     let getReverseLocation = async (latLon: LatLon) => {
@@ -204,7 +275,14 @@ export default function Home() {
             }
         }
         const result = await fetch(
-            `https://api.geoapify.com/v1/geocode/reverse?lat=${latLon?.lat}&lon=${latLon?.lon}&apiKey=${apikey}`
+            `https://api.geoapify.com/v1/geocode/reverse?lat=${latLon?.lat}&lon=${latLon?.lon}&apiKey=${apikey}`,
+            {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'User-Agent': 'j2k-weather-app'
+                }
+            }
         );
         const data: ReverseLocation = await result.json();
         setLocation(data.features[0].properties);
@@ -257,8 +335,9 @@ export default function Home() {
 
     useInterval(() => {
         if (appid && location) {
-            void getForecast(location);
-            void getCurrent(location);
+            // void getForecast(location);
+            // void getCurrent(location);
+            void getWeather(location);
         }
         if (secretKey && token) {
             void getTempSensor(secretKey, token);
@@ -315,8 +394,9 @@ export default function Home() {
                 setZipcode(location.postcode);
             }
             if (appid && location) {
-                void getCurrent(location);
-                void getForecast(location);
+                // void getCurrent(location);
+                // void getForecast(location);
+                void getWeather(location);
             }
         }
     }, [location]);

@@ -1,11 +1,9 @@
-import moment from 'moment';
-
-export type Weather = {
+export type Weather = LatLon & {
     id: number;
     min_temp: number;
     max_temp: number;
-    sunrise: moment.Moment;
-    sunset: moment.Moment;
+    sunrise: number;
+    sunset: number;
     description: string;
 };
 
@@ -14,7 +12,7 @@ export type Current = Weather & {
 };
 
 export type Daily = Weather & {
-    dt: moment.Moment;
+    dt: number;
     pop: number;
 };
 
@@ -243,6 +241,46 @@ export type OWWeather = {
     ];
 };
 
+export type OMWeather = {
+    latitude: number;
+    longitude: number;
+    generationtime_ms: number;
+    utc_offset_seconds: number;
+    timezone: string;
+    timezone_abbreviation: string;
+    elevation: number;
+    current_units: {
+        time: string;
+        interval: string;
+        temperature: string;
+        weather_code: string;
+    };
+    current: {
+        time: string;
+        interval: number;
+        temperature: number;
+        weather_code: number;
+    };
+    daily_units: {
+        time: string;
+        temperature_2m_max: string;
+        temperature_2m_min: string;
+        sunrise: string;
+        sunset: string;
+        precipitation_sum: string;
+        precipitation_probability_max: string;
+    };
+    daily: {
+        time: string[];
+        temperature_2m_max: number[];
+        temperature_2m_min: number[];
+        sunrise: string[];
+        sunset: string[];
+        precipitation_probability_mean: number[];
+        weather_code: number[];
+    };
+};
+
 export type Location = {
     datasource: {
         sourcename: string;
@@ -315,17 +353,12 @@ export type ZipcodeLocation = {
 };
 
 export type LocalStorageCurrent = {
-    current: OWCurrent;
-    time: number;
-};
-
-export type LocalStorageWeather = {
-    weather: OWWeather;
+    current: Current;
     time: number;
 };
 
 export type LocalStorageForecast = {
-    forecast: OWForecast;
+    forecast: Forecast;
     time: number;
 };
 
@@ -368,9 +401,6 @@ export type FakeWeather = {
     clouds: OWCurrent;
 };
 
-export type DrizzleId = 300 | 301 | 302 | 310 | 311 | 312 | 313 | 314 | 321;
-export type RainId = 500 | 501 | 502 | 503 | 504 | 511 | 520 | 521 | 522 | 531;
-export type SnowId = 600 | 601 | 602 | 611 | 612 | 613 | 616 | 620 | 621 | 622;
 export type ThunderstormId =
     | 200
     | 201
@@ -382,7 +412,9 @@ export type ThunderstormId =
     | 230
     | 231
     | 232;
-export type CloudId = 801 | 802 | 803 | 804;
+export type DrizzleId = 300 | 301 | 302 | 310 | 311 | 312 | 313 | 314 | 321;
+export type RainId = 500 | 501 | 502 | 503 | 504 | 511 | 520 | 521 | 522 | 531;
+export type SnowId = 600 | 601 | 602 | 611 | 612 | 613 | 616 | 620 | 621 | 622;
 export type AtmosphereId =
     | 701
     | 711
@@ -394,3 +426,43 @@ export type AtmosphereId =
     | 762
     | 771
     | 781;
+export type ClearId = 800;
+export type CloudId = 801 | 802 | 803 | 804;
+export type OWWeatherId =
+    | DrizzleId
+    | RainId
+    | SnowId
+    | ThunderstormId
+    | CloudId
+    | AtmosphereId
+    | ClearId;
+
+export type OMWeatherCode =
+    | 0
+    | 1
+    | 2
+    | 3
+    | 45
+    | 48
+    | 51
+    | 53
+    | 55
+    | 56
+    | 57
+    | 61
+    | 63
+    | 65
+    | 66
+    | 67
+    | 71
+    | 73
+    | 75
+    | 77
+    | 80
+    | 81
+    | 82
+    | 85
+    | 86
+    | 95
+    | 96
+    | 99;

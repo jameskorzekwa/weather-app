@@ -22,7 +22,7 @@ export default function Sun() {
                     width={10}
                     height={40}
                     rx={5}
-                    transform={`rotate(${(360 / 16) * i}) translate(-5, -110)`}
+                    transform={`rotate(${(360 / 16) * i + 1}) translate(-5, -110)`}
                 />
             ))}
         </StyledSun>

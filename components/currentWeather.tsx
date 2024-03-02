@@ -1,7 +1,7 @@
 'use client';
 import '/css/weather-icons.css';
 import { Current, TempSensor } from '@/types';
-import { getTemp } from '@/lib/utils';
+import moment from 'moment-timezone';
 
 interface Props {
     current: Current;
@@ -26,19 +26,15 @@ export default function CurrentWeather({
                 </div>
                 <div className="flex flex-col items-center gap-6">
                     <div className="text text-9xl">
-                        {getTemp(temp, 'f')}
+                        {temp}
                         °F
                     </div>
                     <div
                         style={{ width: '100%' }}
                         className="text flex flex-row grow items-center justify-around text-5xl gap-2"
                     >
-                        <div>
-                            H {getTemp(Math.max(current.max_temp, temp), 'f')}°
-                        </div>
-                        <div>
-                            L {getTemp(Math.min(current.min_temp, temp), 'f')}°
-                        </div>
+                        <div>H {Math.max(current.max_temp, temp)}°</div>
+                        <div>L {Math.min(current.min_temp, temp)}°</div>
                     </div>
                     <div
                         style={{ width: '100%' }}
@@ -47,13 +43,13 @@ export default function CurrentWeather({
                         <div className="flex flex-row gap-2">
                             <i className={`text wi wi-sunrise text-4xl`} />
                             <div className={`text text-3xl`}>
-                                {current.sunrise.format('LT')}
+                                {moment.unix(current.sunrise).format('LT')}
                             </div>
                         </div>
                         <div className="flex flex-row gap-2">
                             <i className={`text wi wi-sunset text-4xl`} />
                             <div className={`text text-3xl`}>
-                                {current.sunset.format('LT')}
+                                {moment.unix(current.sunset).format('LT')}
                             </div>
                         </div>
                     </div>
