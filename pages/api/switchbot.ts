@@ -34,6 +34,8 @@ export default async function handler(
             headers: headers
         }
     );
+    const json = await result.json();
+    json.zipcode = '80465';
 
-    res.status(200).json(await result.json());
+    res.status(200).json(json);
 }

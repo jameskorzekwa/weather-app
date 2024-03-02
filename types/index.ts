@@ -8,6 +8,7 @@ export type Weather = LatLon & {
 };
 
 export type Current = Weather & {
+    source: WeatherSource;
     temp: number;
 };
 
@@ -17,6 +18,7 @@ export type Daily = Weather & {
 };
 
 export type Forecast = {
+    source: WeatherSource;
     daily: Daily[];
 };
 
@@ -389,6 +391,7 @@ export type TempSensor = {
         battery: number;
     };
     message: string;
+    zipcode: string;
 };
 
 export type FakeWeather = {
@@ -466,3 +469,5 @@ export type OMWeatherCode =
     | 95
     | 96
     | 99;
+
+export type WeatherSource = 'OpenMeteo' | 'OpenWeatherMap';

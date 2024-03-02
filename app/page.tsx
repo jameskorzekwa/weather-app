@@ -2,7 +2,7 @@
 import '/css/weather-icons.css';
 import { useInterval } from 'usehooks-ts';
 import moment from 'moment-timezone';
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import Background from '@/components/background';
 import {
     Current,
@@ -18,6 +18,7 @@ import {
     OWWeather,
     ReverseLocation,
     TempSensor,
+    WeatherSource,
     ZipcodeLocation
 } from '@/types';
 import { useSearchParams } from 'next/navigation';
@@ -32,6 +33,7 @@ import {
     owCurrentToCurrent,
     owWeatherToForecast
 } from '@/lib/utils';
+import Settings from '@/components/settings';
 
 if (typeof window !== 'undefined') {
     const { fetch: originalFetch } = window;
@@ -56,6 +58,7 @@ if (typeof window !== 'undefined') {
 }
 
 export default function Home() {
+    const [settingsOpen, setSettingsOpen] = useState<boolean>(false);
     const [datetime, setDatetime] = useState<moment.Moment>(moment());
     const [isNight, setIsNight] = useState<boolean | null>(null);
     const [apikey, setApikey] = useState<string | null>(null);
@@ -68,10 +71,22 @@ export default function Home() {
     const [location, setLocation] = useState<Location | null>(null);
     const [zipcode, setZipcode] = useState<string | null>();
     const [tempSensor, setTempSensor] = useState<TempSensor | null>(null);
+    const [weatherSource, setWeatherSource] = useState<WeatherSource | null>(
+        'OpenMeteo'
+    );
 
     const searchParams = useSearchParams();
 
-    let getTempSensor = async (secretKey: string, token: string) => {
+    const getAppWeather = (location: Location) => {
+        if (weatherSource === 'OpenWeatherMap') {
+            void getCurrent(location);
+            void getForecast(location);
+        } else if (weatherSource === 'OpenMeteo') {
+            void getWeather(location);
+        }
+    };
+
+    const getTempSensor = async (secretKey: string, token: string) => {
         const localStorageTempSensor = localStorage.getItem('tempSensor');
         if (localStorageTempSensor) {
             try {
@@ -116,6 +131,7 @@ export default function Home() {
                     JSON.parse(localStorageForecast);
                 if (
                     !force &&
+                    lastCurrent.current.source === weatherSource &&
                     (moment
                         .unix(lastCurrent.time)
                         .isAfter(moment().subtract(5, 'minutes')) ||
@@ -166,6 +182,7 @@ export default function Home() {
                     JSON.parse(localStorageCurrent);
                 if (
                     !force &&
+                    lastCurrent.current.source === weatherSource &&
                     moment
                         .unix(lastCurrent.time)
                         .isAfter(moment().subtract(5, 'minutes')) &&
@@ -201,6 +218,7 @@ export default function Home() {
                     JSON.parse(localStorageForecast);
                 if (
                     !force &&
+                    lastWeather.forecast.source === weatherSource &&
                     moment
                         .unix(lastWeather.time)
                         .isAfter(moment().subtract(1, 'hours')) &&
@@ -311,10 +329,8 @@ export default function Home() {
     }, 1000);
 
     useInterval(() => {
-        if (appid && location) {
-            // void getForecast(location);
-            // void getCurrent(location);
-            void getWeather(location);
+        if (location) {
+            getAppWeather(location);
         }
         if (secretKey && token) {
             void getTempSensor(secretKey, token);
@@ -327,6 +343,10 @@ export default function Home() {
             setApikey(searchParams.get('apikey'));
             setSecretKey(searchParams.get('secretKey'));
             setToken(searchParams.get('token'));
+            setWeatherSource(
+                (searchParams.get('weatherSource') as WeatherSource) ||
+                    'OpenMeteo'
+            );
             const zipcode = searchParams.get('zipcode');
             const lat = searchParams.get('lat');
             const lon = searchParams.get('lon');
@@ -351,10 +371,39 @@ export default function Home() {
     }, [latLon]);
 
     useEffect(() => {
-        if (apikey && zipcode && !location) {
+        if (apikey && zipcode && (!location || location.postcode !== zipcode)) {
             void getZipcodeLocation(zipcode);
         }
     }, [zipcode]);
+
+    useEffect(() => {
+        if (
+            zipcode ||
+            (zipcode === '' && zipcode !== searchParams?.get('zipcode')) ||
+            apikey ||
+            (apikey === '' && apikey !== searchParams?.get('apikey')) ||
+            secretKey ||
+            (secretKey === '' &&
+                secretKey !== searchParams?.get('secretKey')) ||
+            token ||
+            (token === '' && token !== searchParams?.get('token')) ||
+            appid ||
+            (appid === '' && appid !== searchParams?.get('appid'))
+        ) {
+            const queryObj = {
+                ...(zipcode ? { zipcode } : {}),
+                ...(appid ? { appid } : {}),
+                ...(apikey ? { apikey } : {}),
+                ...(secretKey ? { secretKey } : {}),
+                ...(token ? { token } : {}),
+                ...(weatherSource ? { weatherSource } : {})
+            };
+            const queryParams = new URLSearchParams(queryObj);
+            if ('?' + queryParams.toString() !== window.location.search) {
+                window.location.href = '?' + queryParams.toString();
+            }
+        }
+    }, [zipcode, apikey, secretKey, token, appid]);
 
     useEffect(() => {
         if (secretKey && token) {
@@ -370,10 +419,8 @@ export default function Home() {
             if (!zipcode) {
                 setZipcode(location.postcode);
             }
-            if (appid && location) {
-                // void getCurrent(location);
-                // void getForecast(location);
-                void getWeather(location);
+            if (location) {
+                getAppWeather(location);
             }
         }
     }, [location]);
@@ -389,30 +436,51 @@ export default function Home() {
         }
     }, [current]);
 
-    return current && forecast && location && isNight !== null ? (
+    return (
         <main className="flex min-h-screen flex-col ">
-            <Background current={current} isNight={isNight} />
-            <div
-                style={{
-                    position: 'absolute',
-                    height: '100vh',
-                    width: '100vw'
-                }}
-                className="flex flex-col justify-between grow p-16"
-            >
-                <div className="flex flex-row justify-between">
-                    <div className="text text-7xl">{location.city}</div>
-                    <DateTime datetime={datetime} />
-                </div>
-                <CurrentWeather
-                    current={current}
-                    isNight={isNight}
-                    tempSensor={tempSensor}
-                />
-                <WeeklyWeather forecast={forecast} />
-            </div>
+            {current && forecast && location && isNight !== null ? (
+                <Fragment>
+                    <Background current={current} isNight={isNight} />
+                    <div
+                        style={{
+                            position: 'absolute',
+                            height: '100vh',
+                            width: '100vw'
+                        }}
+                        className="flex flex-col justify-between grow p-16"
+                    >
+                        <div className="flex flex-row justify-between">
+                            <div className="text text-7xl">{location.city}</div>
+                            <DateTime datetime={datetime} />
+                        </div>
+                        <CurrentWeather
+                            location={location}
+                            current={current}
+                            isNight={isNight}
+                            tempSensor={tempSensor}
+                        />
+                        <WeeklyWeather forecast={forecast} />
+                    </div>
+                </Fragment>
+            ) : (
+                <Loading />
+            )}
+            <Settings
+                settingsOpen={settingsOpen}
+                setSettingsOpen={setSettingsOpen}
+                zipcode={location?.postcode}
+                setZipcode={setZipcode}
+                apikey={apikey || undefined}
+                setApikey={setApikey}
+                secretKey={secretKey || undefined}
+                setSecretKey={setSecretKey}
+                token={token || undefined}
+                setToken={setToken}
+                weatherSource={weatherSource || undefined}
+                setWeatherSource={setWeatherSource}
+                appid={appid || undefined}
+                setAppid={setAppid}
+            />
         </main>
-    ) : (
-        <Loading />
     );
 }

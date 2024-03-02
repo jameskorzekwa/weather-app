@@ -1,20 +1,25 @@
 'use client';
 import '/css/weather-icons.css';
-import { Current, TempSensor } from '@/types';
+import { Current, Location, TempSensor } from '@/types';
 import moment from 'moment-timezone';
 
 interface Props {
+    location: Location;
     current: Current;
     isNight: boolean;
     tempSensor: TempSensor | null;
 }
 
 export default function CurrentWeather({
+    location,
     current,
     isNight,
     tempSensor
 }: Props) {
-    const temp = tempSensor?.body?.temperature || current.temp;
+    let temp = current.temp;
+    if (tempSensor?.zipcode === location.postcode) {
+        temp = tempSensor?.body?.temperature || current.temp;
+    }
     return (
         <div style={{ height: '100%' }} className="flex">
             <div className="flex flex-row items-center gap-8 py-12">

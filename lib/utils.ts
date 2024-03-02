@@ -135,6 +135,7 @@ export const omWeatherCodeToDescription = (
 
 export const owCurrentToCurrent = (current: OWCurrent): Current => {
     return {
+        source: 'OpenWeatherMap',
         id: current.weather[0].id,
         temp: getTemp(current.main.temp, 'k', 'f'),
         min_temp: getTemp(current.main.temp_min, 'k', 'f'),
@@ -149,6 +150,7 @@ export const owCurrentToCurrent = (current: OWCurrent): Current => {
 
 export const omWeatherToCurrent = (current: OMWeather): Current => {
     return {
+        source: 'OpenMeteo',
         id: omWeatherCodeToId(current.current.weather_code as OMWeatherCode),
         temp: getTemp(current.current.temperature, 'f', 'f'),
         min_temp: getTemp(current.daily.temperature_2m_min[0], 'f', 'f'),
@@ -165,6 +167,7 @@ export const omWeatherToCurrent = (current: OMWeather): Current => {
 
 export const owWeatherToForecast = (weather: OWWeather): Forecast => {
     return {
+        source: 'OpenWeatherMap',
         daily: weather.daily.map((day) => ({
             id: day.weather[0].id,
             min_temp: getTemp(day.temp.min, 'k', 'f'),
@@ -182,6 +185,7 @@ export const owWeatherToForecast = (weather: OWWeather): Forecast => {
 
 export const omWeatherToForecast = (weather: OMWeather): Forecast => {
     return {
+        source: 'OpenMeteo',
         daily: Array.from(Array(5), (_e, i) => ({
             id: omWeatherCodeToId(
                 weather.daily.weather_code[i + 1] as OMWeatherCode
