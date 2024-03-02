@@ -134,9 +134,11 @@ export default function Home() {
                     setCurrent(lastCurrent.current);
                     setForecast(lastForecast.forecast);
                     setIsNight(
-                        moment().isAfter(moment(lastCurrent.current.sunset)) ||
+                        moment().isAfter(
+                            moment.unix(lastCurrent.current.sunset)
+                        ) ||
                             moment().isBefore(
-                                moment(lastCurrent.current.sunrise)
+                                moment.unix(lastCurrent.current.sunrise)
                             )
                     );
                     return;
@@ -188,9 +190,11 @@ export default function Home() {
                 ) {
                     setCurrent(lastCurrent.current);
                     setIsNight(
-                        moment().isAfter(moment(lastCurrent.current.sunset)) ||
+                        moment().isAfter(
+                            moment.unix(lastCurrent.current.sunset)
+                        ) ||
                             moment().isBefore(
-                                moment(lastCurrent.current.sunrise)
+                                moment.unix(lastCurrent.current.sunrise)
                             )
                     );
                     return;
@@ -328,7 +332,8 @@ export default function Home() {
         setDatetime(now);
         setIsNight(
             current
-                ? now.isAfter(current.sunset) || now.isBefore(current.sunrise)
+                ? now.isAfter(moment.unix(current.sunset)) ||
+                      now.isBefore(moment.unix(current.sunrise))
                 : false
         );
     }, 1000);
