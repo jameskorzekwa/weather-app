@@ -2,346 +2,87 @@ import { FakeWeather } from '@/types';
 
 export const fakeWeather: FakeWeather = {
     thunderstorm: {
-        coord: {
-            lon: 10.99,
-            lat: 44.34
-        },
-        weather: [
-            {
-                id: 200,
-                main: 'Thunderstorm',
-                description: 'moderate rain',
-                icon: '10d'
-            }
-        ],
-        base: 'stations',
-        main: {
-            temp: 298.48,
-            feels_like: 298.74,
-            temp_min: 297.56,
-            temp_max: 300.05,
-            pressure: 1015,
-            humidity: 64,
-            sea_level: 1015,
-            grnd_level: 933
-        },
-        visibility: 10000,
-        wind: {
-            speed: 0.62,
-            deg: 349,
-            gust: 1.18
-        },
-        rain: {
-            '1h': 3.16
-        },
-        clouds: {
-            all: 100
-        },
-        dt: 1661870592,
-        sys: {
-            type: 2,
-            id: 2075663,
-            country: 'IT',
-            sunrise: 1661834187,
-            sunset: 1661882248
-        },
-        timezone: 7200,
-        id: 3163858,
-        name: 'Zocca',
-        cod: 200
+        description: 'Thunderstorm',
+        id: 201,
+        lat: 39.64684815,
+        lon: -105.19633462498464,
+        max_temp: 52,
+        min_temp: 31,
+        source: 'OpenMeteo',
+        sunrise: 1709472540,
+        sunset: 1709513700,
+        temp: 49
     },
     rain: {
-        coord: {
-            lon: 10.99,
-            lat: 44.34
-        },
-        weather: [
-            {
-                id: 500,
-                main: 'Rain',
-                description: 'moderate rain',
-                icon: '10d'
-            }
-        ],
-        base: 'stations',
-        main: {
-            temp: 298.48,
-            feels_like: 298.74,
-            temp_min: 297.56,
-            temp_max: 300.05,
-            pressure: 1015,
-            humidity: 64,
-            sea_level: 1015,
-            grnd_level: 933
-        },
-        visibility: 10000,
-        wind: {
-            speed: 0.62,
-            deg: 349,
-            gust: 1.18
-        },
-        rain: {
-            '1h': 3.16
-        },
-        clouds: {
-            all: 100
-        },
-        dt: 1661870592,
-        sys: {
-            type: 2,
-            id: 2075663,
-            country: 'IT',
-            sunrise: 1661834187,
-            sunset: 1661882248
-        },
-        timezone: 7200,
-        id: 3163858,
-        name: 'Zocca',
-        cod: 200
+        description: 'Rain',
+        id: 501,
+        lat: 39.64684815,
+        lon: -105.19633462498464,
+        max_temp: 52,
+        min_temp: 31,
+        source: 'OpenMeteo',
+        sunrise: 1709472540,
+        sunset: 1709513700,
+        temp: 49
     },
     drizzle: {
-        coord: {
-            lon: 10.99,
-            lat: 44.34
-        },
-        weather: [
-            {
-                id: 300,
-                main: 'Drizzle',
-                description: 'moderate rain',
-                icon: '10d'
-            }
-        ],
-        base: 'stations',
-        main: {
-            temp: 298.48,
-            feels_like: 298.74,
-            temp_min: 297.56,
-            temp_max: 300.05,
-            pressure: 1015,
-            humidity: 64,
-            sea_level: 1015,
-            grnd_level: 933
-        },
-        visibility: 10000,
-        wind: {
-            speed: 0.62,
-            deg: 349,
-            gust: 1.18
-        },
-        rain: {
-            '1h': 3.16
-        },
-        clouds: {
-            all: 100
-        },
-        dt: 1661870592,
-        sys: {
-            type: 2,
-            id: 2075663,
-            country: 'IT',
-            sunrise: 1661834187,
-            sunset: 1661882248
-        },
-        timezone: 7200,
-        id: 3163858,
-        name: 'Zocca',
-        cod: 200
+        description: 'Drizzle',
+        id: 501,
+        lat: 39.64684815,
+        lon: -105.19633462498464,
+        max_temp: 52,
+        min_temp: 31,
+        source: 'OpenMeteo',
+        sunrise: 1709472540,
+        sunset: 1709513700,
+        temp: 49
     },
     snow: {
-        coord: {
-            lon: 10.99,
-            lat: 44.34
-        },
-        weather: [
-            {
-                id: 600,
-                main: 'Snow',
-                description: 'moderate rain',
-                icon: '10d'
-            }
-        ],
-        base: 'stations',
-        main: {
-            temp: 298.48,
-            feels_like: 298.74,
-            temp_min: 297.56,
-            temp_max: 300.05,
-            pressure: 1015,
-            humidity: 64,
-            sea_level: 1015,
-            grnd_level: 933
-        },
-        visibility: 10000,
-        wind: {
-            speed: 0.62,
-            deg: 349,
-            gust: 1.18
-        },
-        rain: {
-            '1h': 3.16
-        },
-        clouds: {
-            all: 100
-        },
-        dt: 1661870592,
-        sys: {
-            type: 2,
-            id: 2075663,
-            country: 'IT',
-            sunrise: 1661834187,
-            sunset: 1661882248
-        },
-        timezone: 7200,
-        id: 3163858,
-        name: 'Zocca',
-        cod: 200
+        description: 'Snow',
+        id: 601,
+        lat: 39.64684815,
+        lon: -105.19633462498464,
+        max_temp: 52,
+        min_temp: 31,
+        source: 'OpenMeteo',
+        sunrise: 1709472540,
+        sunset: 1709513700,
+        temp: 49
     },
     clear: {
-        coord: {
-            lon: 10.99,
-            lat: 44.34
-        },
-        weather: [
-            {
-                id: 800,
-                main: 'Clear',
-                description: 'moderate rain',
-                icon: '10d'
-            }
-        ],
-        base: 'stations',
-        main: {
-            temp: 298.48,
-            feels_like: 298.74,
-            temp_min: 297.56,
-            temp_max: 300.05,
-            pressure: 1015,
-            humidity: 64,
-            sea_level: 1015,
-            grnd_level: 933
-        },
-        visibility: 10000,
-        wind: {
-            speed: 0.62,
-            deg: 349,
-            gust: 1.18
-        },
-        rain: {
-            '1h': 3.16
-        },
-        clouds: {
-            all: 100
-        },
-        dt: 1661870592,
-        sys: {
-            type: 2,
-            id: 2075663,
-            country: 'IT',
-            sunrise: 1661834187,
-            sunset: 1661882248
-        },
-        timezone: 7200,
-        id: 3163858,
-        name: 'Zocca',
-        cod: 200
+        description: 'Clear',
+        id: 800,
+        lat: 39.64684815,
+        lon: -105.19633462498464,
+        max_temp: 52,
+        min_temp: 31,
+        source: 'OpenMeteo',
+        sunrise: 1709472540,
+        sunset: 1709513700,
+        temp: 49
     },
     atmosphere: {
-        coord: {
-            lon: 10.99,
-            lat: 44.34
-        },
-        weather: [
-            {
-                id: 801,
-                main: 'Hazy',
-                description: 'moderate rain',
-                icon: '10d'
-            }
-        ],
-        base: 'stations',
-        main: {
-            temp: 298.48,
-            feels_like: 298.74,
-            temp_min: 297.56,
-            temp_max: 300.05,
-            pressure: 1015,
-            humidity: 64,
-            sea_level: 1015,
-            grnd_level: 933
-        },
-        visibility: 10000,
-        wind: {
-            speed: 0.62,
-            deg: 349,
-            gust: 1.18
-        },
-        rain: {
-            '1h': 3.16
-        },
-        clouds: {
-            all: 100
-        },
-        dt: 1661870592,
-        sys: {
-            type: 2,
-            id: 2075663,
-            country: 'IT',
-            sunrise: 1661834187,
-            sunset: 1661882248
-        },
-        timezone: 7200,
-        id: 3163858,
-        name: 'Zocca',
-        cod: 200
+        description: 'Fog',
+        id: 741,
+        lat: 39.64684815,
+        lon: -105.19633462498464,
+        max_temp: 52,
+        min_temp: 31,
+        source: 'OpenMeteo',
+        sunrise: 1709472540,
+        sunset: 1709513700,
+        temp: 49
     },
     clouds: {
-        coord: {
-            lon: 10.99,
-            lat: 44.34
-        },
-        weather: [
-            {
-                id: 701,
-                main: 'Clouds',
-                description: 'moderate rain',
-                icon: '10d'
-            }
-        ],
-        base: 'stations',
-        main: {
-            temp: 298.48,
-            feels_like: 298.74,
-            temp_min: 297.56,
-            temp_max: 300.05,
-            pressure: 1015,
-            humidity: 64,
-            sea_level: 1015,
-            grnd_level: 933
-        },
-        visibility: 10000,
-        wind: {
-            speed: 0.62,
-            deg: 349,
-            gust: 1.18
-        },
-        rain: {
-            '1h': 3.16
-        },
-        clouds: {
-            all: 100
-        },
-        dt: 1661870592,
-        sys: {
-            type: 2,
-            id: 2075663,
-            country: 'IT',
-            sunrise: 1661834187,
-            sunset: 1661882248
-        },
-        timezone: 7200,
-        id: 3163858,
-        name: 'Zocca',
-        cod: 200
+        description: 'Clouds',
+        id: 802,
+        lat: 39.64684815,
+        lon: -105.19633462498464,
+        max_temp: 52,
+        min_temp: 31,
+        source: 'OpenMeteo',
+        sunrise: 1709472540,
+        sunset: 1709513700,
+        temp: 49
     }
 };

@@ -10,7 +10,9 @@ import {
     Option,
     Select
 } from '@material-tailwind/react';
-import { WeatherSource } from '@/types';
+import { FakeWeatherKey, WeatherSource } from '@/types';
+import { fakeWeather } from '@/constants/data';
+import InputWrapper from '@/components/inputwrapper';
 
 const SettingsWrapper = styled.div`
     height: 75px;
@@ -34,7 +36,19 @@ interface Props {
     setWeatherSource: (state: WeatherSource) => void;
     appid?: string;
     setAppid: (state: string) => void;
+    spoofWeather?: FakeWeatherKey;
+    setSpoofWeather: (state: FakeWeatherKey | undefined) => void;
 }
+
+type Form = {
+    zipcode: { value?: string; error?: string };
+    apikey: { value?: string; error?: string };
+    token: { value?: string; error?: string };
+    secretKey: { value?: string; error?: string };
+    weatherSource: { value?: WeatherSource; error?: string };
+    appid: { value?: string; error?: string };
+    spoofWeather: { value: FakeWeatherKey | 'actual'; error?: string };
+};
 
 export default function Settings({
     settingsOpen,
@@ -50,48 +64,120 @@ export default function Settings({
     weatherSource,
     setWeatherSource,
     appid,
-    setAppid
+    setAppid,
+    spoofWeather,
+    setSpoofWeather
 }: Props) {
-    const [formZipcode, setFormZipcode] = useState<string | undefined>(zipcode);
-    const [formApikey, setFormApikey] = useState<string | undefined>(apikey);
-    const [formToken, setFormToken] = useState<string | undefined>(token);
-    const [formSecretKey, setFormSecretKey] = useState<string | undefined>(
-        secretKey
-    );
-    const [formWeatherSource, setFormWeatherSource] = useState<
-        WeatherSource | undefined
-    >(weatherSource);
-    const [formAppid, setFormAppid] = useState<string | undefined>(appid);
+    const [form, setForm] = useState<Form>({
+        zipcode: { value: zipcode, error: undefined },
+        apikey: { value: apikey, error: undefined },
+        token: { value: token, error: undefined },
+        secretKey: { value: secretKey, error: undefined },
+        weatherSource: { value: weatherSource, error: undefined },
+        appid: { value: appid, error: undefined },
+        spoofWeather: { value: spoofWeather || 'actual', error: undefined }
+    });
+
+    const validate = (): boolean => {
+        let valid = true;
+
+        setForm((prevForm) => {
+            const tempForm: Form = { ...prevForm };
+            Object.keys(prevForm).forEach((key) => {
+                // @ts-ignore
+                tempForm[key] = { ...prevForm[key], error: undefined };
+            });
+
+            if (!tempForm.zipcode.value) {
+                tempForm.zipcode.error = 'Zipcode required';
+            }
+
+            if (!tempForm.apikey.value) {
+                tempForm.apikey.error = 'Geoapify API Key required';
+            }
+
+            if (tempForm.weatherSource.value === 'OpenWeatherMap') {
+                if (!tempForm.appid.value) {
+                    tempForm.appid.error =
+                        'OWM App ID required for OpenWeatherMap';
+                }
+            }
+            for (const [_, value] of Object.entries(tempForm)) {
+                if (value.error) {
+                    valid = false;
+                }
+            }
+            return { ...tempForm };
+        });
+
+        return valid;
+    };
 
     const onSave = () => {
-        setZipcode(formZipcode || '');
-        setApikey(formApikey || '');
-        setSecretKey(formSecretKey || '');
-        setToken(formToken || '');
-        setWeatherSource(formWeatherSource || 'OpenMeteo');
-        setAppid(formAppid || '');
-        setSettingsOpen(false);
+        if (validate()) {
+            setZipcode(form.zipcode.value || '');
+            setApikey(form.apikey.value || '');
+            setSecretKey(form.secretKey.value || '');
+            setToken(form.token.value || '');
+            setWeatherSource(form.weatherSource.value || 'OpenMeteo');
+            setAppid(form.appid.value || '');
+            setSpoofWeather(
+                form.spoofWeather.value === 'actual'
+                    ? undefined
+                    : form.spoofWeather.value
+            );
+            setSettingsOpen(false);
+        }
     };
+
     useEffect(() => {
-        setFormZipcode(zipcode);
+        setForm((prevState) => ({
+            ...prevState,
+            zipcode: { ...form.zipcode, value: zipcode }
+        }));
     }, [zipcode]);
 
     useEffect(() => {
-        setFormApikey(apikey);
+        setForm((prevState) => ({
+            ...prevState,
+            apikey: { ...form.apikey, value: apikey }
+        }));
     }, [apikey]);
     useEffect(() => {
-        setFormSecretKey(secretKey);
+        setForm((prevState) => ({
+            ...prevState,
+            secretKey: { ...form.secretKey, value: secretKey }
+        }));
     }, [secretKey]);
 
     useEffect(() => {
-        setFormToken(token);
+        setForm((prevState) => ({
+            ...prevState,
+            token: { ...form.token, value: token }
+        }));
     }, [token]);
     useEffect(() => {
-        setFormWeatherSource(weatherSource);
+        setForm((prevState) => ({
+            ...prevState,
+            weatherSource: { ...form.weatherSource, value: weatherSource }
+        }));
     }, [weatherSource]);
     useEffect(() => {
-        setFormAppid(appid);
+        setForm((prevState) => ({
+            ...prevState,
+            appid: { ...form.appid, value: appid }
+        }));
     }, [appid]);
+    useEffect(() => {
+        setForm((prevState) => ({
+            ...prevState,
+            spoofWeather: {
+                ...form.spoofWeather,
+                value: spoofWeather || 'actual'
+            }
+        }));
+    }, [spoofWeather]);
+
     return (
         <Fragment>
             <SettingsWrapper onClick={() => setSettingsOpen(true)} />
@@ -102,73 +188,172 @@ export default function Settings({
             >
                 <DialogHeader>Settings</DialogHeader>
                 <DialogBody>
-                    <div className="flex flex-col gap-6">
-                        <div className="w-72">
-                            <Input
-                                label="Zipcode"
-                                crossOrigin={undefined}
-                                value={formZipcode}
-                                onChange={({ target }) =>
-                                    setFormZipcode(target.value)
-                                }
-                            />
-                        </div>
-                        <div className="w-72">
-                            <Input
-                                label="Geoapify API Key"
-                                crossOrigin={undefined}
-                                value={formApikey}
-                                onChange={({ target }) =>
-                                    setFormApikey(target.value)
-                                }
-                            />
-                        </div>
-                        <div className="w-72">
-                            <Input
-                                label="Switchbot Secret Key"
-                                crossOrigin={undefined}
-                                value={formSecretKey}
-                                onChange={({ target }) =>
-                                    setFormSecretKey(target.value)
-                                }
-                            />
-                        </div>
-                        <div className="w-72">
-                            <Input
-                                label="Switchbot Token"
-                                crossOrigin={undefined}
-                                value={formToken}
-                                onChange={({ target }) =>
-                                    setFormToken(target.value)
-                                }
-                            />
-                        </div>
-                        <div className="w-72">
-                            <Select
-                                label="Select Weather Source"
-                                value={formWeatherSource}
-                                onChange={(val) =>
-                                    setFormWeatherSource(val as WeatherSource)
-                                }
-                            >
-                                <Option value="OpenWeatherMap">
-                                    OpenWeatherMap
-                                </Option>
-                                <Option value="OpenMeteo">OpenMeteo</Option>
-                            </Select>
-                        </div>
-                        {formWeatherSource === 'OpenWeatherMap' && (
+                    <div className="flex flex-row gap-4">
+                        <div className="flex flex-col gap-6">
                             <div className="w-72">
-                                <Input
-                                    label="OWM App ID"
-                                    crossOrigin={undefined}
-                                    value={formAppid}
-                                    onChange={({ target }) =>
-                                        setFormAppid(target.value)
-                                    }
-                                />
+                                <InputWrapper error={form.zipcode.error}>
+                                    <Input
+                                        label="Zipcode"
+                                        crossOrigin={undefined}
+                                        value={form.zipcode.value}
+                                        error={!!form.zipcode.error}
+                                        onChange={({ target }) =>
+                                            setForm((form) => ({
+                                                ...form,
+                                                zipcode: {
+                                                    ...form.zipcode,
+                                                    value: target.value
+                                                }
+                                            }))
+                                        }
+                                    />
+                                </InputWrapper>
                             </div>
-                        )}
+                            <div className="w-72">
+                                <InputWrapper error={form.apikey.error}>
+                                    <Input
+                                        label="Geoapify API Key"
+                                        crossOrigin={undefined}
+                                        value={form.apikey.value}
+                                        error={!!form.apikey.error}
+                                        onChange={({ target }) =>
+                                            setForm((form) => ({
+                                                ...form,
+                                                apikey: {
+                                                    ...form.apikey,
+                                                    value: target.value
+                                                }
+                                            }))
+                                        }
+                                    />
+                                </InputWrapper>
+                            </div>
+                            <div className="w-72">
+                                <InputWrapper error={form.secretKey.error}>
+                                    <Input
+                                        label="Switchbot Secret Key"
+                                        crossOrigin={undefined}
+                                        value={form.secretKey.value}
+                                        error={!!form.secretKey.error}
+                                        onChange={({ target }) =>
+                                            setForm((form) => ({
+                                                ...form,
+                                                secretKey: {
+                                                    ...form.secretKey,
+                                                    value: target.value
+                                                }
+                                            }))
+                                        }
+                                    />
+                                </InputWrapper>
+                            </div>
+                            <div className="w-72">
+                                <InputWrapper error={form.token.error}>
+                                    <Input
+                                        label="Switchbot Token"
+                                        crossOrigin={undefined}
+                                        value={form.token.value}
+                                        error={!!form.token.error}
+                                        onChange={({ target }) =>
+                                            setForm((form) => ({
+                                                ...form,
+                                                token: {
+                                                    ...form.token,
+                                                    value: target.value
+                                                }
+                                            }))
+                                        }
+                                    />
+                                </InputWrapper>
+                            </div>
+                            <div className="w-72">
+                                <InputWrapper error={form.weatherSource.error}>
+                                    <Select
+                                        label="Select Weather Source"
+                                        value={form.weatherSource.value}
+                                        error={!!form.weatherSource.error}
+                                        onChange={(val) =>
+                                            setForm((form) => ({
+                                                ...form,
+                                                weatherSource: {
+                                                    ...form.weatherSource,
+                                                    value: val as WeatherSource
+                                                }
+                                            }))
+                                        }
+                                    >
+                                        <Option value="OpenWeatherMap">
+                                            OpenWeatherMap
+                                        </Option>
+                                        <Option value="OpenMeteo">
+                                            OpenMeteo
+                                        </Option>
+                                    </Select>
+                                </InputWrapper>
+                            </div>
+                            {form.weatherSource.value === 'OpenWeatherMap' && (
+                                <div className="w-72">
+                                    <InputWrapper error={form.appid.error}>
+                                        <Input
+                                            label="OWM App ID"
+                                            crossOrigin={undefined}
+                                            value={form.appid.value}
+                                            onChange={({ target }) =>
+                                                setForm((form) => ({
+                                                    ...form,
+                                                    appid: {
+                                                        ...form.appid,
+                                                        value: target.value
+                                                    }
+                                                }))
+                                            }
+                                        />
+                                    </InputWrapper>
+                                </div>
+                            )}
+                        </div>
+                        <div className="w-72">
+                            <InputWrapper error={form.spoofWeather.error}>
+                                <Select
+                                    label="Select Current Weather"
+                                    value={form.spoofWeather.value}
+                                    error={!!form.spoofWeather.error}
+                                    onChange={(val) =>
+                                        setForm((form) => ({
+                                            ...form,
+                                            spoofWeather: {
+                                                ...form.spoofWeather,
+                                                value: val as
+                                                    | FakeWeatherKey
+                                                    | 'actual'
+                                            }
+                                        }))
+                                    }
+                                >
+                                    {[
+                                        <Option key="actual" value="actual">
+                                            Actual Weather
+                                        </Option>,
+                                        ...Object.keys(fakeWeather).map(
+                                            (key) => {
+                                                return (
+                                                    <Option
+                                                        key={key}
+                                                        value={key}
+                                                    >
+                                                        {fakeWeather[
+                                                            key as FakeWeatherKey
+                                                        ]?.description ||
+                                                            'Actual Weather'}
+                                                    </Option>
+                                                );
+                                            }
+                                        )
+                                    ]}
+                                </Select>
+                            </InputWrapper>
+                        </div>
+                        <div className="flex flex-col gap-6"></div>
                     </div>
                 </DialogBody>
                 <DialogFooter>

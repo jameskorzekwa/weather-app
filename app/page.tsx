@@ -6,6 +6,7 @@ import { Fragment, useEffect, useState } from 'react';
 import Background from '@/components/background';
 import {
     Current,
+    FakeWeatherKey,
     Forecast,
     LatLon,
     LocalStorageCurrent,
@@ -34,6 +35,7 @@ import {
     owWeatherToForecast
 } from '@/lib/utils';
 import Settings from '@/components/settings';
+import { fakeWeather } from '@/constants/data';
 
 if (typeof window !== 'undefined') {
     const { fetch: originalFetch } = window;
@@ -60,29 +62,34 @@ if (typeof window !== 'undefined') {
 export default function Home() {
     const [settingsOpen, setSettingsOpen] = useState<boolean>(false);
     const [datetime, setDatetime] = useState<moment.Moment>(moment());
-    const [isNight, setIsNight] = useState<boolean | null>(null);
-    const [apikey, setApikey] = useState<string | null>(null);
-    const [appid, setAppid] = useState<string | null>(null);
-    const [secretKey, setSecretKey] = useState<string | null>(null);
-    const [token, setToken] = useState<string | null>(null);
-    const [latLon, setLatLon] = useState<LatLon | null>(null);
-    const [forecast, setForecast] = useState<Forecast | null>(null);
-    const [current, setCurrent] = useState<Current | null>(null);
-    const [location, setLocation] = useState<Location | null>(null);
-    const [zipcode, setZipcode] = useState<string | null>();
-    const [tempSensor, setTempSensor] = useState<TempSensor | null>(null);
-    const [weatherSource, setWeatherSource] = useState<WeatherSource | null>(
-        'OpenMeteo'
-    );
+    const [isNight, setIsNight] = useState<boolean | undefined>();
+    const [apikey, setApikey] = useState<string | undefined>();
+    const [appid, setAppid] = useState<string | undefined>();
+    const [secretKey, setSecretKey] = useState<string | undefined>();
+    const [token, setToken] = useState<string | undefined>();
+    const [latLon, setLatLon] = useState<LatLon | undefined>();
+    const [forecast, setForecast] = useState<Forecast | undefined>();
+    const [current, setCurrent] = useState<Current | undefined>();
+    const [location, setLocation] = useState<Location | undefined>();
+    const [zipcode, setZipcode] = useState<string | undefined>();
+    const [tempSensor, setTempSensor] = useState<TempSensor | undefined>();
+    const [weatherSource, setWeatherSource] = useState<
+        WeatherSource | undefined
+    >('OpenMeteo');
+    const [spoofWeather, setSpoofWeather] = useState<
+        FakeWeatherKey | undefined
+    >();
 
     const searchParams = useSearchParams();
 
     const getAppWeather = (location: Location) => {
-        if (weatherSource === 'OpenWeatherMap') {
-            void getCurrent(location);
-            void getForecast(location);
-        } else if (weatherSource === 'OpenMeteo') {
-            void getWeather(location);
+        if (!spoofWeather) {
+            if (weatherSource === 'OpenWeatherMap') {
+                void getCurrent(location);
+                void getForecast(location);
+            } else if (weatherSource === 'OpenMeteo') {
+                void getWeather(location);
+            }
         }
     };
 
@@ -339,10 +346,10 @@ export default function Home() {
 
     useEffect(() => {
         if (searchParams) {
-            setAppid(searchParams.get('appid'));
-            setApikey(searchParams.get('apikey'));
-            setSecretKey(searchParams.get('secretKey'));
-            setToken(searchParams.get('token'));
+            setAppid(searchParams.get('appid') || undefined);
+            setApikey(searchParams.get('apikey') || undefined);
+            setSecretKey(searchParams.get('secretKey') || undefined);
+            setToken(searchParams.get('token') || undefined);
             setWeatherSource(
                 (searchParams.get('weatherSource') as WeatherSource) ||
                     'OpenMeteo'
@@ -354,7 +361,6 @@ export default function Home() {
                 setLatLon({ lat: parseFloat(lat), lon: parseFloat(lon) });
             }
             if (zipcode) {
-                console.log('SETTING ZIP');
                 setZipcode(zipcode);
             }
         }
@@ -469,9 +475,17 @@ export default function Home() {
         }
     }, [current]);
 
+    useEffect(() => {
+        if (spoofWeather) {
+            setCurrent(fakeWeather[spoofWeather]);
+        } else if (location) {
+            getAppWeather(location);
+        }
+    }, [spoofWeather]);
+
     return (
         <main className="flex min-h-screen flex-col ">
-            {current && forecast && location && isNight !== null ? (
+            {current && forecast && location && isNight !== undefined ? (
                 <Fragment>
                     <Background current={current} isNight={isNight} />
                     <div
@@ -501,18 +515,20 @@ export default function Home() {
             <Settings
                 settingsOpen={settingsOpen}
                 setSettingsOpen={setSettingsOpen}
-                zipcode={zipcode || undefined}
+                zipcode={zipcode}
                 setZipcode={setZipcode}
-                apikey={apikey || undefined}
+                apikey={apikey}
                 setApikey={setApikey}
-                secretKey={secretKey || undefined}
+                secretKey={secretKey}
                 setSecretKey={setSecretKey}
-                token={token || undefined}
+                token={token}
                 setToken={setToken}
-                weatherSource={weatherSource || undefined}
+                weatherSource={weatherSource}
                 setWeatherSource={setWeatherSource}
-                appid={appid || undefined}
+                appid={appid}
                 setAppid={setAppid}
+                spoofWeather={spoofWeather}
+                setSpoofWeather={setSpoofWeather}
             />
         </main>
     );

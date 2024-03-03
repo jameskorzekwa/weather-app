@@ -394,14 +394,17 @@ export type TempSensor = {
     zipcode: string;
 };
 
+export type FakeWeatherKey =
+    | 'thunderstorm'
+    | 'drizzle'
+    | 'rain'
+    | 'snow'
+    | 'atmosphere'
+    | 'clear'
+    | 'clouds';
+
 export type FakeWeather = {
-    thunderstorm: OWCurrent;
-    drizzle: OWCurrent;
-    rain: OWCurrent;
-    snow: OWCurrent;
-    atmosphere: OWCurrent;
-    clear: OWCurrent;
-    clouds: OWCurrent;
+    [key in FakeWeatherKey]: Current;
 };
 
 export type ThunderstormId =

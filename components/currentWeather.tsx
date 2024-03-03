@@ -7,7 +7,7 @@ interface Props {
     location: Location;
     current: Current;
     isNight: boolean;
-    tempSensor: TempSensor | null;
+    tempSensor?: TempSensor;
 }
 
 export default function CurrentWeather({
