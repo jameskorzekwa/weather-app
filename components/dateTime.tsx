@@ -9,10 +9,10 @@ interface Props {
 export default function DateTime({ datetime }: Props) {
     return (
         <div className="flex flex-col items-end gap-4">
-            <div className="text text-3xl">
+            <div className="text text-4xl">
                 {datetime.format('dddd, MMMM Do YYYY')}
             </div>
-            <div className="text text-5xl">{datetime.format('h:mm A')}</div>
+            <div className="text text-7xl">{datetime.format('h:mm A')}</div>
         </div>
     );
 }

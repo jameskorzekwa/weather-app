@@ -354,6 +354,7 @@ export default function Home() {
                 setLatLon({ lat: parseFloat(lat), lon: parseFloat(lon) });
             }
             if (zipcode) {
+                console.log('SETTING ZIP');
                 setZipcode(zipcode);
             }
         }
@@ -366,7 +367,7 @@ export default function Home() {
     }, [secretKey, token]);
 
     useEffect(() => {
-        if (!location && latLon) {
+        if (!location && latLon && apikey) {
             void getReverseLocation(latLon);
         }
     }, [latLon]);
@@ -409,7 +410,14 @@ export default function Home() {
             };
             const queryParams = new URLSearchParams(queryObj);
             if ('?' + queryParams.toString() !== window.location.search) {
-                window.location.href = '?' + queryParams.toString();
+                const newUrl =
+                    window.location.protocol +
+                    '//' +
+                    window.location.host +
+                    window.location.pathname +
+                    '?' +
+                    queryParams.toString();
+                window.history.pushState({ path: newUrl }, '', newUrl);
             }
         }
     }, [zipcode, apikey, secretKey, token, appid, latLon]);
@@ -441,6 +449,16 @@ export default function Home() {
     }, [weatherSource]);
 
     useEffect(() => {
+        if (!location && apikey) {
+            if (latLon) {
+                void getReverseLocation(latLon);
+            } else if (zipcode) {
+                void getZipcodeLocation(zipcode);
+            }
+        }
+    }, [apikey]);
+
+    useEffect(() => {
         if (current) {
             setIsNight(
                 current
@@ -462,7 +480,7 @@ export default function Home() {
                             height: '100vh',
                             width: '100vw'
                         }}
-                        className="flex flex-col justify-between grow p-16"
+                        className="flex flex-col justify-between grow p-8"
                     >
                         <div className="flex flex-row justify-between">
                             <div className="text text-7xl">{location.city}</div>
@@ -483,7 +501,7 @@ export default function Home() {
             <Settings
                 settingsOpen={settingsOpen}
                 setSettingsOpen={setSettingsOpen}
-                zipcode={location?.postcode}
+                zipcode={zipcode || undefined}
                 setZipcode={setZipcode}
                 apikey={apikey || undefined}
                 setApikey={setApikey}

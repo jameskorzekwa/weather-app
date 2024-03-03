@@ -23,6 +23,7 @@ interface Props {
 
 export default function Background({ current, isNight }: Props) {
     const id = current.id;
+    isNight = false;
     let getWeatherType = (id: number) => {
         if ([200, 201, 202, 210, 211, 212, 221, 230, 231, 232].includes(id)) {
             return <Thunderstorm id={id as ThunderstormId} isNight={isNight} />;

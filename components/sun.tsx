@@ -12,13 +12,14 @@ const StyledSun = styled.g`
 `;
 export default function Sun() {
     const numberOfRays = 14;
+    const sunColor = '#f1a20f';
     return (
         <StyledSun>
-            <ellipse fill={'#F1C40F'} cx="0" cy="0" rx={'60'} ry={'60'} />
+            <ellipse fill={sunColor} cx="0" cy="0" rx={'60'} ry={'60'} />
             {Array.from(Array(numberOfRays), (_e, i) => (
                 <rect
                     key={i}
-                    fill={'#F1C40F'}
+                    fill={sunColor}
                     width={10}
                     height={40}
                     rx={5}
