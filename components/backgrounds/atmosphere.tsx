@@ -34,9 +34,10 @@ export default function Atmosphere({ id, isNight }: Props) {
     return (
         <div
             style={{
-                backgroundColor: isNight ? 'rgb(23,23,23)' : 'rgb(119,103,88)',
+                backgroundColor: isNight ? 'rgb(23,23,23)' : 'rgb(115,129,129)',
                 height: '100vh',
-                width: '100vw'
+                width: '100vw',
+                overflow: 'hidden'
             }}
         >
             <div style={{ color: 'rgba(179,182,183,0.53)' }}></div>
@@ -76,25 +77,23 @@ export default function Atmosphere({ id, isNight }: Props) {
                     transform="translate(470, 0)"
                 />
                 <ellipse
-                    fill={isNight ? '#eedea3' : '#F1C40F'}
+                    fill={isNight ? '#eedea3' : 'rgba(241,196,15,0.67)'}
                     cx="0"
                     cy="0"
                     rx={isNight ? '30' : '60'}
                     ry={isNight ? '30' : '60'}
                     transform="translate(470, 0)"
                 />
-                {isNight
-                    ? null
-                    : Array.from(Array(6), (_e, i) => (
-                          <Cloud
-                              key={i}
-                              y={y[i]}
-                              fill={fills[i]}
-                              duration={durations[i]}
-                              delay={delays[i]}
-                              fuzzy={true}
-                          />
-                      ))}
+                {Array.from(Array(6), (_e, i) => (
+                    <Cloud
+                        key={i}
+                        y={y[i]}
+                        fill={fills[i]}
+                        duration={durations[i]}
+                        delay={delays[i]}
+                        fuzzy={true}
+                    />
+                ))}
             </svg>
         </div>
     );

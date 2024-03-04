@@ -57,7 +57,7 @@ export default function Cloud({ y, fill, duration, delay, fuzzy }: Props) {
                    a 15,15 1 0,0 -35,10
                    z`}
                     $scale={1}
-                    $opacity={fuzzy ? 0.2 : 0.7}
+                    $opacity={fuzzy ? 0.1 : 0.7}
                     fill={fill}
                 />
                 {fuzzy && [
@@ -71,7 +71,7 @@ export default function Cloud({ y, fill, duration, delay, fuzzy }: Props) {
                    a 15,15 1 0,0 -35,10
                    z`}
                         $scale={0.75}
-                        $opacity={0.5}
+                        $opacity={0.3}
                         fill={fill}
                     />,
                     <StyledPath
@@ -83,7 +83,7 @@ export default function Cloud({ y, fill, duration, delay, fuzzy }: Props) {
                    a 10,10 1 0,0 -15,-10
                    a 15,15 1 0,0 -35,10
                    z`}
-                        $opacity={1}
+                        $opacity={0.6}
                         $scale={0.5}
                         fill={fill}
                     />
