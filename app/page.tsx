@@ -2,6 +2,7 @@
 import '/css/weather-icons.css';
 import { useInterval } from 'usehooks-ts';
 import moment from 'moment-timezone';
+import { v4 as uuidv4 } from 'uuid';
 import { Fragment, useEffect, useState } from 'react';
 import Background from '@/components/background';
 import {
@@ -36,6 +37,7 @@ import {
 } from '@/lib/utils';
 import Settings from '@/components/settings';
 import { fakeWeather } from '@/constants/data';
+import Alerts from '@/components/alerts';
 
 if (typeof window !== 'undefined') {
     const { fetch: originalFetch } = window;
@@ -60,6 +62,7 @@ if (typeof window !== 'undefined') {
 }
 
 export default function Home() {
+    const [alerts, setAlerts] = useState<{ id: string; msg: string }[]>([]);
     const [settingsOpen, setSettingsOpen] = useState<boolean>(false);
     const [datetime, setDatetime] = useState<moment.Moment>(moment());
     const [isNight, setIsNight] = useState<boolean | undefined>();
@@ -79,6 +82,38 @@ export default function Home() {
     const [spoofWeather, setSpoofWeather] = useState<
         FakeWeatherKey | undefined
     >();
+
+    const closeAlert = (id: string) => {
+        setAlerts((prevState) => {
+            const idx = prevState.findIndex((element) => element.id === id);
+            if (idx !== -1) {
+                prevState.splice(idx, 1);
+            }
+            return [...prevState];
+        });
+    };
+
+    const addAlert = (msg: string | unknown) => {
+        // @ts-ignore
+        setAlerts((prevState) => {
+            const idx = prevState.findIndex(
+                // @ts-ignore
+                (alert) => (alert.msg = msg.toString())
+            );
+            return [
+                ...prevState,
+                ...(idx === -1
+                    ? [
+                          {
+                              id: uuidv4(),
+                              // @ts-ignore
+                              msg: msg.toString()
+                          }
+                      ]
+                    : [])
+            ];
+        });
+    };
 
     const searchParams = useSearchParams();
 
@@ -109,22 +144,39 @@ export default function Home() {
                     return;
                 }
             } catch (e) {
-                console.log(e);
+                addAlert(e);
             }
         }
-        const result = await fetch(
-            `/api/switchbot?secret=${secretKey}&token=${token}`
-        );
-        const resp: TempSensor = await result.json();
-        if (resp.body?.temperature) {
-            resp.body.temperature = getTemp(resp.body.temperature, 'c', 'f');
+        try {
+            const result = await fetch(
+                `/api/switchbot?secret=${secretKey}&token=${token}`
+            );
+            if (result.status === 401) {
+                throw new Error(
+                    `Failed to authenticate with switchbot. Please set valid Secret Key and Token.`
+                );
+            } else if (result.status < 200 || result.status > 299) {
+                throw new Error(
+                    `Failed to get switchbot temperature sensor data\nstatus code: ${result.status}\nmessage: ${await result.text()}`
+                );
+            }
+            const resp: TempSensor = await result.json();
+            if (resp.body?.temperature) {
+                resp.body.temperature = getTemp(
+                    resp.body.temperature,
+                    'c',
+                    'f'
+                );
+            }
+            setTempSensor(resp);
+            const store: LocalStorageTempSensor = {
+                time: moment().unix(),
+                tempSensor: resp
+            };
+            localStorage.setItem('tempSensor', JSON.stringify(store));
+        } catch (e) {
+            addAlert(e);
         }
-        setTempSensor(resp);
-        const store: LocalStorageTempSensor = {
-            time: moment().unix(),
-            tempSensor: resp
-        };
-        localStorage.setItem('tempSensor', JSON.stringify(store));
     };
     let getWeather = async (location: Location, force: boolean = false) => {
         const localStorageCurrent = localStorage.getItem('current');
@@ -159,27 +211,36 @@ export default function Home() {
                     return;
                 }
             } catch (e) {
-                console.log(e);
+                addAlert(e);
             }
         }
-        const result = await fetch(
-            `https://api.open-meteo.com/v1/forecast?latitude=${location.lat}&longitude=${location.lon}&current=temperature,weather_code&daily=temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_mean,weather_code&timezone=${moment.tz.guess()}&temperature_unit=fahrenheit`
-        );
-        const data: OMWeather = await result.json();
-        data.latitude = location.lat;
-        data.longitude = location.lon;
-        setCurrent(omWeatherToCurrent(data));
-        setForecast(omWeatherToForecast(data));
-        const curr: LocalStorageCurrent = {
-            time: moment().unix(),
-            current: omWeatherToCurrent(data)
-        };
-        const fore: LocalStorageForecast = {
-            time: moment().unix(),
-            forecast: omWeatherToForecast(data)
-        };
-        localStorage.setItem('current', JSON.stringify(curr));
-        localStorage.setItem('forecast', JSON.stringify(fore));
+        try {
+            const result = await fetch(
+                `https://api.open-meteo.com/v1/forecast?latitude=${location.lat}&longitude=${location.lon}&current=temperature,weather_code&daily=temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_mean,weather_code&timezone=${moment.tz.guess()}&temperature_unit=fahrenheit`
+            );
+            if (result.status < 200 || result.status > 299) {
+                throw new Error(
+                    `Failed to get open-meteo weather data\nstatus code: ${result.status}\nmessage: ${await result.text()}`
+                );
+            }
+            const data: OMWeather = await result.json();
+            data.latitude = location.lat;
+            data.longitude = location.lon;
+            setCurrent(omWeatherToCurrent(data));
+            setForecast(omWeatherToForecast(data));
+            const curr: LocalStorageCurrent = {
+                time: moment().unix(),
+                current: omWeatherToCurrent(data)
+            };
+            const fore: LocalStorageForecast = {
+                time: moment().unix(),
+                forecast: omWeatherToForecast(data)
+            };
+            localStorage.setItem('current', JSON.stringify(curr));
+            localStorage.setItem('forecast', JSON.stringify(fore));
+        } catch (e) {
+            addAlert(e);
+        }
     };
     let getCurrent = async (location: Location, force: boolean = false) => {
         const localStorageCurrent = localStorage.getItem('current');
@@ -202,20 +263,33 @@ export default function Home() {
                     return;
                 }
             } catch (e) {
-                console.log(e);
+                alert(JSON.stringify(e));
             }
         }
-        const result = await fetch(
-            `https://api.openweathermap.org/data/2.5/weather?lat=${location.lat}&lon=${location.lon}&appid=${appid}`
-        );
-        const data: OWCurrent = await result.json();
-        data.coord = { lat: location.lat, lon: location.lon };
-        setCurrent(owCurrentToCurrent(data));
-        const store: LocalStorageCurrent = {
-            time: moment().unix(),
-            current: owCurrentToCurrent(data)
-        };
-        localStorage.setItem('current', JSON.stringify(store));
+        try {
+            const result = await fetch(
+                `https://api.openweathermap.org/data/2.5/weather?lat=${location.lat}&lon=${location.lon}&appid=${appid}`
+            );
+            if (result.status === 401) {
+                throw new Error(
+                    `Failed to authenticate with openweathermap. Please set valid OWM App ID.`
+                );
+            } else if (result.status < 200 || result.status > 299) {
+                throw new Error(
+                    `Failed to get openweathermap current data\nstatus code: ${result.status}\nmessage: ${await result.text()}`
+                );
+            }
+            const data: OWCurrent = await result.json();
+            data.coord = { lat: location.lat, lon: location.lon };
+            setCurrent(owCurrentToCurrent(data));
+            const store: LocalStorageCurrent = {
+                time: moment().unix(),
+                current: owCurrentToCurrent(data)
+            };
+            localStorage.setItem('current', JSON.stringify(store));
+        } catch (e) {
+            addAlert(e);
+        }
     };
     let getForecast = async (location: Location, force: boolean = false) => {
         const localStorageForecast = localStorage.getItem('forecast');
@@ -238,21 +312,34 @@ export default function Home() {
                     return;
                 }
             } catch (e) {
-                console.log(e);
+                addAlert(e);
             }
         }
-        const result = await fetch(
-            `https://api.openweathermap.org/data/3.0/onecall?lat=${location.lat}&lon=${location.lon}&appid=${appid}`
-        );
-        const data: OWWeather = await result.json();
-        data.lat = location.lat;
-        data.lon = location.lon;
-        setForecast(owWeatherToForecast(data));
-        const store: LocalStorageForecast = {
-            time: moment().unix(),
-            forecast: owWeatherToForecast(data)
-        };
-        localStorage.setItem('forecast', JSON.stringify(store));
+        try {
+            const result = await fetch(
+                `https://api.openweathermap.org/data/3.0/onecall?lat=${location.lat}&lon=${location.lon}&appid=${appid}`
+            );
+            if (result.status === 401) {
+                throw new Error(
+                    `Failed to authenticate with openweathermap. Please set valid OWM App ID.`
+                );
+            } else if (result.status < 200 || result.status > 299) {
+                throw new Error(
+                    `Failed to get openweathermap forecast data\nstatus code: ${result.status}\nmessage: ${await result.text()}`
+                );
+            }
+            const data: OWWeather = await result.json();
+            data.lat = location.lat;
+            data.lon = location.lon;
+            setForecast(owWeatherToForecast(data));
+            const store: LocalStorageForecast = {
+                time: moment().unix(),
+                forecast: owWeatherToForecast(data)
+            };
+            localStorage.setItem('forecast', JSON.stringify(store));
+        } catch (e) {
+            addAlert(e);
+        }
     };
 
     let getReverseLocation = async (latLon: LatLon) => {
@@ -272,27 +359,40 @@ export default function Home() {
                     return;
                 }
             } catch (e) {
-                console.log(e);
+                addAlert(e);
             }
         }
-        const result = await fetch(
-            `https://api.geoapify.com/v1/geocode/reverse?lat=${latLon?.lat}&lon=${latLon?.lon}&apiKey=${apikey}`,
-            {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'User-Agent': 'j2k-weather-app'
+        try {
+            const result = await fetch(
+                `https://api.geoapify.com/v1/geocode/reverse?lat=${latLon?.lat}&lon=${latLon?.lon}&apiKey=${apikey}`,
+                {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'User-Agent': 'j2k-weather-app'
+                    }
                 }
+            );
+            if (result.status === 401) {
+                throw new Error(
+                    `Failed to authenticate with geoapify. Please set valid API Key.`
+                );
+            } else if (result.status < 200 || result.status > 299) {
+                throw new Error(
+                    `Failed to get geoapify location data\nstatus code: ${result.status}\nmessage: ${await result.text()}`
+                );
             }
-        );
-        const data: ReverseLocation = await result.json();
-        setLocation(data.features[0].properties);
-        const store: LocalStorageLocation = {
-            time: moment().unix(),
-            location: data.features[0].properties,
-            source: 'latlon'
-        };
-        localStorage.setItem('location', JSON.stringify(store));
+            const data: ReverseLocation = await result.json();
+            setLocation(data.features[0].properties);
+            const store: LocalStorageLocation = {
+                time: moment().unix(),
+                location: data.features[0].properties,
+                source: 'latlon'
+            };
+            localStorage.setItem('location', JSON.stringify(store));
+        } catch (e) {
+            addAlert(e);
+        }
     };
     let getZipcodeLocation = async (zipcode: string) => {
         const localStorageLocation = localStorage.getItem('location');
@@ -308,20 +408,34 @@ export default function Home() {
                     return;
                 }
             } catch (e) {
-                console.log(e);
+                addAlert(e);
             }
         }
-        const result = await fetch(
-            `https://api.geoapify.com/v1/geocode/search?text=${zipcode}&lang=en&limit=10&type=postcode&filter=countrycode:us&&format=json&apiKey=${apikey}`
-        );
-        const data: ZipcodeLocation = await result.json();
-        setLocation(data.results[0]);
-        const store: LocalStorageLocation = {
-            time: moment().unix(),
-            location: data.results[0],
-            source: 'zipcode'
-        };
-        localStorage.setItem('location', JSON.stringify(store));
+        try {
+            const result = await fetch(
+                `https://api.geoapify.com/v1/geocode/search?text=${zipcode}&lang=en&limit=10&type=postcode&filter=countrycode:us&&format=json&apiKey=${apikey}`
+            );
+            if (result.status === 401) {
+                throw new Error(
+                    `Failed to authenticate with geoapify. Please set valid API Key.`
+                );
+            } else if (result.status < 200 || result.status > 299) {
+                throw new Error(
+                    `Failed to get geoapify location data\nstatus code: ${result.status}\nmessage: ${await result.text()}`
+                );
+            }
+            const data: ZipcodeLocation = await result.json();
+            setLocation(data.results[0]);
+            const store: LocalStorageLocation = {
+                time: moment().unix(),
+                location: data.results[0],
+                source: 'zipcode'
+            };
+            localStorage.setItem('location', JSON.stringify(store));
+        } catch (e) {
+            // @ts-ignore
+            addAlert(e);
+        }
     };
 
     useInterval(() => {
@@ -426,7 +540,7 @@ export default function Home() {
                 window.history.pushState({ path: newUrl }, '', newUrl);
             }
         }
-    }, [zipcode, apikey, secretKey, token, appid, latLon]);
+    }, [zipcode, apikey, secretKey, token, appid, latLon, weatherSource]);
 
     useEffect(() => {
         if (secretKey && token) {
@@ -530,6 +644,7 @@ export default function Home() {
                 spoofWeather={spoofWeather}
                 setSpoofWeather={setSpoofWeather}
             />
+            <Alerts alerts={alerts} closeAlert={closeAlert} />
         </main>
     );
 }
