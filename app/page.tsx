@@ -487,18 +487,13 @@ export default function Home() {
     }, [secretKey, token]);
 
     useEffect(() => {
-        if (!location && latLon && apikey) {
+        if (latLon && apikey) {
             void getReverseLocation(latLon);
         }
     }, [latLon]);
 
     useEffect(() => {
-        if (
-            apikey &&
-            zipcode &&
-            !latLon &&
-            (!location || location.postcode !== zipcode)
-        ) {
+        if (apikey && zipcode && (!location || location.postcode !== zipcode)) {
             void getZipcodeLocation(zipcode);
         }
     }, [zipcode]);
@@ -550,10 +545,14 @@ export default function Home() {
 
     useEffect(() => {
         if (location) {
-            if (!latLon) {
+            if (
+                !latLon ||
+                location.lat.toFixed(6) !== latLon?.lat.toFixed(6) ||
+                location.lon.toFixed(6) !== latLon?.lon.toFixed(6)
+            ) {
                 setLatLon({ lat: location.lat, lon: location.lon });
             }
-            if (!zipcode) {
+            if (!zipcode || zipcode !== location.postcode) {
                 setZipcode(location.postcode);
             }
             if (location) {
@@ -629,6 +628,8 @@ export default function Home() {
             <Settings
                 settingsOpen={settingsOpen}
                 setSettingsOpen={setSettingsOpen}
+                latlon={latLon}
+                setLatlon={setLatLon}
                 zipcode={zipcode}
                 setZipcode={setZipcode}
                 apikey={apikey}

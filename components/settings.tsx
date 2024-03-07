@@ -10,7 +10,7 @@ import {
     Option,
     Select
 } from '@material-tailwind/react';
-import { FakeWeatherKey, WeatherSource } from '@/types';
+import { FakeWeatherKey, LatLon, WeatherSource } from '@/types';
 import { fakeWeather } from '@/constants/data';
 import InputWrapper from '@/components/inputwrapper';
 
@@ -24,6 +24,8 @@ const SettingsWrapper = styled.div`
 interface Props {
     settingsOpen: boolean;
     setSettingsOpen: (state: boolean) => void;
+    latlon?: LatLon;
+    setLatlon: (state: LatLon | undefined) => void;
     zipcode?: string;
     setZipcode: (state: string) => void;
     apikey?: string;
@@ -41,6 +43,7 @@ interface Props {
 }
 
 type Form = {
+    latlon: { value?: string; error?: string };
     zipcode: { value?: string; error?: string };
     apikey: { value?: string; error?: string };
     token: { value?: string; error?: string };
@@ -53,6 +56,8 @@ type Form = {
 export default function Settings({
     settingsOpen,
     setSettingsOpen,
+    latlon,
+    setLatlon,
     zipcode,
     setZipcode,
     apikey,
@@ -69,6 +74,10 @@ export default function Settings({
     setSpoofWeather
 }: Props) {
     const [form, setForm] = useState<Form>({
+        latlon: {
+            value: latlon && `${latlon.lat},${latlon.lon}`,
+            error: undefined
+        },
         zipcode: { value: zipcode, error: undefined },
         apikey: { value: apikey, error: undefined },
         token: { value: token, error: undefined },
@@ -77,6 +86,18 @@ export default function Settings({
         appid: { value: appid, error: undefined },
         spoofWeather: { value: spoofWeather || 'actual', error: undefined }
     });
+
+    const parseLatLon = (latlon: string): LatLon => {
+        const lat = parseFloat(latlon.split(',')[0]);
+        const lon = parseFloat(latlon.split(',')[1]);
+        if (Number.isNaN(lat) || Number.isNaN(lon)) {
+            throw new Error('Invalid format for latitude and longitude');
+        }
+        return {
+            lat,
+            lon
+        };
+    };
 
     const validate = (): boolean => {
         let valid = true;
@@ -88,8 +109,20 @@ export default function Settings({
                 tempForm[key] = { ...prevForm[key], error: undefined };
             });
 
-            if (!tempForm.zipcode.value) {
-                tempForm.zipcode.error = 'Zipcode required';
+            if (!(tempForm.zipcode.value || tempForm.latlon.value)) {
+                tempForm.zipcode.error =
+                    'Zipcode or Latitude and Longitude required';
+                tempForm.latlon.error =
+                    'Latitude and Longitude or Zipcode required';
+            }
+
+            if (tempForm.latlon.value) {
+                try {
+                    parseLatLon(tempForm.latlon.value);
+                } catch (e) {
+                    tempForm.latlon.error =
+                        'Invalid format, must be: (lat),(lon)';
+                }
             }
 
             if (!tempForm.apikey.value) {
@@ -115,6 +148,9 @@ export default function Settings({
 
     const onSave = () => {
         if (validate()) {
+            setLatlon(
+                form.latlon.value ? parseLatLon(form.latlon.value) : undefined
+            );
             setZipcode(form.zipcode.value || '');
             setApikey(form.apikey.value || '');
             setSecretKey(form.secretKey.value || '');
@@ -129,6 +165,16 @@ export default function Settings({
             setSettingsOpen(false);
         }
     };
+
+    useEffect(() => {
+        setForm((prevState) => ({
+            ...prevState,
+            latlon: {
+                ...form.latlon,
+                value: latlon && `${latlon.lat},${latlon.lon}`
+            }
+        }));
+    }, [latlon]);
 
     useEffect(() => {
         setForm((prevState) => ({
@@ -190,6 +236,25 @@ export default function Settings({
                 <DialogBody>
                     <div className="flex flex-row gap-4">
                         <div className="flex flex-col gap-6">
+                            <div className="w-72">
+                                <InputWrapper error={form.latlon.error}>
+                                    <Input
+                                        label="Latitude and Longitute"
+                                        crossOrigin={undefined}
+                                        value={form.latlon.value}
+                                        error={!!form.latlon.error}
+                                        onChange={({ target }) =>
+                                            setForm((form) => ({
+                                                ...form,
+                                                latlon: {
+                                                    ...form.latlon,
+                                                    value: target.value
+                                                }
+                                            }))
+                                        }
+                                    />
+                                </InputWrapper>
+                            </div>
                             <div className="w-72">
                                 <InputWrapper error={form.zipcode.error}>
                                     <Input
