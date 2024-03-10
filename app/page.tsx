@@ -64,7 +64,6 @@ if (typeof window !== 'undefined') {
 export default function Home() {
     const [alerts, setAlerts] = useState<{ id: string; msg: string }[]>([]);
     const [settingsOpen, setSettingsOpen] = useState<boolean>(false);
-    const [datetime, setDatetime] = useState<moment.Moment>(moment());
     const [isNight, setIsNight] = useState<boolean | undefined>();
     const [apikey, setApikey] = useState<string | undefined>();
     const [appid, setAppid] = useState<string | undefined>();
@@ -439,17 +438,12 @@ export default function Home() {
     };
 
     useInterval(() => {
-        const now = moment();
-        setDatetime(now);
         setIsNight(
             current
-                ? now.isAfter(moment.unix(current.sunset)) ||
-                      now.isBefore(moment.unix(current.sunrise))
+                ? moment().isAfter(moment.unix(current.sunset)) ||
+                      moment().isBefore(moment.unix(current.sunrise))
                 : false
         );
-    }, 1000);
-
-    useInterval(() => {
         if (location) {
             getAppWeather(location);
         }
@@ -611,7 +605,7 @@ export default function Home() {
                     >
                         <div className="flex flex-row justify-between">
                             <div className="text text-7xl">{location.city}</div>
-                            <DateTime datetime={datetime} />
+                            <DateTime />
                         </div>
                         <CurrentWeather
                             location={location}
