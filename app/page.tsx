@@ -82,7 +82,10 @@ export default function Home() {
         FakeWeatherKey | undefined
     >();
 
-    const closeAlert = (id: string) => {
+    const closeAlert = (id?: string) => {
+        if (!id) {
+            setAlerts([]);
+        }
         setAlerts((prevState) => {
             const idx = prevState.findIndex((element) => element.id === id);
             if (idx !== -1) {
@@ -97,7 +100,7 @@ export default function Home() {
         setAlerts((prevState) => {
             const idx = prevState.findIndex(
                 // @ts-ignore
-                (alert) => (alert.msg = msg.toString())
+                (alert) => alert.msg === msg.toString()
             );
             return [
                 ...prevState,
@@ -450,7 +453,7 @@ export default function Home() {
         if (secretKey && token) {
             void getTempSensor(secretKey, token);
         }
-    }, 60000);
+    }, 1000);
 
     useEffect(() => {
         if (searchParams) {

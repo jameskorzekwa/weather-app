@@ -3,7 +3,7 @@ import { Alert } from '@material-tailwind/react';
 
 interface Props {
     alerts: { id: string; msg: string }[];
-    closeAlert: (id: string) => void;
+    closeAlert: (id?: string) => void;
 }
 
 export default function Alerts({ alerts, closeAlert }: Props) {
@@ -16,18 +16,22 @@ export default function Alerts({ alerts, closeAlert }: Props) {
             style={{
                 position: 'absolute',
                 bottom: 0,
-                overflow: 'hidden',
+                overflowY: 'scroll',
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'flex-end',
                 gap: '10px',
-                padding: '10px'
+                padding: '10px',
+                height: '100vh',
+                width: 650
             }}
         >
             {alrts.map((alert) => {
                 return (
                     <Alert
-                        style={{ width: '35vw' }}
+                        style={{
+                            maxWidth: '500px'
+                        }}
                         key={alert.id}
                         open={
                             !!alrts.find((element) => element.id === alert.id)
@@ -35,10 +39,33 @@ export default function Alerts({ alerts, closeAlert }: Props) {
                         onClose={() => closeAlert(alert.id)}
                         color="red"
                     >
-                        {alert.msg}
+                        <div
+                            style={{
+                                maxHeight: '200px',
+                                overflowY: 'scroll',
+                                overflowX: 'hidden',
+                                minHeight: '20px',
+                                maxWidth: '450px'
+                            }}
+                        >
+                            {alert.msg}
+                        </div>
                     </Alert>
                 );
             })}
+            {alrts.length > 2 && (
+                <button
+                    style={{
+                        position: 'absolute',
+                        bottom: 5,
+                        left: 525,
+                        whiteSpace: 'nowrap'
+                    }}
+                    onClick={() => closeAlert()}
+                >
+                    Clear All
+                </button>
+            )}
         </div>
     );
 }
