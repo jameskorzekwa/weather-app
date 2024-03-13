@@ -22,7 +22,7 @@ export default function Alerts({ alerts, closeAlert }: Props) {
                 justifyContent: 'flex-end',
                 gap: '10px',
                 padding: '10px',
-                height: '100vh',
+                maxHeight: '100vh',
                 width: 650
             }}
         >
