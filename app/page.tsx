@@ -195,10 +195,10 @@ export default function Home() {
                     lastCurrent.current.source === weatherSource &&
                     (moment
                         .unix(lastCurrent.time)
-                        .isAfter(moment().subtract(5, 'minutes')) ||
+                        .isAfter(moment().subtract(2, 'minutes')) ||
                         moment
                             .unix(lastForecast.time)
-                            .isAfter(moment().subtract(5, 'minutes'))) &&
+                            .isAfter(moment().subtract(2, 'minutes'))) &&
                     lastCurrent.current.lat.toFixed(6) ===
                         location?.lat.toFixed(6) &&
                     lastCurrent.current.lon.toFixed(6) ===
