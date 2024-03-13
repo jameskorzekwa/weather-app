@@ -453,7 +453,7 @@ export default function Home() {
         if (secretKey && token) {
             void getTempSensor(secretKey, token);
         }
-    }, 1000);
+    }, 60000);
 
     useEffect(() => {
         if (searchParams) {
