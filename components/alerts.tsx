@@ -53,13 +53,14 @@ export default function Alerts({ alerts, closeAlert }: Props) {
                     </Alert>
                 );
             })}
-            {alrts.length > 2 && (
+            {alrts.length > 0 && (
                 <button
                     style={{
                         position: 'absolute',
                         bottom: 5,
                         left: 525,
-                        whiteSpace: 'nowrap'
+                        whiteSpace: 'nowrap',
+                        color: 'white'
                     }}
                     onClick={() => closeAlert()}
                 >
