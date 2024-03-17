@@ -456,6 +456,12 @@ export default function Home() {
     }, 60000);
 
     useEffect(() => {
+        setIsNight(
+            current
+                ? moment().isAfter(moment.unix(current.sunset)) ||
+                      moment().isBefore(moment.unix(current.sunrise))
+                : false
+        );
         if (searchParams) {
             setAppid(searchParams.get('appid') || undefined);
             setApikey(searchParams.get('apikey') || undefined);
