@@ -92,7 +92,7 @@ export default function Settings({
     const getLocation = () => {
         if (navigator.geolocation) {
             setLocationLoading(true);
-            navigator.geolocation.getCurrentPosition(
+            const id = navigator.geolocation.watchPosition(
                 (position) => {
                     setForm((form) => ({
                         ...form,
@@ -102,9 +102,16 @@ export default function Settings({
                         }
                     }));
                     setLocationLoading(false);
+                    navigator.geolocation.clearWatch(id);
                 },
-                () => setLocationLoading(false)
+                () => {
+                    setLocationLoading(false);
+                    navigator.geolocation.clearWatch(id);
+                }
             );
+            setTimeout(() => {
+                navigator.geolocation.clearWatch(id);
+            }, 15000);
         }
     };
 
