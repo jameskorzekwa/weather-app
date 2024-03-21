@@ -2,6 +2,7 @@ import React, { Fragment, useEffect, useState } from 'react';
 import styled from 'styled-components';
 import {
     Button,
+    Checkbox,
     Dialog,
     DialogBody,
     DialogFooter,
@@ -41,6 +42,8 @@ interface Props {
     setAppid: (state: string) => void;
     spoofWeather?: FakeWeatherKey;
     setSpoofWeather: (state: FakeWeatherKey | undefined) => void;
+    isNight?: boolean;
+    setIsNight: (state: boolean) => void;
     addAlert: (msg: string | unknown) => void;
 }
 
@@ -53,6 +56,7 @@ type Form = {
     weatherSource: { value?: WeatherSource; error?: string };
     appid: { value?: string; error?: string };
     spoofWeather: { value: FakeWeatherKey | 'actual'; error?: string };
+    isNight: { value?: boolean; error?: string };
 };
 
 export default function Settings({
@@ -74,6 +78,8 @@ export default function Settings({
     setAppid,
     spoofWeather,
     setSpoofWeather,
+    isNight,
+    setIsNight,
     addAlert
 }: Props) {
     const [form, setForm] = useState<Form>({
@@ -87,7 +93,8 @@ export default function Settings({
         secretKey: { value: secretKey, error: undefined },
         weatherSource: { value: weatherSource, error: undefined },
         appid: { value: appid, error: undefined },
-        spoofWeather: { value: spoofWeather || 'actual', error: undefined }
+        spoofWeather: { value: spoofWeather || 'actual', error: undefined },
+        isNight: { value: isNight, error: undefined }
     });
     const [locationLoading, setLocationLoading] = useState<boolean>(false);
 
@@ -197,6 +204,7 @@ export default function Settings({
                     ? undefined
                     : form.spoofWeather.value
             );
+            setIsNight(!!form.isNight.value);
             setSettingsOpen(false);
         }
     };
@@ -258,6 +266,12 @@ export default function Settings({
             }
         }));
     }, [spoofWeather]);
+    useEffect(() => {
+        setForm((prevState) => ({
+            ...prevState,
+            isNight: { ...form.isNight, value: isNight }
+        }));
+    }, [isNight]);
 
     return (
         <Fragment>
@@ -488,8 +502,29 @@ export default function Settings({
                                     ]}
                                 </Select>
                             </InputWrapper>
+                            {form.spoofWeather.value !== 'actual' && (
+                                <InputWrapper error={form.spoofWeather.error}>
+                                    <div style={{ marginTop: 20 }}>
+                                        <Checkbox
+                                            crossOrigin={undefined}
+                                            label="Is Night"
+                                            checked={form.isNight.value}
+                                            onChange={() => {
+                                                setForm((form) => ({
+                                                    ...form,
+                                                    isNight: {
+                                                        ...form.isNight,
+                                                        value: !form.isNight
+                                                            .value
+                                                    }
+                                                }));
+                                            }}
+                                        />
+                                    </div>
+                                </InputWrapper>
+                            )}
                         </div>
-                        <div className="flex flex-col gap-6"></div>
+                        {/*<div className="flex flex-col gap-6"></div>*/}
                     </div>
                 </DialogBody>
                 <DialogFooter>

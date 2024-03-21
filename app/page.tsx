@@ -82,6 +82,17 @@ export default function Home() {
         FakeWeatherKey | undefined
     >();
 
+    const checkIsNight = () => {
+        if (!spoofWeather) {
+            setIsNight(
+                current
+                    ? moment().isAfter(moment.unix(current.sunset)) ||
+                          moment().isBefore(moment.unix(current.sunrise))
+                    : false
+            );
+        }
+    };
+
     const closeAlert = (id?: string) => {
         if (!id) {
             setAlerts([]);
@@ -441,27 +452,18 @@ export default function Home() {
     };
 
     useInterval(() => {
-        setIsNight(
-            current
-                ? moment().isAfter(moment.unix(current.sunset)) ||
-                      moment().isBefore(moment.unix(current.sunrise))
-                : false
-        );
         if (location) {
             getAppWeather(location);
         }
         if (secretKey && token) {
             void getTempSensor(secretKey, token);
         }
+        if (current) {
+            checkIsNight();
+        }
     }, 60000);
 
     useEffect(() => {
-        setIsNight(
-            current
-                ? moment().isAfter(moment.unix(current.sunset)) ||
-                      moment().isBefore(moment.unix(current.sunrise))
-                : false
-        );
         if (searchParams) {
             setAppid(searchParams.get('appid') || undefined);
             setApikey(searchParams.get('apikey') || undefined);
@@ -582,12 +584,7 @@ export default function Home() {
 
     useEffect(() => {
         if (current) {
-            setIsNight(
-                current
-                    ? moment().isAfter(moment.unix(current.sunset)) ||
-                          moment().isBefore(moment.unix(current.sunrise))
-                    : false
-            );
+            checkIsNight();
         }
     }, [current]);
 
@@ -647,6 +644,8 @@ export default function Home() {
                 setAppid={setAppid}
                 spoofWeather={spoofWeather}
                 setSpoofWeather={setSpoofWeather}
+                isNight={isNight}
+                setIsNight={setIsNight}
                 addAlert={addAlert}
             />
             <Alerts alerts={alerts} closeAlert={closeAlert} />
