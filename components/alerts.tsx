@@ -23,7 +23,8 @@ export default function Alerts({ alerts, closeAlert }: Props) {
                 gap: '10px',
                 padding: '10px',
                 maxHeight: '100vh',
-                width: 650
+                width: 650,
+                zIndex: 10000
             }}
         >
             {alrts.map((alert) => {
