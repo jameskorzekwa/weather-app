@@ -110,6 +110,7 @@ export default function Settings({
                 }
             );
             setTimeout(() => {
+                setLocationLoading(false);
                 navigator.geolocation.clearWatch(id);
             }, 15000);
         }
