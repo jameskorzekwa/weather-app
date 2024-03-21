@@ -8,7 +8,8 @@ import {
     DialogHeader,
     Input,
     Option,
-    Select
+    Select,
+    Spinner
 } from '@material-tailwind/react';
 import { FakeWeatherKey, LatLon, WeatherSource } from '@/types';
 import { fakeWeather } from '@/constants/data';
@@ -86,6 +87,26 @@ export default function Settings({
         appid: { value: appid, error: undefined },
         spoofWeather: { value: spoofWeather || 'actual', error: undefined }
     });
+    const [locationLoading, setLocationLoading] = useState<boolean>(false);
+
+    const getLocation = () => {
+        if (navigator.geolocation) {
+            setLocationLoading(true);
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    setForm((form) => ({
+                        ...form,
+                        latlon: {
+                            ...form.latlon,
+                            value: `${position.coords.latitude},${position.coords.longitude}`
+                        }
+                    }));
+                    setLocationLoading(false);
+                },
+                () => setLocationLoading(false)
+            );
+        }
+    };
 
     const parseLatLon = (latlon: string): LatLon => {
         const lat = parseFloat(latlon.split(',')[0]);
@@ -238,21 +259,56 @@ export default function Settings({
                         <div className="flex flex-col gap-6">
                             <div className="w-72">
                                 <InputWrapper error={form.latlon.error}>
-                                    <Input
-                                        label="Latitude and Longitute"
-                                        crossOrigin={undefined}
-                                        value={form.latlon.value}
-                                        error={!!form.latlon.error}
-                                        onChange={({ target }) =>
-                                            setForm((form) => ({
-                                                ...form,
-                                                latlon: {
-                                                    ...form.latlon,
-                                                    value: target.value
-                                                }
-                                            }))
-                                        }
-                                    />
+                                    <div className="relative flex w-full max-w-[24rem]">
+                                        <Input
+                                            label="Latitude and Longitute"
+                                            crossOrigin={undefined}
+                                            value={form.latlon.value}
+                                            error={!!form.latlon.error}
+                                            onChange={({ target }) =>
+                                                setForm((form) => ({
+                                                    ...form,
+                                                    latlon: {
+                                                        ...form.latlon,
+                                                        value: target.value
+                                                    }
+                                                }))
+                                            }
+                                            containerProps={{
+                                                className: 'min-w-0'
+                                            }}
+                                        />
+                                        <Button
+                                            size="sm"
+                                            className="!absolute right-1 top-1 rounded"
+                                            onClick={() => getLocation()}
+                                            disabled={locationLoading}
+                                        >
+                                            {locationLoading ? (
+                                                <Spinner className="h-4 w-4" />
+                                            ) : (
+                                                <svg
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    fill="none"
+                                                    viewBox="0 0 24 24"
+                                                    strokeWidth={1.5}
+                                                    stroke="currentColor"
+                                                    className="w-4 h-4"
+                                                >
+                                                    <path
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                        d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
+                                                    />
+                                                    <path
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                        d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"
+                                                    />
+                                                </svg>
+                                            )}
+                                        </Button>
+                                    </div>
                                 </InputWrapper>
                             </div>
                             <div className="w-72">

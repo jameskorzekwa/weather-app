@@ -39,6 +39,7 @@ export default function Alerts({ alerts, closeAlert }: Props) {
                         onClose={() => closeAlert(alert.id)}
                         color="red"
                     >
+                        {setTimeout(() => closeAlert(alert.id), 10000) && null}
                         <div
                             style={{
                                 maxHeight: '200px',
