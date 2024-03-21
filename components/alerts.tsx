@@ -1,10 +1,25 @@
 import React, { useEffect, useState } from 'react';
 import { Alert } from '@material-tailwind/react';
+import styled from 'styled-components';
 
 interface Props {
     alerts: { id: string; msg: string }[];
     closeAlert: (id?: string) => void;
 }
+
+const AlertsContainer = styled.div`
+    position: absolute;
+    bottom: 0;
+    overflow-y: scroll;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 10px;
+    max-height: 100vh;
+    width: 650px;
+    z-index: 10000;
+`;
 
 export default function Alerts({ alerts, closeAlert }: Props) {
     const [alrts, setAlrts] = useState<{ id: string; msg: string }[]>(alerts);
@@ -12,21 +27,7 @@ export default function Alerts({ alerts, closeAlert }: Props) {
         setAlrts(alerts);
     }, [alerts]);
     return (
-        <div
-            style={{
-                position: 'absolute',
-                bottom: 0,
-                overflowY: 'scroll',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'flex-end',
-                gap: '10px',
-                padding: '10px',
-                maxHeight: '100vh',
-                width: 650,
-                zIndex: 10000
-            }}
-        >
+        <AlertsContainer>
             {alrts.map((alert) => {
                 return (
                     <Alert
@@ -69,6 +70,6 @@ export default function Alerts({ alerts, closeAlert }: Props) {
                     Clear All
                 </button>
             )}
-        </div>
+        </AlertsContainer>
     );
 }

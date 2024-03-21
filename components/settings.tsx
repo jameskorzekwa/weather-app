@@ -263,6 +263,7 @@ export default function Settings({
         <Fragment>
             <SettingsWrapper onClick={() => setSettingsOpen(true)} />
             <Dialog
+                dismiss={{ enabled: false }}
                 open={settingsOpen}
                 handler={() => setSettingsOpen(!settingsOpen)}
                 className={'p-4'}
