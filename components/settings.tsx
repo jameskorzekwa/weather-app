@@ -41,6 +41,7 @@ interface Props {
     setAppid: (state: string) => void;
     spoofWeather?: FakeWeatherKey;
     setSpoofWeather: (state: FakeWeatherKey | undefined) => void;
+    addAlert: (msg: string | unknown) => void;
 }
 
 type Form = {
@@ -72,7 +73,8 @@ export default function Settings({
     appid,
     setAppid,
     spoofWeather,
-    setSpoofWeather
+    setSpoofWeather,
+    addAlert
 }: Props) {
     const [form, setForm] = useState<Form>({
         latlon: {
@@ -101,15 +103,19 @@ export default function Settings({
                             value: `${position.coords.latitude},${position.coords.longitude}`
                         }
                     }));
+                    clearTimeout(timeoutId);
                     setLocationLoading(false);
                     navigator.geolocation.clearWatch(id);
                 },
                 () => {
+                    addAlert('failed to get location');
+                    clearTimeout(timeoutId);
                     setLocationLoading(false);
                     navigator.geolocation.clearWatch(id);
                 }
             );
-            setTimeout(() => {
+            const timeoutId = setTimeout(() => {
+                addAlert('failed to get location');
                 setLocationLoading(false);
                 navigator.geolocation.clearWatch(id);
             }, 15000);

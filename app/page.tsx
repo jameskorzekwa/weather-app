@@ -647,6 +647,7 @@ export default function Home() {
                 setAppid={setAppid}
                 spoofWeather={spoofWeather}
                 setSpoofWeather={setSpoofWeather}
+                addAlert={addAlert}
             />
             <Alerts alerts={alerts} closeAlert={closeAlert} />
         </main>
