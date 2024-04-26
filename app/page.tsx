@@ -372,7 +372,7 @@ export default function Home() {
         }
         try {
             const result = await fetch(
-                `https://api.geoapify.com/v1/geocode/reverse?lat=${latLon?.lat}&lon=${latLon?.lon}&type=city&apiKey=${apikey}`,
+                `https://api.geoapify.com/v1/geocode/reverse?lat=${latLon?.lat}&lon=${latLon?.lon}&apiKey=${apikey}`,
                 {
                     method: 'GET',
                     headers: {
