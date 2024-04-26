@@ -6,9 +6,11 @@ import {
     OMWeatherCode,
     OWCurrent,
     OWWeather,
-    OWWeatherId
+    OWWeatherId,
+    TempSensor
 } from '@/types';
 import moment from 'moment';
+import { Device } from 'ambient-weather-api';
 
 export const getTemp = (temp: number, from: string, to: string): number => {
     if (from === 'f') {
@@ -210,5 +212,14 @@ export const omWeatherToForecast = (weather: OMWeather): Forecast => {
             lat: weather.latitude,
             lon: weather.longitude
         }))
+    };
+};
+
+export const AWNDeviceToTempSensor = (awnDevice: Device): TempSensor => {
+    return {
+        temperature: awnDevice.lastData.tempf,
+        humidity: awnDevice.lastData.humidity,
+        lat: awnDevice.info.coords.coords.lat,
+        lon: awnDevice.info.coords.coords.lon
     };
 };

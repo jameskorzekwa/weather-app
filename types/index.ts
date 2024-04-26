@@ -380,7 +380,7 @@ export type LatLon = {
     lon: number;
 };
 
-export type TempSensor = {
+export type SwitchBotTempSensor = {
     statusCode: number;
     body: {
         deviceId: string;
@@ -392,6 +392,13 @@ export type TempSensor = {
     };
     message: string;
     zipcode: string;
+};
+
+export type TempSensor = {
+    humidity?: number;
+    temperature?: number;
+    lat: number;
+    lon: number;
 };
 
 export type FakeWeatherKey =

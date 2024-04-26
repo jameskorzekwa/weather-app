@@ -29,7 +29,7 @@ import CurrentWeather from '@/components/currentWeather';
 import DateTime from '@/components/dateTime';
 import Loading from '@/components/loading';
 import {
-    getTemp,
+    AWNDeviceToTempSensor,
     omWeatherToCurrent,
     omWeatherToForecast,
     owCurrentToCurrent,
@@ -38,6 +38,7 @@ import {
 import Settings from '@/components/settings';
 import { fakeWeather } from '@/constants/data';
 import Alerts from '@/components/alerts';
+import { Device } from 'ambient-weather-api';
 
 if (typeof window !== 'undefined') {
     const { fetch: originalFetch } = window;
@@ -162,7 +163,7 @@ export default function Home() {
         }
         try {
             const result = await fetch(
-                `/api/switchbot?secret=${secretKey}&token=${token}`
+                `/api/awn?apiKey=${secretKey}&applicationKey=${token}`
             );
             if (result.status === 401) {
                 throw new Error(
@@ -173,18 +174,12 @@ export default function Home() {
                     `Failed to get switchbot temperature sensor data\nstatus code: ${result.status}\nmessage: ${await result.text()}`
                 );
             }
-            const resp: TempSensor = await result.json();
-            if (resp.body?.temperature) {
-                resp.body.temperature = getTemp(
-                    resp.body.temperature,
-                    'c',
-                    'f'
-                );
-            }
-            setTempSensor(resp);
+            const resp: Device[] = await result.json();
+            const awnTempSensor = AWNDeviceToTempSensor(resp[0]);
+            setTempSensor(awnTempSensor);
             const store: LocalStorageTempSensor = {
                 time: moment().unix(),
-                tempSensor: resp
+                tempSensor: awnTempSensor
             };
             localStorage.setItem('tempSensor', JSON.stringify(store));
         } catch (e) {
@@ -476,10 +471,10 @@ export default function Home() {
             const zipcode = searchParams.get('zipcode');
             const lat = searchParams.get('lat');
             const lon = searchParams.get('lon');
+
             if (lat && Number(lat) && lon && Number(lon)) {
                 setLatLon({ lat: parseFloat(lat), lon: parseFloat(lon) });
-            }
-            if (zipcode) {
+            } else if (zipcode) {
                 setZipcode(zipcode);
             }
         }
@@ -552,8 +547,8 @@ export default function Home() {
         if (location) {
             if (
                 !latLon ||
-                location.lat.toFixed(6) !== latLon?.lat.toFixed(6) ||
-                location.lon.toFixed(6) !== latLon?.lon.toFixed(6)
+                location.lat.toFixed(3) !== latLon?.lat.toFixed(3) ||
+                location.lon.toFixed(3) !== latLon?.lon.toFixed(3)
             ) {
                 setLatLon({ lat: location.lat, lon: location.lon });
             }

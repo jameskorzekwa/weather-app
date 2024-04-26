@@ -17,8 +17,11 @@ export default function CurrentWeather({
     tempSensor
 }: Props) {
     let temp = current.temp;
-    if (tempSensor?.zipcode === location.postcode) {
-        temp = tempSensor?.body?.temperature || current.temp;
+    if (
+        tempSensor?.lat.toFixed(6) === location.lat.toFixed(6) &&
+        tempSensor?.lon.toFixed(6) === location.lon.toFixed(6)
+    ) {
+        temp = tempSensor?.temperature || current.temp;
     }
     return (
         <div style={{ height: '100%' }} className="flex">
