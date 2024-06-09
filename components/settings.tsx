@@ -280,7 +280,8 @@ export default function Settings({
                 dismiss={{ enabled: false }}
                 open={settingsOpen}
                 handler={() => setSettingsOpen(!settingsOpen)}
-                className={'p-4'}
+                className={'p-4 overflow-y-scroll'}
+                style={{ maxHeight: '90vh' }}
             >
                 <DialogHeader>Settings</DialogHeader>
                 <DialogBody>
