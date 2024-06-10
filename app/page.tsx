@@ -68,8 +68,8 @@ export default function Home() {
     const [isNight, setIsNight] = useState<boolean | undefined>();
     const [apikey, setApikey] = useState<string | undefined>();
     const [appid, setAppid] = useState<string | undefined>();
-    const [secretKey, setSecretKey] = useState<string | undefined>();
-    const [token, setToken] = useState<string | undefined>();
+    const [apiKey, setApiKey] = useState<string | undefined>();
+    const [applicationKey, setApplicationKey] = useState<string | undefined>();
     const [latLon, setLatLon] = useState<LatLon | undefined>();
     const [forecast, setForecast] = useState<Forecast | undefined>();
     const [current, setCurrent] = useState<Current | undefined>();
@@ -142,7 +142,7 @@ export default function Home() {
         }
     };
 
-    const getTempSensor = async (secretKey: string, token: string) => {
+    const getTempSensor = async (apiKey: string, applicationKey: string) => {
         const localStorageTempSensor = localStorage.getItem('tempSensor');
         if (localStorageTempSensor) {
             try {
@@ -163,15 +163,15 @@ export default function Home() {
         }
         try {
             const result = await fetch(
-                `/api/awn?apiKey=${secretKey}&applicationKey=${token}`
+                `/api/awn?apiKey=${apiKey}&applicationKey=${applicationKey}`
             );
             if (result.status === 401) {
                 throw new Error(
-                    `Failed to authenticate with switchbot. Please set valid Secret Key and Token.`
+                    `Failed to authenticate with awn. Please set valid Secret Key and ApplicationKey.`
                 );
             } else if (result.status < 200 || result.status > 299) {
                 throw new Error(
-                    `Failed to get switchbot temperature sensor data\nstatus code: ${result.status}\nmessage: ${await result.text()}`
+                    `Failed to get awn temperature sensor data\nstatus code: ${result.status}\nmessage: ${await result.text()}`
                 );
             }
             const resp: Device[] = await result.json();
@@ -450,8 +450,8 @@ export default function Home() {
         if (location) {
             getAppWeather(location);
         }
-        if (secretKey && token) {
-            void getTempSensor(secretKey, token);
+        if (apiKey && applicationKey) {
+            void getTempSensor(apiKey, applicationKey);
         }
         if (current) {
             checkIsNight();
@@ -462,8 +462,8 @@ export default function Home() {
         if (searchParams) {
             setAppid(searchParams.get('appid') || undefined);
             setApikey(searchParams.get('apikey') || undefined);
-            setSecretKey(searchParams.get('secretKey') || undefined);
-            setToken(searchParams.get('token') || undefined);
+            setApiKey(searchParams.get('apiKey') || undefined);
+            setApplicationKey(searchParams.get('applicationKey') || undefined);
             setWeatherSource(
                 (searchParams.get('weatherSource') as WeatherSource) ||
                     'OpenMeteo'
@@ -481,10 +481,10 @@ export default function Home() {
     }, []);
 
     useEffect(() => {
-        if (secretKey && token) {
-            void getTempSensor(secretKey, token);
+        if (apiKey && applicationKey) {
+            void getTempSensor(apiKey, applicationKey);
         }
-    }, [secretKey, token]);
+    }, [apiKey, applicationKey]);
 
     useEffect(() => {
         if (latLon && apikey) {
@@ -504,11 +504,11 @@ export default function Home() {
             (zipcode === '' && zipcode !== searchParams?.get('zipcode')) ||
             apikey ||
             (apikey === '' && apikey !== searchParams?.get('apikey')) ||
-            secretKey ||
-            (secretKey === '' &&
-                secretKey !== searchParams?.get('secretKey')) ||
-            token ||
-            (token === '' && token !== searchParams?.get('token')) ||
+            apiKey ||
+            (apiKey === '' && apiKey !== searchParams?.get('apiKey')) ||
+            applicationKey ||
+            (applicationKey === '' &&
+                applicationKey !== searchParams?.get('applicationKey')) ||
             appid ||
             (appid === '' && appid !== searchParams?.get('appid'))
         ) {
@@ -519,8 +519,8 @@ export default function Home() {
                 ...(zipcode ? { zipcode } : {}),
                 ...(appid ? { appid } : {}),
                 ...(apikey ? { apikey } : {}),
-                ...(secretKey ? { secretKey } : {}),
-                ...(token ? { token } : {}),
+                ...(apiKey ? { apiKey } : {}),
+                ...(applicationKey ? { applicationKey } : {}),
                 ...(weatherSource ? { weatherSource } : {})
             };
             const queryParams = new URLSearchParams(queryObj);
@@ -535,13 +535,13 @@ export default function Home() {
                 window.history.pushState({ path: newUrl }, '', newUrl);
             }
         }
-    }, [zipcode, apikey, secretKey, token, appid, latLon, weatherSource]);
+    }, [zipcode, apikey, apiKey, applicationKey, appid, latLon, weatherSource]);
 
     useEffect(() => {
-        if (secretKey && token) {
-            void getTempSensor(secretKey, token);
+        if (apiKey && applicationKey) {
+            void getTempSensor(apiKey, applicationKey);
         }
-    }, [secretKey, token]);
+    }, [apiKey, applicationKey]);
 
     useEffect(() => {
         if (location) {
@@ -629,10 +629,10 @@ export default function Home() {
                 setZipcode={setZipcode}
                 apikey={apikey}
                 setApikey={setApikey}
-                secretKey={secretKey}
-                setSecretKey={setSecretKey}
-                token={token}
-                setToken={setToken}
+                apiKey={apiKey}
+                setApiKey={setApiKey}
+                applicationKey={applicationKey}
+                setApplicationKey={setApplicationKey}
                 weatherSource={weatherSource}
                 setWeatherSource={setWeatherSource}
                 appid={appid}

@@ -32,10 +32,10 @@ interface Props {
     setZipcode: (state: string) => void;
     apikey?: string;
     setApikey: (state: string) => void;
-    token?: string;
-    setToken: (state: string) => void;
-    secretKey?: string;
-    setSecretKey: (state: string) => void;
+    applicationKey?: string;
+    setApplicationKey: (state: string) => void;
+    apiKey?: string;
+    setApiKey: (state: string) => void;
     weatherSource?: WeatherSource;
     setWeatherSource: (state: WeatherSource) => void;
     appid?: string;
@@ -51,8 +51,8 @@ type Form = {
     latlon: { value?: string; error?: string };
     zipcode: { value?: string; error?: string };
     apikey: { value?: string; error?: string };
-    token: { value?: string; error?: string };
-    secretKey: { value?: string; error?: string };
+    applicationKey: { value?: string; error?: string };
+    apiKey: { value?: string; error?: string };
     weatherSource: { value?: WeatherSource; error?: string };
     appid: { value?: string; error?: string };
     spoofWeather: { value: FakeWeatherKey | 'actual'; error?: string };
@@ -68,10 +68,10 @@ export default function Settings({
     setZipcode,
     apikey,
     setApikey,
-    token,
-    setToken,
-    secretKey,
-    setSecretKey,
+    applicationKey,
+    setApplicationKey,
+    apiKey,
+    setApiKey,
     weatherSource,
     setWeatherSource,
     appid,
@@ -89,8 +89,8 @@ export default function Settings({
         },
         zipcode: { value: zipcode, error: undefined },
         apikey: { value: apikey, error: undefined },
-        token: { value: token, error: undefined },
-        secretKey: { value: secretKey, error: undefined },
+        applicationKey: { value: applicationKey, error: undefined },
+        apiKey: { value: apiKey, error: undefined },
         weatherSource: { value: weatherSource, error: undefined },
         appid: { value: appid, error: undefined },
         spoofWeather: { value: spoofWeather || 'actual', error: undefined },
@@ -195,8 +195,8 @@ export default function Settings({
             );
             setZipcode(form.zipcode.value || '');
             setApikey(form.apikey.value || '');
-            setSecretKey(form.secretKey.value || '');
-            setToken(form.token.value || '');
+            setApiKey(form.apiKey.value || '');
+            setApplicationKey(form.applicationKey.value || '');
             setWeatherSource(form.weatherSource.value || 'OpenMeteo');
             setAppid(form.appid.value || '');
             setSpoofWeather(
@@ -235,16 +235,16 @@ export default function Settings({
     useEffect(() => {
         setForm((prevState) => ({
             ...prevState,
-            secretKey: { ...form.secretKey, value: secretKey }
+            apiKey: { ...form.apiKey, value: apiKey }
         }));
-    }, [secretKey]);
+    }, [apiKey]);
 
     useEffect(() => {
         setForm((prevState) => ({
             ...prevState,
-            token: { ...form.token, value: token }
+            applicationKey: { ...form.applicationKey, value: applicationKey }
         }));
-    }, [token]);
+    }, [applicationKey]);
     useEffect(() => {
         setForm((prevState) => ({
             ...prevState,
@@ -380,17 +380,17 @@ export default function Settings({
                                 </InputWrapper>
                             </div>
                             <div className="w-72">
-                                <InputWrapper error={form.secretKey.error}>
+                                <InputWrapper error={form.apiKey.error}>
                                     <Input
-                                        label="Switchbot Secret Key"
+                                        label="AWN API Key"
                                         crossOrigin={undefined}
-                                        value={form.secretKey.value}
-                                        error={!!form.secretKey.error}
+                                        value={form.apiKey.value}
+                                        error={!!form.apiKey.error}
                                         onChange={({ target }) =>
                                             setForm((form) => ({
                                                 ...form,
-                                                secretKey: {
-                                                    ...form.secretKey,
+                                                apiKey: {
+                                                    ...form.apiKey,
                                                     value: target.value
                                                 }
                                             }))
@@ -399,17 +399,17 @@ export default function Settings({
                                 </InputWrapper>
                             </div>
                             <div className="w-72">
-                                <InputWrapper error={form.token.error}>
+                                <InputWrapper error={form.applicationKey.error}>
                                     <Input
-                                        label="Switchbot Token"
+                                        label="AWN Application Key"
                                         crossOrigin={undefined}
-                                        value={form.token.value}
-                                        error={!!form.token.error}
+                                        value={form.applicationKey.value}
+                                        error={!!form.applicationKey.error}
                                         onChange={({ target }) =>
                                             setForm((form) => ({
                                                 ...form,
-                                                token: {
-                                                    ...form.token,
+                                                applicationKey: {
+                                                    ...form.applicationKey,
                                                     value: target.value
                                                 }
                                             }))
