@@ -624,7 +624,8 @@ export default function Home() {
                                         <FontAwesomeIcon
                                             icon={faLocationCrosshairs}
                                             inverse
-                                            style={{ paddingTop: 32 }}
+                                            style={{ paddingTop: 30 }}
+                                            size="xl"
                                         />
                                     )}
                                 </div>
