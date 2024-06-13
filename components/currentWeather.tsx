@@ -2,8 +2,6 @@
 import '/css/weather-icons.css';
 import { Current, Location, TempSensor } from '@/types';
 import moment from 'moment-timezone';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faLocationCrosshairs } from '@fortawesome/free-solid-svg-icons';
 
 interface Props {
     location: Location;
@@ -19,13 +17,11 @@ export default function CurrentWeather({
     tempSensor
 }: Props) {
     let temp = current.temp;
-    let localTemp = false;
     if (
         tempSensor?.lat.toFixed(3) === location.lat.toFixed(3) &&
         tempSensor?.lon.toFixed(3) === location.lon.toFixed(3)
     ) {
         temp = tempSensor?.temperature || current.temp;
-        localTemp = !!tempSensor?.temperature;
     }
     return (
         <div style={{ height: '100%' }} className="flex">
@@ -38,12 +34,6 @@ export default function CurrentWeather({
                 </div>
                 <div className="flex flex-col items-center gap-6">
                     <div className="flex flex-row">
-                        {localTemp && (
-                            <FontAwesomeIcon
-                                icon={faLocationCrosshairs}
-                                inverse
-                            />
-                        )}
                         <div className="text text-9xl">
                             {temp}
                             °F

@@ -39,6 +39,8 @@ import Settings from '@/components/settings';
 import { fakeWeather } from '@/constants/data';
 import Alerts from '@/components/alerts';
 import { Device } from 'ambient-weather-api';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faLocationCrosshairs } from '@fortawesome/free-solid-svg-icons';
 
 if (typeof window !== 'undefined') {
     const { fetch: originalFetch } = window;
@@ -591,6 +593,14 @@ export default function Home() {
         }
     }, [spoofWeather]);
 
+    let localTemp = false;
+    if (
+        tempSensor?.lat.toFixed(3) === location?.lat.toFixed(3) &&
+        tempSensor?.lon.toFixed(3) === location?.lon.toFixed(3)
+    ) {
+        localTemp = !!tempSensor?.temperature;
+    }
+
     return (
         <main className="flex min-h-screen flex-col ">
             {current && forecast && location && isNight !== undefined ? (
@@ -605,7 +615,19 @@ export default function Home() {
                         className="flex flex-col justify-between grow p-8"
                     >
                         <div className="flex flex-row justify-between">
-                            <div className="text text-7xl">{location.city}</div>
+                            <div className="flex flex-row gap-3 content-center">
+                                <div className="text text-7xl">
+                                    {location.city}
+                                </div>
+                                <div>
+                                    {localTemp && (
+                                        <FontAwesomeIcon
+                                            icon={faLocationCrosshairs}
+                                            inverse
+                                        />
+                                    )}
+                                </div>
+                            </div>
                             <DateTime />
                         </div>
                         <CurrentWeather
