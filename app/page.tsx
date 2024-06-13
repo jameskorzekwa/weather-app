@@ -615,7 +615,7 @@ export default function Home() {
                         className="flex flex-col justify-between grow p-8"
                     >
                         <div className="flex flex-row justify-between">
-                            <div className="flex flex-row gap-3 content-center">
+                            <div className="flex flex-row gap-5 content-center shrink">
                                 <div className="text text-7xl">
                                     {location.city}
                                 </div>
@@ -624,6 +624,7 @@ export default function Home() {
                                         <FontAwesomeIcon
                                             icon={faLocationCrosshairs}
                                             inverse
+                                            style={{ paddingTop: 32 }}
                                         />
                                     )}
                                 </div>
