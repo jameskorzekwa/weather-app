@@ -1,5 +1,5 @@
 'use client';
-import '/css/weather-icons.css';
+import '@/css/weather-icons.css';
 import { Current, Location, TempSensor } from '@/types';
 import moment from 'moment-timezone';
 

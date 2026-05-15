@@ -1,9 +1,9 @@
 'use client';
-import '/css/weather-icons.css';
+import '@/css/weather-icons.css';
 import { useInterval } from 'usehooks-ts';
 import moment from 'moment-timezone';
 import { v4 as uuidv4 } from 'uuid';
-import { Fragment, useEffect, useState } from 'react';
+import { Fragment, Suspense, useEffect, useState } from 'react';
 import Background from '@/components/background';
 import {
     Current,
@@ -64,7 +64,7 @@ if (typeof window !== 'undefined') {
     };
 }
 
-export default function Home() {
+function HomeContent() {
     const [alerts, setAlerts] = useState<{ id: string; msg: string }[]>([]);
     const [settingsOpen, setSettingsOpen] = useState<boolean>(false);
     const [isNight, setIsNight] = useState<boolean | undefined>();
@@ -81,6 +81,7 @@ export default function Home() {
     const [weatherSource, setWeatherSource] = useState<
         WeatherSource | undefined
     >('OpenMeteo');
+    const [mono, setMono] = useState<boolean>(false);
     const [spoofWeather, setSpoofWeather] = useState<
         FakeWeatherKey | undefined
     >();
@@ -470,6 +471,7 @@ export default function Home() {
                 (searchParams.get('weatherSource') as WeatherSource) ||
                     'OpenMeteo'
             );
+            setMono(searchParams.get('mono') === '1');
             const zipcode = searchParams.get('zipcode');
             const lat = searchParams.get('lat');
             const lon = searchParams.get('lon');
@@ -523,7 +525,8 @@ export default function Home() {
                 ...(apikey ? { apikey } : {}),
                 ...(apiKey ? { apiKey } : {}),
                 ...(applicationKey ? { applicationKey } : {}),
-                ...(weatherSource ? { weatherSource } : {})
+                ...(weatherSource ? { weatherSource } : {}),
+                ...(mono ? { mono: '1' } : {})
             };
             const queryParams = new URLSearchParams(queryObj);
             if ('?' + queryParams.toString() !== window.location.search) {
@@ -537,7 +540,7 @@ export default function Home() {
                 window.history.pushState({ path: newUrl }, '', newUrl);
             }
         }
-    }, [zipcode, apikey, apiKey, applicationKey, appid, latLon, weatherSource]);
+    }, [zipcode, apikey, apiKey, applicationKey, appid, latLon, weatherSource, mono]);
 
     useEffect(() => {
         if (apiKey && applicationKey) {
@@ -593,6 +596,15 @@ export default function Home() {
         }
     }, [spoofWeather]);
 
+    useEffect(() => {
+        document.documentElement.classList.toggle('mono', mono);
+        document.documentElement.classList.toggle('invert', mono && !isNight);
+        return () => {
+            document.documentElement.classList.remove('mono');
+            document.documentElement.classList.remove('invert');
+        };
+    }, [mono, isNight]);
+
     let localTemp = false;
     if (
         tempSensor?.lat.toFixed(3) === location?.lat.toFixed(3) &&
@@ -605,7 +617,7 @@ export default function Home() {
         <main className="flex min-h-screen flex-col ">
             {current && forecast && location && isNight !== undefined ? (
                 <Fragment>
-                    <Background current={current} isNight={isNight} />
+                    <Background current={current} isNight={isNight} mono={mono} />
                     <div
                         style={{
                             position: 'absolute',
@@ -665,9 +677,19 @@ export default function Home() {
                 setSpoofWeather={setSpoofWeather}
                 isNight={isNight}
                 setIsNight={setIsNight}
+                mono={mono}
+                setMono={setMono}
                 addAlert={addAlert}
             />
             <Alerts alerts={alerts} closeAlert={closeAlert} />
         </main>
+    );
+}
+
+export default function Home() {
+    return (
+        <Suspense fallback={<Loading />}>
+            <HomeContent />
+        </Suspense>
     );
 }

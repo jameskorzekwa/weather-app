@@ -7,16 +7,17 @@ import { seededRandomNumber } from '@/lib/utils';
 interface Props {
     id: AtmosphereId;
     isNight: boolean;
+    inverted?: boolean;
 }
 
-export default function Atmosphere({ id, isNight }: Props) {
+export default function Atmosphere({ id, isNight, inverted }: Props) {
     const colors = [
-        '#839192',
-        '#B3B6B7',
-        '#A6ACAF',
-        '#898b8c',
-        '#868e93',
-        '#bccdd3'
+        '#8d8d8d',
+        '#b5b5b5',
+        '#aaaaaa',
+        '#8a8a8a',
+        '#8c8c8c',
+        '#c9c9c9'
     ];
     const rdm = seedrandom('seed2');
     const fills = Array.from(
@@ -67,7 +68,9 @@ export default function Atmosphere({ id, isNight }: Props) {
                 <ellipse
                     fill={
                         isNight
-                            ? 'rgba(238,222,163,0.2)'
+                            ? inverted
+                                ? 'rgba(90,90,90,0.4)'
+                                : 'rgba(140,140,140,0.4)'
                             : 'rgba(241,196,15,0.5)'
                     }
                     cx="0"
@@ -77,7 +80,13 @@ export default function Atmosphere({ id, isNight }: Props) {
                     transform="translate(470, 0)"
                 />
                 <ellipse
-                    fill={isNight ? '#eedea3' : 'rgba(241,196,15,0.67)'}
+                    fill={
+                        isNight
+                            ? inverted
+                                ? '#5a5a5a'
+                                : '#707070'
+                            : 'rgba(241,196,15,0.67)'
+                    }
                     cx="0"
                     cy="0"
                     rx={isNight ? '30' : '60'}

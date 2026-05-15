@@ -1,17 +1,63 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Rubik:ital,wght@0,300..900;1,300..900&display=swap');
+@import "tailwindcss";
+@source "../node_modules/@material-tailwind/react";
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@utility bg-opacity-60 {
+    --tw-bg-opacity: 0.6;
+}
 
-html * {
-    font-family: 'Rubik', sans-serif;
-    font-optical-sizing: auto;
-    font-weight: 450;
-    font-style: normal;
+.bg-black.bg-opacity-60 {
+    background-color: rgb(0 0 0 / 0.6);
+}
+
+@layer base {
+    html * {
+        font-optical-sizing: auto;
+        font-weight: 450;
+        font-style: normal;
+    }
 }
 
 .text {
     color: white;
     white-space: nowrap;
 }
+
+html.invert {
+    filter: invert(1);
+}
+
+/* Keep Next.js dev overlay in its original colors when the page is inverted.
+   We filter <html> rather than <body> so <body> doesn't become a containing block
+   for fixed-positioned elements — that breaks the Next.js dev tools modal sizing. */
+html.invert nextjs-portal {
+    filter: invert(1);
+}
+
+/* Force the Material Tailwind primary buttons (e.g. SAVE in the settings dialog) to
+   be solid black. In mono night the user sees black; in mono day the page-wide invert
+   flips it to white. Either way: only black or white, never blue/orange/gray.
+   Exclude `role=combobox` — those are the Select dropdown triggers, not actions. */
+html.mono [role="dialog"] button:not([role="combobox"]) {
+    background-color: #000 !important;
+    background-image: none !important;
+    color: #fff !important;
+}
+
+/* Splash / Loading screen — default colored */
+.splash-loading {
+    background-color: rgb(55, 114, 180);
+}
+.splash-sun {
+    fill: #f1c40f;
+}
+
+/* When URL has mono=1, the inline script in layout.tsx adds .mono-init to <html>
+   so the loading screen renders in grayscale from the very first paint (no SSR flash).
+   Use direct values (matches the mono-day look: white bg, dark element) for high contrast. */
+html.mono-init .splash-loading {
+    background-color: white;
+}
+html.mono-init .splash-sun {
+    fill: #000000;
+}
+

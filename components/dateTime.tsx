@@ -1,5 +1,5 @@
 'use client';
-import '/css/weather-icons.css';
+import '@/css/weather-icons.css';
 import moment from 'moment';
 import { useInterval } from 'usehooks-ts';
 import { useState } from 'react';

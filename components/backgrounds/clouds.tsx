@@ -18,14 +18,14 @@ export default function Clouds({ id, isNight }: Props) {
     };
 
     const colors = [
-        '#737779',
-        '#839192',
-        '#B3B6B7',
-        '#A6ACAF',
-        '#898b8c',
-        '#868e93',
-        '#bccdd3',
-        '#5b5d5e'
+        '#767676',
+        '#8d8d8d',
+        '#b5b5b5',
+        '#aaaaaa',
+        '#8a8a8a',
+        '#8c8c8c',
+        '#c9c9c9',
+        '#5c5c5c'
     ];
 
     const rdm = seedrandom('seed8');

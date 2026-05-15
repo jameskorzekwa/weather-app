@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Rubik } from 'next/font/google';
 import './globals.css';
 import React from 'react';
 
-const inter = Inter({ subsets: ['latin'] });
+const rubik = Rubik({ subsets: ['latin'], weight: ['300', '400', '500', '600', '700', '800', '900'] });
 
 export const metadata: Metadata = {
     title: 'Weather App',
@@ -17,7 +17,14 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="en">
-            <body className={inter.className}>{children}</body>
+            <head>
+                <script
+                    dangerouslySetInnerHTML={{
+                        __html: `try{if(new URLSearchParams(location.search).get('mono')==='1'){document.documentElement.classList.add('mono-init');document.documentElement.classList.add('invert');}}catch(e){}`
+                    }}
+                />
+            </head>
+            <body className={rubik.className}>{children}</body>
         </html>
     );
 }

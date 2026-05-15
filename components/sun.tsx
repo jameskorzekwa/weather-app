@@ -10,9 +10,13 @@ const StyledSun = styled.g`
         }
     }
 `;
-export default function Sun() {
+interface Props {
+    inverted?: boolean;
+}
+
+export default function Sun({ inverted }: Props = {}) {
     const numberOfRays = 14;
-    const sunColor = '#f1a20f';
+    const sunColor = inverted ? '#5a5a5a' : '#f1a20f';
     return (
         <StyledSun>
             <ellipse fill={sunColor} cx="0" cy="0" rx={'60'} ry={'60'} />

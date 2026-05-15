@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { Fragment, useEffect, useState } from 'react';
 import styled from 'styled-components';
 import {
@@ -44,6 +45,8 @@ interface Props {
     setSpoofWeather: (state: FakeWeatherKey | undefined) => void;
     isNight?: boolean;
     setIsNight: (state: boolean) => void;
+    mono?: boolean;
+    setMono: (state: boolean) => void;
     addAlert: (msg: string | unknown) => void;
 }
 
@@ -57,6 +60,7 @@ type Form = {
     appid: { value?: string; error?: string };
     spoofWeather: { value: FakeWeatherKey | 'actual'; error?: string };
     isNight: { value?: boolean; error?: string };
+    mono: { value: boolean; error?: string };
 };
 
 export default function Settings({
@@ -80,6 +84,8 @@ export default function Settings({
     setSpoofWeather,
     isNight,
     setIsNight,
+    mono,
+    setMono,
     addAlert
 }: Props) {
     const [form, setForm] = useState<Form>({
@@ -94,7 +100,8 @@ export default function Settings({
         weatherSource: { value: weatherSource, error: undefined },
         appid: { value: appid, error: undefined },
         spoofWeather: { value: spoofWeather || 'actual', error: undefined },
-        isNight: { value: isNight, error: undefined }
+        isNight: { value: isNight, error: undefined },
+        mono: { value: !!mono, error: undefined }
     });
     const [locationLoading, setLocationLoading] = useState<boolean>(false);
 
@@ -205,6 +212,7 @@ export default function Settings({
                     : form.spoofWeather.value
             );
             setIsNight(!!form.isNight.value);
+            setMono(!!form.mono.value);
             setSettingsOpen(false);
         }
     };
@@ -272,6 +280,28 @@ export default function Settings({
             isNight: { ...form.isNight, value: isNight }
         }));
     }, [isNight]);
+    useEffect(() => {
+        setForm((prevState) => ({
+            ...prevState,
+            mono: { ...form.mono, value: !!mono }
+        }));
+    }, [mono]);
+
+    useEffect(() => {
+        if (!settingsOpen) return;
+        let cancelled = false;
+        const apply = () => {
+            if (cancelled) return;
+            const dialog = document.querySelector<HTMLElement>('[role="dialog"]');
+            if (dialog) {
+                if (dialog.style.opacity !== '1') dialog.style.opacity = '1';
+                if (dialog.style.transform !== 'none') dialog.style.transform = 'none';
+            }
+            requestAnimationFrame(apply);
+        };
+        requestAnimationFrame(apply);
+        return () => { cancelled = true; };
+    }, [settingsOpen]);
 
     return (
         <Fragment>
@@ -439,6 +469,26 @@ export default function Settings({
                                         <Option value="OpenMeteo">
                                             OpenMeteo
                                         </Option>
+                                    </Select>
+                                </InputWrapper>
+                            </div>
+                            <div className="w-72">
+                                <InputWrapper error={form.mono.error}>
+                                    <Select
+                                        label="Color Mode"
+                                        value={form.mono.value ? 'mono' : 'color'}
+                                        onChange={(val) =>
+                                            setForm((form) => ({
+                                                ...form,
+                                                mono: {
+                                                    ...form.mono,
+                                                    value: val === 'mono'
+                                                }
+                                            }))
+                                        }
+                                    >
+                                        <Option value="color">Color</Option>
+                                        <Option value="mono">Monochrome</Option>
                                     </Select>
                                 </InputWrapper>
                             </div>

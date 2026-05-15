@@ -5,13 +5,16 @@ import Moon from '@/components/moon';
 interface Props {
     id: number;
     isNight: boolean;
+    mono?: boolean;
+    inverted?: boolean;
 }
 
-export default function Clear({ isNight }: Props) {
+export default function Clear({ isNight, mono, inverted }: Props) {
+    const useNightBg = isNight || !!mono;
     return (
         <div
             style={{
-                backgroundColor: isNight ? 'black' : 'rgb(55,114,180)',
+                backgroundColor: useNightBg ? 'black' : 'rgb(55,114,180)',
                 height: '100vh',
                 width: '100vw',
                 overflow: 'hidden'
@@ -19,7 +22,7 @@ export default function Clear({ isNight }: Props) {
         >
             <svg viewBox="0 0 470 1536">
                 <g transform={'translate(470, 0)'}>
-                    {isNight ? <Moon /> : <Sun />}
+                    {isNight ? <Moon inverted={inverted} /> : <Sun inverted={inverted} />}
                 </g>
             </svg>
         </div>
