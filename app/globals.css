@@ -58,6 +58,31 @@ html.mono [role="dialog"] button:not([role="combobox"]) {
     color: #fff !important;
 }
 
+/* MT v2 text inputs: the field's own bottom/side border is rgb(0,0,0) but the
+   TOP is drawn by the label ::before/::after pseudo notch in a lighter
+   blue-gray (lab ~47). Through the mono filter that makes the top render a
+   different (darker) grey than the bottom. COLOR-ONLY fix: force the notch
+   pseudos and the field's bottom/side borders to the same colour so top ==
+   bottom on every field. (Do NOT set border-top-color on the input — it must
+   stay transparent so the notch gap shows. No width changes.) */
+[role="dialog"] label::before,
+[role="dialog"] label::after {
+    border-color: rgb(0, 0, 0) !important;
+}
+[role="dialog"] input:not([type="checkbox"]),
+[role="dialog"] [role="combobox"] {
+    border-bottom-color: rgb(0, 0, 0) !important;
+    border-left-color: rgb(0, 0, 0) !important;
+    border-right-color: rgb(0, 0, 0) !important;
+}
+/* MT colours unfocused/filled input labels lighter (lab~47) than select
+   labels (rgb 0,0,0), so through the mono filter the text-field labels read
+   as a darker grey. Force every dialog label to the same colour as the
+   selects (which are correct) so all label text matches. Colour only. */
+[role="dialog"] label {
+    color: rgb(0, 0, 0) !important;
+}
+
 /* Splash / Loading screen — default colored */
 .splash-loading {
     background-color: rgb(55, 114, 180);
