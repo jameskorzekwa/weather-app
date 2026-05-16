@@ -57,15 +57,44 @@ Notes:
 
 ## Tests
 
-There is **no automated test suite** (no Jest/Vitest, no test files). The only
-checks are:
+Vitest + React Testing Library (jsdom). Config: `vitest.config.ts`
+(`@` alias → project root, `css:false`), setup: `vitest.setup.ts`
+(jest-dom + matchMedia/ResizeObserver polyfills). Tests live in `test/**`.
 
 ```bash
-npm run lint   # next lint
+npm test          # vitest run  (74 tests, 11 files)
+npm run test:watch
+npm run lint      # next lint
 ```
 
-"Testing" means **manual browser testing** (see below). If you change UI,
-verify it in the browser; do not claim success without looking.
+Coverage / conventions:
+- `test/lib/utils.test.ts` — all pure functions. Tests lock in **actual**
+  behavior, incl. quirks (`roundTo` uses bitwise `^`, `getTemp` uses 273 vs
+  273.15) — don't "correct" the asserted values to match the math.
+- `test/hooks` — `useRandomInterval` with `vi.useFakeTimers()`.
+- `test/components/svg.test.tsx` — Sun/Moon/Cloud/Raining/ThunderCloud:
+  assert SVG `fill`/structure (incl. the `inverted` grey-vs-color logic).
+- `test/components/ui.test.tsx` — Loading/DateTime/CurrentWeather/WeeklyWeather.
+- `test/components/background.test.tsx` — routing + `night`/`inverted`
+  flags. Mocks every `backgrounds/*` child; **vi.mock factories are hoisted
+  so they must be fully self-contained** (no outer-scope refs).
+- `test/components/backgrounds.test.tsx` — real backgrounds, bg-color + sun/moon.
+- `@material-tailwind/react` is mocked per-file (inputwrapper/alerts/settings)
+  — MT v2 + portals/floating-ui don't render cleanly in jsdom.
+- `test/api/routes.test.ts` — `pages/api/awn` & `switchbot` with
+  `ambient-weather-api`/`fetch`/`uuid` mocked.
+- `test/app/page.test.tsx` — smoke only (heavy children + `next/navigation`
+  stubbed); asserts the loading splash mounts.
+
+Known gotcha encoded in tests: `components/settings.tsx` `validate()` is
+effectively a **no-op** — it runs validation inside an async `setForm`
+updater but returns the stale `valid`, so Save never actually blocks. The
+settings test asserts this real behavior (with a comment), so a future fix
+will surface as a failing test.
+
+Unit tests cover logic + render output. Animated weather backgrounds and
+live API integration are still **manual browser testing** (see below) — if
+you change UI, verify in the browser; don't claim success without looking.
 
 ## How to test in the browser
 
