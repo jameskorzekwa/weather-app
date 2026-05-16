@@ -25,7 +25,9 @@ interface Props {
 export default function Background({ current, isNight, mono }: Props) {
     const id = current.id;
     const night = isNight || !!mono;
-    const inverted = !!mono && !isNight;
+    // Mono is ALWAYS inverted (white bg, dark elements) — eink-friendly.
+    // Day/night only changes the Sun/Moon icon for clear weather, not the scheme.
+    const inverted = !!mono;
     let getWeatherType = (id: number) => {
         if ([200, 201, 202, 210, 211, 212, 221, 230, 231, 232].includes(id)) {
             return <Thunderstorm id={id as ThunderstormId} isNight={night} />;

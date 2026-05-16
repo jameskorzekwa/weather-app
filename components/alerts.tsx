@@ -28,7 +28,7 @@ export default function Alerts({ alerts, closeAlert }: Props) {
         setAlrts(alerts);
     }, [alerts]);
     return (
-        <AlertsContainer>
+        <AlertsContainer className="alerts-root">
             {alrts.map((alert) => {
                 return (
                     <Alert

@@ -18,7 +18,7 @@ export default function WeeklyWeather({ forecast }: Props) {
                             borderRadius: '5px',
                             backgroundColor: 'rgba(0, 0, 0, 0.1)'
                         }}
-                        className="flex flex-row grow justify-center items-center gap-2 py-4 px-1"
+                        className="forecast-card flex flex-row grow justify-center items-center gap-2 py-4 px-1"
                     >
                         <i
                             className={`text wi wi-owm-${forecast.daily[i].id} text-5xl`}

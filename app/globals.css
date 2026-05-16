@@ -33,10 +33,23 @@ html.invert nextjs-portal {
     filter: invert(1);
 }
 
+/* Keep error/alert popups in their original colors (red stays red, not green).
+   Counter-invert the whole alerts area back to original. */
+html.invert .alerts-root {
+    filter: invert(1);
+}
+
+/* Forecast cards use rgba(0,0,0,0.1) inline — invisible once inverted onto the
+   white mono bg. Give them a solid dark source so they invert to a visible
+   light-grey box. (Color mode keeps the inline rgba; no html.invert there.) */
+html.invert .forecast-card {
+    background-color: rgb(40, 40, 40) !important;
+}
+
 /* Force the Material Tailwind primary buttons (e.g. SAVE in the settings dialog) to
-   be solid black. In mono night the user sees black; in mono day the page-wide invert
-   flips it to white. Either way: only black or white, never blue/orange/gray.
-   Exclude `role=combobox` — those are the Select dropdown triggers, not actions. */
+   solid black source. Mono is always inverted, so the user sees a white button with
+   black text — never the blue/orange MT gradient. Exclude `role=combobox` — those
+   are the Select dropdown triggers, not actions. */
 html.mono [role="dialog"] button:not([role="combobox"]) {
     background-color: #000 !important;
     background-image: none !important;

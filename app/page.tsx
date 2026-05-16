@@ -598,12 +598,12 @@ function HomeContent() {
 
     useEffect(() => {
         document.documentElement.classList.toggle('mono', mono);
-        document.documentElement.classList.toggle('invert', mono && !isNight);
+        document.documentElement.classList.toggle('invert', mono);
         return () => {
             document.documentElement.classList.remove('mono');
             document.documentElement.classList.remove('invert');
         };
-    }, [mono, isNight]);
+    }, [mono]);
 
     let localTemp = false;
     if (
