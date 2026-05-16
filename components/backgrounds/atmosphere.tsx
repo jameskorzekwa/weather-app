@@ -41,7 +41,7 @@ export default function Atmosphere({ id, isNight, inverted }: Props) {
                 overflow: 'hidden'
             }}
         >
-            <div style={{ color: 'rgba(179,182,183,0.53)' }}></div>
+            <div style={{ color: 'rgba(180,180,180,0.53)' }}></div>
             <svg viewBox="0 0 470 1536">
                 {isNight
                     ? null

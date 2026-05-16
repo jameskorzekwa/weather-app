@@ -102,9 +102,9 @@ export default function Thunderstorm({ id, isNight }: Props) {
                     <ThunderCloud y={0} delay={0} fill="#2d2d2d" />
                     <ThunderCloud y={0} delay={-40000} fill="#2d2d2d" />
                     <ThunderCloud y={0} delay={-120000} fill="#2d2d2d" />
-                    <ThunderCloud y={-100} delay={15000} fill="#7a7a7e" />
-                    <ThunderCloud y={-85} delay={-45000} fill="#7a7a7e" />
-                    <ThunderCloud y={-75} delay={-90000} fill="#7a7a7e" />
+                    <ThunderCloud y={-100} delay={15000} fill="#7a7a7a" />
+                    <ThunderCloud y={-85} delay={-45000} fill="#7a7a7a" />
+                    <ThunderCloud y={-75} delay={-90000} fill="#7a7a7a" />
                 </svg>
             </div>
         </div>

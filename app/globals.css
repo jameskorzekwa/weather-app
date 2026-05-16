@@ -22,19 +22,21 @@
     white-space: nowrap;
 }
 
+/* grayscale(1) is a hard guarantee: every pixel becomes R=G=B regardless of
+   source color space (Tailwind v4 oklch, Material Tailwind blue-gray, lab()
+   gradients, etc.). The eink display can never derive a hue from anything.
+   invert(1) gives the white-bg / dark-element (eink-friendly) look. */
 html.invert {
-    filter: invert(1);
+    filter: invert(1) grayscale(1);
 }
 
-/* Keep Next.js dev overlay in its original colors when the page is inverted.
-   We filter <html> rather than <body> so <body> doesn't become a containing block
-   for fixed-positioned elements — that breaks the Next.js dev tools modal sizing. */
-html.invert nextjs-portal {
-    filter: invert(1);
-}
-
-/* Keep error/alert popups in their original colors (red stays red, not green).
-   Counter-invert the whole alerts area back to original. */
+/* Counter-invert the Next.js dev overlay and the alerts so they're not a photo-
+   negative. NOTE: the html grayscale(1) above still applies, so these end up as
+   neutral greys (no color) — which is the intended eink behavior. The earlier
+   "keep red" goal is intentionally superseded by the no-color requirement; eink
+   can't show red anyway. We filter <html> (not <body>) so <body> doesn't become
+   a containing block for fixed elements (that broke the dev tools modal). */
+html.invert nextjs-portal,
 html.invert .alerts-root {
     filter: invert(1);
 }
