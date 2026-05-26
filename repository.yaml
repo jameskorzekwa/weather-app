@@ -1,0 +1,14 @@
+---
+# Marks this repo as a Home Assistant add-on repository.
+# Users add it in HA via:
+#   Settings → Add-ons → Add-on Store → ⋮ → Repositories →
+#   paste the repo URL → "Add"
+#
+# HA Supervisor then scans top-level directories for `config.yaml` files —
+# right now that's `homeassistant/`, which exposes the Weather App add-on.
+# Adding more add-ons later is as simple as creating another sibling
+# directory with its own `config.yaml`.
+
+name: "Weather App add-ons"
+url: "https://github.com/jameskorzekwa/weather-app"
+maintainer: "James Korzekwa <james.korzekwa@gmail.com>"

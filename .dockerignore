@@ -1,0 +1,32 @@
+# Ignored when the Home Assistant add-on Docker image is built.
+# Build context is the repository root (set in .github/workflows/build.yaml
+# via `context: .`).
+
+node_modules
+.next
+.git
+.github
+.idea
+.vercel
+coverage
+out
+build
+
+# Test scaffolding — not needed in the production image
+test
+vitest.config.ts
+vitest.setup.ts
+
+# Editor / OS junk
+.DS_Store
+*.log
+*.tsbuildinfo
+
+# Local-only files (secrets, scratch)
+*.local
+.env*.local
+
+# Docs / repo meta
+README.md
+AGENTS.md
+CLAUDE.md
