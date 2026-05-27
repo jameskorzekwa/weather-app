@@ -68,10 +68,10 @@ function HomeContent() {
     const [alerts, setAlerts] = useState<{ id: string; msg: string }[]>([]);
     const [settingsOpen, setSettingsOpen] = useState<boolean>(false);
     const [isNight, setIsNight] = useState<boolean | undefined>();
-    const [apikey, setApikey] = useState<string | undefined>();
-    const [appid, setAppid] = useState<string | undefined>();
-    const [apiKey, setApiKey] = useState<string | undefined>();
-    const [applicationKey, setApplicationKey] = useState<string | undefined>();
+    const [geoapifyApiKey, setGeoapifyApiKey] = useState<string | undefined>();
+    const [openWeatherMapAppId, setOpenWeatherMapAppId] = useState<string | undefined>();
+    const [awnApiKey, setAwnApiKey] = useState<string | undefined>();
+    const [awnApplicationKey, setAwnApplicationKey] = useState<string | undefined>();
     const [latLon, setLatLon] = useState<LatLon | undefined>();
     const [forecast, setForecast] = useState<Forecast | undefined>();
     const [current, setCurrent] = useState<Current | undefined>();
@@ -145,7 +145,7 @@ function HomeContent() {
         }
     };
 
-    const getTempSensor = async (apiKey: string, applicationKey: string) => {
+    const getTempSensor = async (awnApiKey: string, awnApplicationKey: string) => {
         const localStorageTempSensor = localStorage.getItem('tempSensor');
         if (localStorageTempSensor) {
             try {
@@ -166,7 +166,7 @@ function HomeContent() {
         }
         try {
             const result = await fetch(
-                `/api/awn?apiKey=${apiKey}&applicationKey=${applicationKey}`
+                `api/awn?awnApiKey=${awnApiKey}&awnApplicationKey=${awnApplicationKey}`
             );
             if (result.status === 401) {
                 throw new Error(
@@ -279,7 +279,7 @@ function HomeContent() {
         }
         try {
             const result = await fetch(
-                `https://api.openweathermap.org/data/2.5/weather?lat=${location.lat}&lon=${location.lon}&appid=${appid}`
+                `https://api.openweathermap.org/data/2.5/weather?lat=${location.lat}&lon=${location.lon}&appid=${openWeatherMapAppId}`
             );
             if (result.status === 401) {
                 throw new Error(
@@ -328,7 +328,7 @@ function HomeContent() {
         }
         try {
             const result = await fetch(
-                `https://api.openweathermap.org/data/3.0/onecall?lat=${location.lat}&lon=${location.lon}&appid=${appid}`
+                `https://api.openweathermap.org/data/3.0/onecall?lat=${location.lat}&lon=${location.lon}&appid=${openWeatherMapAppId}`
             );
             if (result.status === 401) {
                 throw new Error(
@@ -375,7 +375,7 @@ function HomeContent() {
         }
         try {
             const result = await fetch(
-                `https://api.geoapify.com/v1/geocode/reverse?lat=${latLon?.lat}&lon=${latLon?.lon}&apiKey=${apikey}`,
+                `https://api.geoapify.com/v1/geocode/reverse?lat=${latLon?.lat}&lon=${latLon?.lon}&apiKey=${geoapifyApiKey}`,
                 {
                     method: 'GET',
                     headers: {
@@ -424,7 +424,7 @@ function HomeContent() {
         }
         try {
             const result = await fetch(
-                `https://api.geoapify.com/v1/geocode/search?text=${zipcode}&lang=en&limit=10&type=postcode&filter=countrycode:us&&format=json&apiKey=${apikey}`
+                `https://api.geoapify.com/v1/geocode/search?text=${zipcode}&lang=en&limit=10&type=postcode&filter=countrycode:us&&format=json&apiKey=${geoapifyApiKey}`
             );
             if (result.status === 401) {
                 throw new Error(
@@ -453,8 +453,8 @@ function HomeContent() {
         if (location) {
             getAppWeather(location);
         }
-        if (apiKey && applicationKey) {
-            void getTempSensor(apiKey, applicationKey);
+        if (awnApiKey && awnApplicationKey) {
+            void getTempSensor(awnApiKey, awnApplicationKey);
         }
         if (current) {
             checkIsNight();
@@ -463,10 +463,10 @@ function HomeContent() {
 
     useEffect(() => {
         if (searchParams) {
-            setAppid(searchParams.get('appid') || undefined);
-            setApikey(searchParams.get('apikey') || undefined);
-            setApiKey(searchParams.get('apiKey') || undefined);
-            setApplicationKey(searchParams.get('applicationKey') || undefined);
+            setOpenWeatherMapAppId(searchParams.get('openWeatherMapAppId') || undefined);
+            setGeoapifyApiKey(searchParams.get('geoapifyApiKey') || undefined);
+            setAwnApiKey(searchParams.get('awnApiKey') || undefined);
+            setAwnApplicationKey(searchParams.get('awnApplicationKey') || undefined);
             setWeatherSource(
                 (searchParams.get('weatherSource') as WeatherSource) ||
                     'OpenMeteo'
@@ -485,19 +485,19 @@ function HomeContent() {
     }, []);
 
     useEffect(() => {
-        if (apiKey && applicationKey) {
-            void getTempSensor(apiKey, applicationKey);
+        if (awnApiKey && awnApplicationKey) {
+            void getTempSensor(awnApiKey, awnApplicationKey);
         }
-    }, [apiKey, applicationKey]);
+    }, [awnApiKey, awnApplicationKey]);
 
     useEffect(() => {
-        if (latLon && apikey) {
+        if (latLon && geoapifyApiKey) {
             void getReverseLocation(latLon);
         }
     }, [latLon]);
 
     useEffect(() => {
-        if (apikey && zipcode && (!location || location.postcode !== zipcode)) {
+        if (geoapifyApiKey && zipcode && (!location || location.postcode !== zipcode)) {
             void getZipcodeLocation(zipcode);
         }
     }, [zipcode]);
@@ -506,25 +506,25 @@ function HomeContent() {
         if (
             zipcode ||
             (zipcode === '' && zipcode !== searchParams?.get('zipcode')) ||
-            apikey ||
-            (apikey === '' && apikey !== searchParams?.get('apikey')) ||
-            apiKey ||
-            (apiKey === '' && apiKey !== searchParams?.get('apiKey')) ||
-            applicationKey ||
-            (applicationKey === '' &&
-                applicationKey !== searchParams?.get('applicationKey')) ||
-            appid ||
-            (appid === '' && appid !== searchParams?.get('appid'))
+            geoapifyApiKey ||
+            (geoapifyApiKey === '' && geoapifyApiKey !== searchParams?.get('geoapifyApiKey')) ||
+            awnApiKey ||
+            (awnApiKey === '' && awnApiKey !== searchParams?.get('awnApiKey')) ||
+            awnApplicationKey ||
+            (awnApplicationKey === '' &&
+                awnApplicationKey !== searchParams?.get('awnApplicationKey')) ||
+            openWeatherMapAppId ||
+            (openWeatherMapAppId === '' && openWeatherMapAppId !== searchParams?.get('openWeatherMapAppId'))
         ) {
             const queryObj = {
                 ...(latLon
                     ? { lat: latLon.lat.toString(), lon: latLon.lon.toString() }
                     : {}),
                 ...(zipcode ? { zipcode } : {}),
-                ...(appid ? { appid } : {}),
-                ...(apikey ? { apikey } : {}),
-                ...(apiKey ? { apiKey } : {}),
-                ...(applicationKey ? { applicationKey } : {}),
+                ...(openWeatherMapAppId ? { openWeatherMapAppId } : {}),
+                ...(geoapifyApiKey ? { geoapifyApiKey } : {}),
+                ...(awnApiKey ? { awnApiKey } : {}),
+                ...(awnApplicationKey ? { awnApplicationKey } : {}),
                 ...(weatherSource ? { weatherSource } : {}),
                 ...(mono ? { mono: '1' } : {})
             };
@@ -540,13 +540,13 @@ function HomeContent() {
                 window.history.pushState({ path: newUrl }, '', newUrl);
             }
         }
-    }, [zipcode, apikey, apiKey, applicationKey, appid, latLon, weatherSource, mono]);
+    }, [zipcode, geoapifyApiKey, awnApiKey, awnApplicationKey, openWeatherMapAppId, latLon, weatherSource, mono]);
 
     useEffect(() => {
-        if (apiKey && applicationKey) {
-            void getTempSensor(apiKey, applicationKey);
+        if (awnApiKey && awnApplicationKey) {
+            void getTempSensor(awnApiKey, awnApplicationKey);
         }
-    }, [apiKey, applicationKey]);
+    }, [awnApiKey, awnApplicationKey]);
 
     useEffect(() => {
         if (location) {
@@ -573,14 +573,14 @@ function HomeContent() {
     }, [weatherSource]);
 
     useEffect(() => {
-        if (!location && apikey) {
+        if (!location && geoapifyApiKey) {
             if (latLon) {
                 void getReverseLocation(latLon);
             } else if (zipcode) {
                 void getZipcodeLocation(zipcode);
             }
         }
-    }, [apikey]);
+    }, [geoapifyApiKey]);
 
     useEffect(() => {
         if (current) {
@@ -663,16 +663,16 @@ function HomeContent() {
                 setLatlon={setLatLon}
                 zipcode={zipcode}
                 setZipcode={setZipcode}
-                apikey={apikey}
-                setApikey={setApikey}
-                apiKey={apiKey}
-                setApiKey={setApiKey}
-                applicationKey={applicationKey}
-                setApplicationKey={setApplicationKey}
+                geoapifyApiKey={geoapifyApiKey}
+                setGeoapifyApiKey={setGeoapifyApiKey}
+                awnApiKey={awnApiKey}
+                setAwnApiKey={setAwnApiKey}
+                awnApplicationKey={awnApplicationKey}
+                setAwnApplicationKey={setAwnApplicationKey}
                 weatherSource={weatherSource}
                 setWeatherSource={setWeatherSource}
-                appid={appid}
-                setAppid={setAppid}
+                openWeatherMapAppId={openWeatherMapAppId}
+                setOpenWeatherMapAppId={setOpenWeatherMapAppId}
                 spoofWeather={spoofWeather}
                 setSpoofWeather={setSpoofWeather}
                 isNight={isNight}

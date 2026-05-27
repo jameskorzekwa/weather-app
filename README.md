@@ -28,10 +28,11 @@ forecast.
 | **OpenWeatherMap** (alternative forecast provider) | Only if you set `weatherSource=OpenWeatherMap` | 1,000 calls/day | <https://home.openweathermap.org/users/sign_up> | <https://home.openweathermap.org/api_keys> — note new keys take a few hours to activate |
 | **Ambient Weather Network** (optional local outdoor-temp sensor) | Only if you have an AWN-connected weather station and want its temperature shown | Free for your own data | <https://ambientweather.net/welcome> | After login → **Account** → **API Keys** — needs both an *API Key* and an *Application Key* |
 
-In Vercel/browser usage these go in the URL as `apikey=`, `appid=`,
-`apiKey=`, `applicationKey=` (see param reference at the bottom of
-[`test-url.local`](./test-url.local), gitignored). In the Home Assistant
-add-on they're supplied via the addon's **Configuration** tab; see
+In Vercel/browser usage these go in the URL as `geoapifyApiKey=`,
+`openWeatherMapAppId=`, `awnApiKey=`, `awnApplicationKey=` (see param
+reference at the bottom of [`test-url.local`](./test-url.local),
+gitignored). In the Home Assistant add-on they're supplied via the
+addon's **Configuration** tab; see
 [`homeassistant/DOCS.md`](./homeassistant/DOCS.md) for the step-by-step.
 
 ## Run on Vercel
@@ -40,7 +41,7 @@ Standard Next.js 16 app — works on Vercel with no special configuration.
 Push the repo to a Vercel project; visit it with a URL like:
 
 ```
-https://<your-vercel-domain>.vercel.app/?lat=39.58&lon=-105.25&apikey=<geoapify>&weatherSource=OpenMeteo
+https://<your-vercel-domain>.vercel.app/?lat=39.58&lon=-105.25&geoapifyApiKey=<geoapify>&weatherSource=OpenMeteo
 ```
 
 Append `&mono=1` for monochrome mode. The Settings modal (invisible click

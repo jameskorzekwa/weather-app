@@ -8,7 +8,7 @@ The add-on runs the same Next.js build that ships to Vercel — there is no
 forked codebase. Configuration (API keys, location) is supplied through the
 HA Configuration tab and injected into the app via URL parameters at
 startup, so behaviour is identical to opening the Vercel deploy with the
-same `?lat=...&apikey=...` URL.
+same `?lat=...&geoapifyApiKey=...` URL.
 
 ## Install
 

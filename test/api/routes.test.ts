@@ -25,7 +25,7 @@ describe('GET /api/awn', () => {
         const devices = [{ macAddress: 'XX', lastData: { tempf: 70 } }];
         userDevices.mockResolvedValue(devices);
         const req: any = {
-            query: { apiKey: 'a', applicationKey: 'b' }
+            query: { awnApiKey: 'a', awnApplicationKey: 'b' }
         };
         const res = mockRes();
         await awnHandler(req, res);
