@@ -26,6 +26,71 @@ After saving, click **Restart**. The values are URL-encoded and injected
 into the request when you open `/` — exactly the same params documented in
 `test-url.local`.
 
+## Where to get the API keys
+
+You don't need all of them — only the ones for the providers you actually
+want to use. The shortest path to a working install is **Geoapify only**;
+that gets you city names + the default OpenMeteo forecast.
+
+### Geoapify — recommended
+
+Used to turn coordinates into a place name (the big "Morrison" header in
+the screenshot) and to look up a location from a zip code. Without it
+the dashboard still renders, but the city header is blank.
+
+1. Sign up at <https://www.geoapify.com/get-started-with-maps-api/>.
+   Free tier is **3,000 requests/day** (more than enough for one HA
+   dashboard).
+2. Open the project dashboard at <https://myprojects.geoapify.com/>.
+3. Create a project, then copy the **API Key** from the project's keys
+   list.
+4. Paste it into the addon's **`geoapify_api_key`** field.
+
+### OpenMeteo — default forecast provider, no key needed
+
+The 5-day forecast and current conditions ship by default from
+<https://open-meteo.com/>, which is free and **does not require an API
+key**. Leave `weather_source` set to `OpenMeteo` and you're done.
+
+### OpenWeatherMap — optional alternative
+
+Only needed if you flip `weather_source` to `OpenWeatherMap`. (You'd
+typically do this if you prefer their condition descriptions or want to
+match an existing OWM integration elsewhere.)
+
+1. Sign up at <https://home.openweathermap.org/users/sign_up>. Free tier
+   is **1,000 calls/day** plus 60/minute.
+2. After verifying your email, open
+   <https://home.openweathermap.org/api_keys>.
+3. Use the default key or generate a new one. Copy the value.
+4. Paste it into the addon's **`openweathermap_appid`** field.
+5. Set `weather_source` to `OpenWeatherMap`.
+
+**Heads up:** new OpenWeatherMap keys can take **up to a few hours** to
+activate. If the dashboard shows no current temperature right after you
+set the key, wait a bit and **Restart** the addon.
+
+### Ambient Weather Network — optional, for personal weather stations
+
+If you own an [Ambient Weather](https://ambientweather.com/) station that
+reports to AWN, the addon can read its outdoor temperature sensor and
+display it in place of the regional OpenMeteo / OWM temperature. Skip
+this section if you don't have an AWN-connected station.
+
+1. Sign in at <https://ambientweather.net/welcome> (or **Create Your
+   Account** if you don't already have one — your station has to be set
+   up there too).
+2. After logging in, open the **Account** menu (top right) → look for
+   the **API Keys** section.
+3. Create an **API Key** and an **Application Key**. AWN distinguishes
+   them — the API Key authenticates the account, the Application Key
+   identifies your specific integration. Both are required.
+4. Paste the **API Key** into **`awn_api_key`** and the **Application
+   Key** into **`awn_application_key`**.
+
+If you'd rather skip AWN, leave both fields blank — the dashboard just
+uses the forecast provider's temperature.
+
 ### Per-user mono
 
 By default everyone sees the color dashboard. To switch specific HA users
@@ -85,3 +150,10 @@ which HA persists across restarts and upgrades.
   publish ran successfully.
 - **No sidebar entry**: confirm `Show in sidebar` is enabled in the
   add-on **Info** tab.
+- **City header is blank**: missing or wrong `geoapify_api_key`. Confirm
+  the key works by hitting `https://api.geoapify.com/v1/geocode/reverse?lat=<your lat>&lon=<your lon>&apiKey=<your key>` in a browser — it should return JSON, not an error.
+- **OpenWeatherMap key returns 401 right after creating it**: the key
+  hasn't activated yet. Wait an hour or two and restart the addon.
+- **AWN temperature shows but is wrong / stale**: the addon picks the
+  first station on your AWN account. If you have multiple, the sensor
+  shown is whichever AWN's API lists first.

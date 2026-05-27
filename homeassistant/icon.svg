@@ -1,0 +1,16 @@
+<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg" shape-rendering="geometricPrecision">
+  <!-- Background — same charcoal as the app's dark color-mode bg, rounded. -->
+  <rect width="128" height="128" rx="22" fill="#1c1f26"/>
+  <!-- Sun behind the cloud, partially visible top-right. -->
+  <circle cx="92" cy="42" r="18" fill="#ffd166"/>
+  <!-- Cloud — three overlapping ovals + a rounded base. Pure white so it
+       reads well over the dark bg and survives the HA store thumbnail
+       downsample to 32-48px. -->
+  <g fill="#ffffff">
+    <ellipse cx="40" cy="78" rx="22" ry="18"/>
+    <ellipse cx="62" cy="64" rx="22" ry="22"/>
+    <ellipse cx="82" cy="74" rx="20" ry="18"/>
+    <ellipse cx="96" cy="86" rx="14" ry="12"/>
+    <rect x="30" y="76" width="74" height="22" rx="11"/>
+  </g>
+</svg>

@@ -1,0 +1,23 @@
+<svg width="500" height="200" viewBox="0 0 500 200" xmlns="http://www.w3.org/2000/svg" shape-rendering="geometricPrecision">
+  <!-- 5:2 aspect so it renders nicely at HA's logo target. Letterbox of the
+       icon on the left, wordmark on the right. -->
+  <rect width="500" height="200" rx="28" fill="#1c1f26"/>
+
+  <!-- Icon, scaled up version of icon.svg's composition. -->
+  <g transform="translate(28, 36)">
+    <circle cx="92" cy="42" r="22" fill="#ffd166"/>
+    <g fill="#ffffff">
+      <ellipse cx="36" cy="82" rx="26" ry="20"/>
+      <ellipse cx="62" cy="66" rx="26" ry="26"/>
+      <ellipse cx="86" cy="78" rx="24" ry="20"/>
+      <ellipse cx="102" cy="92" rx="16" ry="14"/>
+      <rect x="24" y="80" width="84" height="26" rx="13"/>
+    </g>
+  </g>
+
+  <!-- Wordmark. system-ui as a portable fallback — librsvg/sharp will pick
+       up whatever sans-serif is available in the build environment. Bold
+       for parity with the app's Rubik 900 wordmark. -->
+  <text x="170" y="125" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"
+        font-size="74" font-weight="800" fill="#ffffff" letter-spacing="-2">Weather</text>
+</svg>
