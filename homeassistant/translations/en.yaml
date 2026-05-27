@@ -1,0 +1,63 @@
+---
+# Friendly labels + help text for the addon's Configuration tab in HA.
+# Format reference: https://developers.home-assistant.io/docs/add-ons/configuration#translations
+#
+# `name` is the label rendered above each input. `description` is the
+# muted help text shown below the input. Keep descriptions short — HA
+# wraps long ones but they're easier to scan when they fit on one line.
+
+configuration:
+  latitude:
+    name: Latitude
+    description: >-
+      Decimal degrees (e.g. 39.5831). Used with Longitude.
+      Leave blank to use Zip Code as the location source.
+  longitude:
+    name: Longitude
+    description: >-
+      Decimal degrees (e.g. -105.2496). Used with Latitude.
+  zipcode:
+    name: Zip Code
+    description: >-
+      Fallback location when Latitude/Longitude are blank.
+  geoapify_api_key:
+    name: Geoapify API Key
+    description: >-
+      Required for the city header and zip-code lookup. Free at
+      geoapify.com — see the Documentation tab.
+  openweathermap_appid:
+    name: OpenWeatherMap App ID
+    description: >-
+      Only used when Weather Source is OpenWeatherMap. Leave blank if
+      you're using OpenMeteo (the default — no key needed).
+  awn_api_key:
+    name: Ambient Weather API Key
+    description: >-
+      Optional. Lets the dashboard show your AWN weather station's
+      outdoor temperature instead of the regional forecast value.
+  awn_application_key:
+    name: Ambient Weather Application Key
+    description: >-
+      Optional. Paired with the API Key above. Both are required if
+      you want AWN integration; both are blank otherwise.
+  weather_source:
+    name: Weather Source
+    description: >-
+      Which provider supplies current conditions and the 5-day
+      forecast. OpenMeteo is free and needs no key; OpenWeatherMap
+      needs an App ID.
+  monochrome:
+    name: Default to Monochrome
+    description: >-
+      Color mode for users not in the Monochrome Users list below.
+      Off = color (default), on = monochrome.
+  monochrome_users:
+    name: Monochrome Users
+    description: >-
+      HA user display names (e.g. "James Korzekwa") that should always
+      see the monochrome dashboard, regardless of the default above.
+
+# The Network section title and port helper texts (if we ever expose host
+# ports). We don't expose any today, so this is just here for future use.
+network:
+  {}
