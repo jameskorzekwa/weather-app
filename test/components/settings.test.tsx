@@ -54,16 +54,16 @@ const baseProps = () => ({
     setLatlon: vi.fn(),
     zipcode: '80465',
     setZipcode: vi.fn(),
-    apikey: 'geo-key',
-    setApikey: vi.fn(),
-    applicationKey: 'app-key',
-    setApplicationKey: vi.fn(),
-    apiKey: 'awn-key',
-    setApiKey: vi.fn(),
+    geoapifyApiKey: 'geo-key',
+    setGeoapifyApiKey: vi.fn(),
+    awnApplicationKey: 'app-key',
+    setAwnApplicationKey: vi.fn(),
+    awnApiKey: 'awn-key',
+    setAwnApiKey: vi.fn(),
     weatherSource: 'OpenMeteo' as const,
     setWeatherSource: vi.fn(),
-    appid: '',
-    setAppid: vi.fn(),
+    openWeatherMapAppId: '',
+    setOpenWeatherMapAppId: vi.fn(),
     spoofWeather: undefined,
     setSpoofWeather: vi.fn(),
     isNight: false,
@@ -105,7 +105,7 @@ describe('Settings', () => {
                 {...props}
                 latlon={undefined}
                 zipcode=""
-                apikey=""
+                geoapifyApiKey=""
             />
         );
         fireEvent.click(

@@ -9,11 +9,14 @@ export default async function handler(
     req: NextApiRequest,
     res: NextApiResponse<ResponseData>
 ) {
-    const apiKey = req.query.apiKey?.toString() || '';
-    const applicationKey = req.query.applicationKey?.toString() || '';
+    const awnApiKey = req.query.awnApiKey?.toString() || '';
+    const awnApplicationKey = req.query.awnApplicationKey?.toString() || '';
+    // The `ambient-weather-api` library expects its credentials in
+    // `apiKey` / `applicationKey` properties — keep using those names
+    // here even though our incoming query params are `awn`-prefixed.
     const api = new AmbientWeatherApi({
-        apiKey,
-        applicationKey
+        apiKey: awnApiKey,
+        applicationKey: awnApplicationKey
     });
     const json = await api.userDevices();
 

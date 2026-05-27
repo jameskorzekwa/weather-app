@@ -31,16 +31,16 @@ interface Props {
     setLatlon: (state: LatLon | undefined) => void;
     zipcode?: string;
     setZipcode: (state: string) => void;
-    apikey?: string;
-    setApikey: (state: string) => void;
-    applicationKey?: string;
-    setApplicationKey: (state: string) => void;
-    apiKey?: string;
-    setApiKey: (state: string) => void;
+    geoapifyApiKey?: string;
+    setGeoapifyApiKey: (state: string) => void;
+    awnApplicationKey?: string;
+    setAwnApplicationKey: (state: string) => void;
+    awnApiKey?: string;
+    setAwnApiKey: (state: string) => void;
     weatherSource?: WeatherSource;
     setWeatherSource: (state: WeatherSource) => void;
-    appid?: string;
-    setAppid: (state: string) => void;
+    openWeatherMapAppId?: string;
+    setOpenWeatherMapAppId: (state: string) => void;
     spoofWeather?: FakeWeatherKey;
     setSpoofWeather: (state: FakeWeatherKey | undefined) => void;
     isNight?: boolean;
@@ -53,11 +53,11 @@ interface Props {
 type Form = {
     latlon: { value?: string; error?: string };
     zipcode: { value?: string; error?: string };
-    apikey: { value?: string; error?: string };
-    applicationKey: { value?: string; error?: string };
-    apiKey: { value?: string; error?: string };
+    geoapifyApiKey: { value?: string; error?: string };
+    awnApplicationKey: { value?: string; error?: string };
+    awnApiKey: { value?: string; error?: string };
     weatherSource: { value?: WeatherSource; error?: string };
-    appid: { value?: string; error?: string };
+    openWeatherMapAppId: { value?: string; error?: string };
     spoofWeather: { value: FakeWeatherKey | 'actual'; error?: string };
     isNight: { value?: boolean; error?: string };
     mono: { value: boolean; error?: string };
@@ -70,16 +70,16 @@ export default function Settings({
     setLatlon,
     zipcode,
     setZipcode,
-    apikey,
-    setApikey,
-    applicationKey,
-    setApplicationKey,
-    apiKey,
-    setApiKey,
+    geoapifyApiKey,
+    setGeoapifyApiKey,
+    awnApplicationKey,
+    setAwnApplicationKey,
+    awnApiKey,
+    setAwnApiKey,
     weatherSource,
     setWeatherSource,
-    appid,
-    setAppid,
+    openWeatherMapAppId,
+    setOpenWeatherMapAppId,
     spoofWeather,
     setSpoofWeather,
     isNight,
@@ -94,11 +94,11 @@ export default function Settings({
             error: undefined
         },
         zipcode: { value: zipcode, error: undefined },
-        apikey: { value: apikey, error: undefined },
-        applicationKey: { value: applicationKey, error: undefined },
-        apiKey: { value: apiKey, error: undefined },
+        geoapifyApiKey: { value: geoapifyApiKey, error: undefined },
+        awnApplicationKey: { value: awnApplicationKey, error: undefined },
+        awnApiKey: { value: awnApiKey, error: undefined },
         weatherSource: { value: weatherSource, error: undefined },
-        appid: { value: appid, error: undefined },
+        openWeatherMapAppId: { value: openWeatherMapAppId, error: undefined },
         spoofWeather: { value: spoofWeather || 'actual', error: undefined },
         isNight: { value: isNight, error: undefined },
         mono: { value: !!mono, error: undefined }
@@ -174,13 +174,13 @@ export default function Settings({
                 }
             }
 
-            if (!tempForm.apikey.value) {
-                tempForm.apikey.error = 'Geoapify API Key required';
+            if (!tempForm.geoapifyApiKey.value) {
+                tempForm.geoapifyApiKey.error = 'Geoapify API Key required';
             }
 
             if (tempForm.weatherSource.value === 'OpenWeatherMap') {
-                if (!tempForm.appid.value) {
-                    tempForm.appid.error =
+                if (!tempForm.openWeatherMapAppId.value) {
+                    tempForm.openWeatherMapAppId.error =
                         'OWM App ID required for OpenWeatherMap';
                 }
             }
@@ -201,11 +201,11 @@ export default function Settings({
                 form.latlon.value ? parseLatLon(form.latlon.value) : undefined
             );
             setZipcode(form.zipcode.value || '');
-            setApikey(form.apikey.value || '');
-            setApiKey(form.apiKey.value || '');
-            setApplicationKey(form.applicationKey.value || '');
+            setGeoapifyApiKey(form.geoapifyApiKey.value || '');
+            setAwnApiKey(form.awnApiKey.value || '');
+            setAwnApplicationKey(form.awnApplicationKey.value || '');
             setWeatherSource(form.weatherSource.value || 'OpenMeteo');
-            setAppid(form.appid.value || '');
+            setOpenWeatherMapAppId(form.openWeatherMapAppId.value || '');
             setSpoofWeather(
                 form.spoofWeather.value === 'actual'
                     ? undefined
@@ -237,22 +237,22 @@ export default function Settings({
     useEffect(() => {
         setForm((prevState) => ({
             ...prevState,
-            apikey: { ...form.apikey, value: apikey }
+            geoapifyApiKey: { ...form.geoapifyApiKey, value: geoapifyApiKey }
         }));
-    }, [apikey]);
+    }, [geoapifyApiKey]);
     useEffect(() => {
         setForm((prevState) => ({
             ...prevState,
-            apiKey: { ...form.apiKey, value: apiKey }
+            awnApiKey: { ...form.awnApiKey, value: awnApiKey }
         }));
-    }, [apiKey]);
+    }, [awnApiKey]);
 
     useEffect(() => {
         setForm((prevState) => ({
             ...prevState,
-            applicationKey: { ...form.applicationKey, value: applicationKey }
+            awnApplicationKey: { ...form.awnApplicationKey, value: awnApplicationKey }
         }));
-    }, [applicationKey]);
+    }, [awnApplicationKey]);
     useEffect(() => {
         setForm((prevState) => ({
             ...prevState,
@@ -262,9 +262,9 @@ export default function Settings({
     useEffect(() => {
         setForm((prevState) => ({
             ...prevState,
-            appid: { ...form.appid, value: appid }
+            openWeatherMapAppId: { ...form.openWeatherMapAppId, value: openWeatherMapAppId }
         }));
-    }, [appid]);
+    }, [openWeatherMapAppId]);
     useEffect(() => {
         setForm((prevState) => ({
             ...prevState,
@@ -391,17 +391,17 @@ export default function Settings({
                                 </InputWrapper>
                             </div>
                             <div className="w-72">
-                                <InputWrapper error={form.apikey.error}>
+                                <InputWrapper error={form.geoapifyApiKey.error}>
                                     <Input
                                         label="Geoapify API Key"
                                         crossOrigin={undefined}
-                                        value={form.apikey.value}
-                                        error={!!form.apikey.error}
+                                        value={form.geoapifyApiKey.value}
+                                        error={!!form.geoapifyApiKey.error}
                                         onChange={({ target }) =>
                                             setForm((form) => ({
                                                 ...form,
-                                                apikey: {
-                                                    ...form.apikey,
+                                                geoapifyApiKey: {
+                                                    ...form.geoapifyApiKey,
                                                     value: target.value
                                                 }
                                             }))
@@ -410,17 +410,17 @@ export default function Settings({
                                 </InputWrapper>
                             </div>
                             <div className="w-72">
-                                <InputWrapper error={form.apiKey.error}>
+                                <InputWrapper error={form.awnApiKey.error}>
                                     <Input
                                         label="AWN API Key"
                                         crossOrigin={undefined}
-                                        value={form.apiKey.value}
-                                        error={!!form.apiKey.error}
+                                        value={form.awnApiKey.value}
+                                        error={!!form.awnApiKey.error}
                                         onChange={({ target }) =>
                                             setForm((form) => ({
                                                 ...form,
-                                                apiKey: {
-                                                    ...form.apiKey,
+                                                awnApiKey: {
+                                                    ...form.awnApiKey,
                                                     value: target.value
                                                 }
                                             }))
@@ -429,17 +429,17 @@ export default function Settings({
                                 </InputWrapper>
                             </div>
                             <div className="w-72">
-                                <InputWrapper error={form.applicationKey.error}>
+                                <InputWrapper error={form.awnApplicationKey.error}>
                                     <Input
                                         label="AWN Application Key"
                                         crossOrigin={undefined}
-                                        value={form.applicationKey.value}
-                                        error={!!form.applicationKey.error}
+                                        value={form.awnApplicationKey.value}
+                                        error={!!form.awnApplicationKey.error}
                                         onChange={({ target }) =>
                                             setForm((form) => ({
                                                 ...form,
-                                                applicationKey: {
-                                                    ...form.applicationKey,
+                                                awnApplicationKey: {
+                                                    ...form.awnApplicationKey,
                                                     value: target.value
                                                 }
                                             }))
@@ -494,16 +494,16 @@ export default function Settings({
                             </div>
                             {form.weatherSource.value === 'OpenWeatherMap' && (
                                 <div className="w-72">
-                                    <InputWrapper error={form.appid.error}>
+                                    <InputWrapper error={form.openWeatherMapAppId.error}>
                                         <Input
                                             label="OWM App ID"
                                             crossOrigin={undefined}
-                                            value={form.appid.value}
+                                            value={form.openWeatherMapAppId.value}
                                             onChange={({ target }) =>
                                                 setForm((form) => ({
                                                     ...form,
-                                                    appid: {
-                                                        ...form.appid,
+                                                    openWeatherMapAppId: {
+                                                        ...form.openWeatherMapAppId,
                                                         value: target.value
                                                     }
                                                 }))

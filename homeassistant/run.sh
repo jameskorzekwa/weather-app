@@ -64,14 +64,14 @@ add_param() {
     fi
 }
 
-add_param lat            "$LAT"
-add_param lon            "$LON"
-add_param zipcode        "$ZIPCODE"
-add_param apikey         "$GEOAPIFY_KEY"
-add_param appid          "$OWM_APPID"
-add_param apiKey         "$AWN_API_KEY"
-add_param applicationKey "$AWN_APP_KEY"
-add_param weatherSource  "$WEATHER_SOURCE"
+add_param lat                  "$LAT"
+add_param lon                  "$LON"
+add_param zipcode              "$ZIPCODE"
+add_param geoapifyApiKey       "$GEOAPIFY_KEY"
+add_param openWeatherMapAppId  "$OWM_APPID"
+add_param awnApiKey            "$AWN_API_KEY"
+add_param awnApplicationKey    "$AWN_APP_KEY"
+add_param weatherSource        "$WEATHER_SOURCE"
 
 # `mono` is NOT a static query param anymore — its value is determined
 # per-request inside nginx based on the requesting HA user. We append a
