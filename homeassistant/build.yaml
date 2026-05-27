@@ -1,0 +1,22 @@
+---
+# Build configuration consumed by docker/build-push-action in
+# .github/workflows/build.yaml.
+#
+# All architectures share the same multi-arch `node:24-alpine` base image —
+# Docker's manifest list picks the correct variant per platform, so we get
+# native amd64 builds and a QEMU-emulated aarch64 build from one
+# Dockerfile. armv7 is not listed because node:24-alpine doesn't publish
+# a linux/arm/v7 variant. Keep this list in sync with the `arch:` array
+# in config.yaml and the matrix in .github/workflows/build.yaml.
+
+build_from:
+  aarch64: node:24-alpine
+  amd64: node:24-alpine
+
+labels:
+  org.opencontainers.image.title: "Weather App"
+  org.opencontainers.image.description: "Animated weather UI for Home Assistant"
+  org.opencontainers.image.source: "https://github.com/jameskorzekwa/weather-app"
+  org.opencontainers.image.licenses: "MIT"
+
+args: {}

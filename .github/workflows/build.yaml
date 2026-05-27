@@ -1,0 +1,145 @@
+name: Build Home Assistant add-on image
+
+# Builds the multi-arch Docker image that HA Supervisor pulls when a user
+# installs the Weather App add-on. The Vercel deploy is untouched — Vercel
+# builds straight from the Next.js source and ignores everything under
+# /homeassistant and this workflow.
+#
+# Trigger summary:
+#   - push to main           → build + push :latest and :<config_version>
+#   - push of a v* tag       → build + push :<tag> as well as :latest
+#   - pull_request           → build only (no push) so PRs still get verified
+#   - workflow_dispatch      → manual run from the Actions UI
+#
+# Why per-arch repos instead of one multi-arch manifest: HA Supervisor reads
+# `image: ghcr.io/.../weather-app-{arch}` from config.yaml and substitutes
+# the host's arch into the URL — it does NOT use Docker's multi-arch
+# manifest list. That's the same convention the official HA add-ons use.
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+    paths:
+      - 'homeassistant/**'
+      - 'app/**'
+      - 'components/**'
+      - 'lib/**'
+      - 'hooks/**'
+      - 'types/**'
+      - 'pages/**'
+      - 'public/**'
+      - 'css/**'
+      - 'constants/**'
+      - 'middleware.ts'
+      - 'next.config.mjs'
+      - 'package*.json'
+      - 'tsconfig.json'
+      - 'tailwind.config.ts'
+      - 'postcss.config.js'
+      - '.github/workflows/build.yaml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'homeassistant/**'
+      - '.github/workflows/build.yaml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    name: Build (${{ matrix.arch }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Mirrors the `arch:` list in homeassistant/config.yaml and the
+        # `build_from:` map in homeassistant/build.yaml. Keep all three in
+        # sync — adding an arch means updating all three places.
+        include:
+          - arch: amd64
+            platform: linux/amd64
+          - arch: aarch64
+            platform: linux/arm64
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Read add-on version from config.yaml
+        id: meta
+        # awk pulls the value of `version:` regardless of whether it's
+        # quoted ("0.1.0") or bare. Strip surrounding quotes.
+        run: |
+          version=$(awk '/^version:/ { gsub(/"/, "", $2); print $2; exit }' homeassistant/config.yaml)
+          if [ -z "$version" ]; then
+            echo "::error file=homeassistant/config.yaml::Could not read version"
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Add-on version: $version"
+
+      - name: Set up QEMU
+        # Cross-arch emulation so amd64 runners can build arm64 / armv7.
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Compute image tags
+        id: tags
+        # For pushes to main / dispatch:
+        #   ghcr.io/<owner>/weather-app-<arch>:<config_version>
+        #   ghcr.io/<owner>/weather-app-<arch>:latest
+        # For tag pushes (v1.2.3):
+        #   …also :v1.2.3
+        # For pull requests we just build (no push), so the tag list is only
+        # used to name the local image.
+        run: |
+          owner_lc=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          base="ghcr.io/${owner_lc}/weather-app-${{ matrix.arch }}"
+          tags="${base}:${{ steps.meta.outputs.version }}"$'\n'"${base}:latest"
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            tag_name="${GITHUB_REF#refs/tags/}"
+            tags="${tags}"$'\n'"${base}:${tag_name}"
+          fi
+          {
+            echo "tags<<EOF"
+            echo "$tags"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          # Build context is the repo root because the Dockerfile copies
+          # Next.js sources from one level up.
+          context: .
+          file: ./homeassistant/Dockerfile
+          platforms: ${{ matrix.platform }}
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.tags.outputs.tags }}
+          # Cache between runs to keep build time manageable — Next.js +
+          # node_modules cold-build is ~3 min/arch.
+          cache-from: type=gha,scope=${{ matrix.arch }}
+          cache-to: type=gha,scope=${{ matrix.arch }},mode=max
+          build-args: |
+            BUILD_FROM=node:24-alpine
+            BUILD_ARCH=${{ matrix.arch }}
+            BUILD_VERSION=${{ steps.meta.outputs.version }}
+            BUILD_DATE=${{ github.event.repository.updated_at }}
+            BUILD_REF=${{ github.sha }}
+            BUILD_REPOSITORY=https://github.com/${{ github.repository }}
+            BUILD_NAME=Weather App
+            BUILD_DESCRIPTION=Animated weather UI for Home Assistant

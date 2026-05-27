@@ -46,3 +46,25 @@ from the creators of Next.js.
 Check out our
 [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more
 details.
+
+## Run as a Home Assistant add-on
+
+This repo doubles as a Home Assistant add-on repository. The add-on packages
+the same Next.js build into a Docker image that runs behind HA's ingress
+proxy, so it appears as a sidebar panel without any custom dashboard setup.
+
+To install:
+
+1. In Home Assistant: **Settings → Add-ons → Add-on Store**.
+2. Click the ⋮ menu → **Repositories**, paste this repo's URL, then **Add**.
+3. Install the **Weather App** add-on, fill in the **Configuration** tab
+   (lat/lon, API keys, etc.), and **Start** it.
+
+The add-on files live in [`homeassistant/`](./homeassistant/). Docker images
+are built and pushed to GHCR by
+[`.github/workflows/build.yaml`](./.github/workflows/build.yaml) on every
+push to `main` and on tagged releases — nothing about the Vercel deploy
+changes.
+
+See [`homeassistant/DOCS.md`](./homeassistant/DOCS.md) for the full options
+reference.
