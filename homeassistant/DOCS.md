@@ -19,32 +19,32 @@ into the URL.
 | `awn_api_key`           | password | Ambient Weather Network key (local temp sensor).             |
 | `awn_application_key`   | password | Ambient Weather Network *application* key.                   |
 | `weather_source`        | list     | `OpenMeteo` (default) or `OpenWeatherMap`.                   |
-| `monochrome`            | bool     | Default color mode for everyone (`true` = mono, `false` = color). Per-user lists below override this. |
-| `monochrome_users`      | [string] | HA user display names that should always see **mono**, regardless of `monochrome`. |
-| `color_users`           | [string] | HA user display names that should always see **color**, regardless of `monochrome`. |
+| `monochrome`            | bool     | Default color mode for everyone (`true` = mono, `false` = color). Adding a name to `monochrome_users` overrides this for that user. |
+| `monochrome_users`      | [string] | HA user display names that should always see **mono**. Everyone else uses the `monochrome` default. |
 
 After saving, click **Restart**. The values are URL-encoded and injected
 into the request when you open `/` — exactly the same params documented in
 `test-url.local`.
 
-### Per-user color vs. mono
+### Per-user mono
 
-`monochrome` sets the default that everybody sees. To override it for
-specific HA users, add their **display name** (e.g. `"James Korzekwa"`,
-not `"james_korzekwa"`) to `monochrome_users` (force mono) or
-`color_users` (force color). The match is exact and case-sensitive
-against HA's `X-Remote-User-Display-Name` ingress header, which is the
-name shown under **Settings → People** in HA.
+By default everyone sees the color dashboard. To switch specific HA users
+to mono, add their **display name** (e.g. `"James Korzekwa"`, not
+`"james_korzekwa"`) to `monochrome_users`. The match is exact and
+case-sensitive against HA's `X-Remote-User-Display-Name` ingress header,
+which is the name shown under **Settings → People** in HA.
 
-Example: everyone sees color by default except the kitchen tablet user,
-which is signed in as "Kitchen":
+Example: most users see color, but the kitchen tablet (signed in as
+"Kitchen") gets mono:
 
 ```yaml
 monochrome: false
 monochrome_users:
   - "Kitchen"
-color_users: []
 ```
+
+If instead you want **everyone** to see mono by default, set
+`monochrome: true` and leave `monochrome_users` empty.
 
 The override only applies when the page is opened from the HA sidebar
 (or any `/` URL without query params). If you bookmark a URL with an

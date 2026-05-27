@@ -36,17 +36,17 @@ if [ -f "$OPTIONS_FILE" ]; then
     AWN_APP_KEY=$(jq -r '.awn_application_key // empty' "$OPTIONS_FILE")
     WEATHER_SOURCE=$(jq -r '.weather_source // "OpenMeteo"' "$OPTIONS_FILE")
     MONOCHROME=$(jq -r '.monochrome // false' "$OPTIONS_FILE")
-    # Per-user mono overrides — arrays of HA display names. Both default
-    # to empty arrays via `.// []`. We pull them as newline-separated
-    # lists for the bash loop below.
+    # Per-user mono override — array of HA display names that should
+    # always see the mono dashboard, regardless of the default above.
+    # Defaults to an empty array via `.// []`. Pulled as a newline-
+    # separated list for the bash loop below.
     MONO_USERS=$(jq -r '(.monochrome_users // []) | .[]' "$OPTIONS_FILE")
-    COLOR_USERS=$(jq -r '(.color_users // []) | .[]' "$OPTIONS_FILE")
 else
     echo "[run.sh] /data/options.json not found — using empty defaults" >&2
     LAT=""; LON=""; ZIPCODE=""; GEOAPIFY_KEY=""; OWM_APPID=""
     AWN_API_KEY=""; AWN_APP_KEY=""; WEATHER_SOURCE="OpenMeteo"
     MONOCHROME="false"
-    MONO_USERS=""; COLOR_USERS=""
+    MONO_USERS=""
 fi
 
 # ---- Build the query string -----------------------------------------------
@@ -85,8 +85,7 @@ add_param weatherSource  "$WEATHER_SOURCE"
 # leaves a stray empty `mono=` param in the user's URL bar.
 if [ -n "$QUERY" ] \
    || [ "$MONOCHROME" = "true" ] \
-   || [ -n "$MONO_USERS" ] \
-   || [ -n "$COLOR_USERS" ]; then
+   || [ -n "$MONO_USERS" ]; then
     QUERY="${QUERY}&mono=\$user_mono"
 fi
 
@@ -116,13 +115,6 @@ if [ -n "$MONO_USERS" ]; then
         esc=$(escape_nginx_string "$u")
         USER_MONO_MAP_ENTRIES="${USER_MONO_MAP_ENTRIES}        \"${esc}\" \"1\";"$'\n'
     done <<< "$MONO_USERS"
-fi
-if [ -n "$COLOR_USERS" ]; then
-    while IFS= read -r u; do
-        [ -z "$u" ] && continue
-        esc=$(escape_nginx_string "$u")
-        USER_MONO_MAP_ENTRIES="${USER_MONO_MAP_ENTRIES}        \"${esc}\" \"\";"$'\n'
-    done <<< "$COLOR_USERS"
 fi
 # Trim trailing newline so the resulting nginx block isn't padded.
 USER_MONO_MAP_ENTRIES="${USER_MONO_MAP_ENTRIES%$'\n'}"
