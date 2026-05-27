@@ -19,11 +19,40 @@ into the URL.
 | `awn_api_key`           | password | Ambient Weather Network key (local temp sensor).             |
 | `awn_application_key`   | password | Ambient Weather Network *application* key.                   |
 | `weather_source`        | list     | `OpenMeteo` (default) or `OpenWeatherMap`.                   |
-| `monochrome`            | bool     | When `true` the app boots in monochrome mode (`?mono=1`).    |
+| `monochrome`            | bool     | Default color mode for everyone (`true` = mono, `false` = color). Per-user lists below override this. |
+| `monochrome_users`      | [string] | HA user display names that should always see **mono**, regardless of `monochrome`. |
+| `color_users`           | [string] | HA user display names that should always see **color**, regardless of `monochrome`. |
 
 After saving, click **Restart**. The values are URL-encoded and injected
 into the request when you open `/` — exactly the same params documented in
 `test-url.local`.
+
+### Per-user color vs. mono
+
+`monochrome` sets the default that everybody sees. To override it for
+specific HA users, add their **display name** (e.g. `"James Korzekwa"`,
+not `"james_korzekwa"`) to `monochrome_users` (force mono) or
+`color_users` (force color). The match is exact and case-sensitive
+against HA's `X-Remote-User-Display-Name` ingress header, which is the
+name shown under **Settings → People** in HA.
+
+Example: everyone sees color by default except the kitchen tablet user,
+which is signed in as "Kitchen":
+
+```yaml
+monochrome: false
+monochrome_users:
+  - "Kitchen"
+color_users: []
+```
+
+The override only applies when the page is opened from the HA sidebar
+(or any `/` URL without query params). If you bookmark a URL with an
+explicit `mono=1` or `mono=` already in it, that wins — the manual
+choice is preserved.
+
+Direct port access (no HA ingress, no user header) always falls back to
+the `monochrome` default.
 
 ## Where does the configuration live?
 
