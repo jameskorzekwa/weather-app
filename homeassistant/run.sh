@@ -36,11 +36,17 @@ if [ -f "$OPTIONS_FILE" ]; then
     AWN_APP_KEY=$(jq -r '.awn_application_key // empty' "$OPTIONS_FILE")
     WEATHER_SOURCE=$(jq -r '.weather_source // "OpenMeteo"' "$OPTIONS_FILE")
     MONOCHROME=$(jq -r '.monochrome // false' "$OPTIONS_FILE")
+    # Per-user mono overrides — arrays of HA display names. Both default
+    # to empty arrays via `.// []`. We pull them as newline-separated
+    # lists for the bash loop below.
+    MONO_USERS=$(jq -r '(.monochrome_users // []) | .[]' "$OPTIONS_FILE")
+    COLOR_USERS=$(jq -r '(.color_users // []) | .[]' "$OPTIONS_FILE")
 else
     echo "[run.sh] /data/options.json not found — using empty defaults" >&2
     LAT=""; LON=""; ZIPCODE=""; GEOAPIFY_KEY=""; OWM_APPID=""
     AWN_API_KEY=""; AWN_APP_KEY=""; WEATHER_SOURCE="OpenMeteo"
     MONOCHROME="false"
+    MONO_USERS=""; COLOR_USERS=""
 fi
 
 # ---- Build the query string -----------------------------------------------
@@ -66,8 +72,22 @@ add_param appid          "$OWM_APPID"
 add_param apiKey         "$AWN_API_KEY"
 add_param applicationKey "$AWN_APP_KEY"
 add_param weatherSource  "$WEATHER_SOURCE"
-if [ "$MONOCHROME" = "true" ]; then
-    add_param mono 1
+
+# `mono` is NOT a static query param anymore — its value is determined
+# per-request inside nginx based on the requesting HA user. We append a
+# literal `mono=$user_mono` so nginx interpolates `$user_mono` at request
+# time. See the `map $http_x_remote_user_display_name $user_mono` block in
+# nginx.conf for the resolution logic.
+#
+# We only append it when something mono-related is actually configured
+# (or some other param was set). Otherwise an addon with zero config would
+# still trigger a `/` → `/?mono=` redirect on every visit — pointless and
+# leaves a stray empty `mono=` param in the user's URL bar.
+if [ -n "$QUERY" ] \
+   || [ "$MONOCHROME" = "true" ] \
+   || [ -n "$MONO_USERS" ] \
+   || [ -n "$COLOR_USERS" ]; then
+    QUERY="${QUERY}&mono=\$user_mono"
 fi
 
 # Strip leading "&" (added by every add_param call).
@@ -78,14 +98,77 @@ if [ -n "$QUERY" ]; then
     DEFAULT_REDIRECT="?${QUERY}"
 fi
 
-# ---- Inject the redirect into nginx.conf ----------------------------------
+# ---- Build the per-user mono map entries ----------------------------------
+# Each entry maps a quoted HA display name to "1" (force mono) or "" (force
+# color). Generated as nginx-config syntax lines, ready to be sed'd into
+# the template at the @@USER_MONO_MAP_ENTRIES@@ marker.
+
+USER_MONO_MAP_ENTRIES=""
+escape_nginx_string() {
+    # Escape backslashes and double quotes for inclusion inside an nginx
+    # double-quoted string. Newlines aren't valid in display names so we
+    # don't worry about them.
+    printf '%s' "$1" | sed -e 's/[\\"]/\\&/g'
+}
+if [ -n "$MONO_USERS" ]; then
+    while IFS= read -r u; do
+        [ -z "$u" ] && continue
+        esc=$(escape_nginx_string "$u")
+        USER_MONO_MAP_ENTRIES="${USER_MONO_MAP_ENTRIES}        \"${esc}\" \"1\";"$'\n'
+    done <<< "$MONO_USERS"
+fi
+if [ -n "$COLOR_USERS" ]; then
+    while IFS= read -r u; do
+        [ -z "$u" ] && continue
+        esc=$(escape_nginx_string "$u")
+        USER_MONO_MAP_ENTRIES="${USER_MONO_MAP_ENTRIES}        \"${esc}\" \"\";"$'\n'
+    done <<< "$COLOR_USERS"
+fi
+# Trim trailing newline so the resulting nginx block isn't padded.
+USER_MONO_MAP_ENTRIES="${USER_MONO_MAP_ENTRIES%$'\n'}"
+
+# Addon-wide default for users not in either list.
+if [ "$MONOCHROME" = "true" ]; then
+    DEFAULT_MONO="1"
+else
+    DEFAULT_MONO=""
+fi
+
+# ---- Inject the redirect + per-user map into nginx.conf -------------------
 # Escape characters that are special to sed's replacement string. URL params
 # can contain `&`, `/`, `=` — `&` is the dangerous one (sed expands it to
 # the matched text). `|` is our delimiter so `/` is safe; `\` and `|` could
 # appear in user-supplied values so we escape them defensively.
+#
+# The map-entries placeholder is on its own line in the template — we
+# replace the whole line via awk so newline-bearing replacements work
+# (sed substitution can't easily emit literal newlines portably).
 
 ESCAPED=$(printf '%s' "$DEFAULT_REDIRECT" | sed -e 's/[\\|&]/\\&/g')
-sed "s|@@DEFAULT_REDIRECT@@|${ESCAPED}|g" "$NGINX_TEMPLATE" > "$NGINX_CONF"
+sed \
+    -e "s|@@DEFAULT_REDIRECT@@|${ESCAPED}|g" \
+    -e "s|@@DEFAULT_MONO@@|${DEFAULT_MONO}|g" \
+    "$NGINX_TEMPLATE" > "$NGINX_CONF.partial"
+
+# Replace the map-entries line with the (possibly multi-line) per-user
+# entries block. We write the entries to a temp file and stream them in via
+# awk's getline so multi-line replacement works in both busybox awk
+# (alpine) and bsd awk (macOS, for dry-runs).
+ENTRIES_FILE="/tmp/.weather-app-mono-entries"
+printf '%s' "$USER_MONO_MAP_ENTRIES" > "$ENTRIES_FILE"
+awk -v entries_file="$ENTRIES_FILE" '
+    /@@USER_MONO_MAP_ENTRIES@@/ {
+        # Stream the entries file in place of this marker line. Skip the
+        # marker itself (the `next` below). If the file is empty (no
+        # per-user overrides configured), nothing is emitted and the map
+        # block just contains its `default` line — which is correct.
+        while ((getline line < entries_file) > 0) print line
+        close(entries_file)
+        next
+    }
+    { print }
+' "$NGINX_CONF.partial" > "$NGINX_CONF"
+rm -f "$NGINX_CONF.partial" "$ENTRIES_FILE"
 
 # ---- Start Next.js --------------------------------------------------------
 

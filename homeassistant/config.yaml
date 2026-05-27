@@ -3,7 +3,7 @@
 # Docs: https://developers.home-assistant.io/docs/add-ons/configuration/
 
 name: Weather App
-version: "0.1.0"
+version: "0.2.0"
 slug: weather_app
 description: >-
   Animated weather backgrounds with current conditions and a 5-day forecast,
@@ -53,6 +53,11 @@ options:
   awn_application_key: null
   weather_source: OpenMeteo
   monochrome: false
+  # Per-HA-user mono overrides. The strings are matched against HA's
+  # `X-Remote-User-Display-Name` ingress header (e.g. "James Korzekwa").
+  # Users not in either list get whatever `monochrome:` above is set to.
+  monochrome_users: []
+  color_users: []
 
 # Validation schema. `?` suffix makes a field optional. `password` masks the
 # value in the HA UI but is passed to the addon in plain text — same trust
@@ -67,6 +72,10 @@ schema:
   awn_application_key: "password?"
   weather_source: "list(OpenMeteo|OpenWeatherMap)"
   monochrome: "bool"
+  monochrome_users:
+    - "str"
+  color_users:
+    - "str"
 
 # The Settings modal in the app uses URL params as the source of truth, so
 # we don't need persistent storage. /data is mounted only because HA writes
