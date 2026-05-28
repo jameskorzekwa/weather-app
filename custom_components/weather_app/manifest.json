@@ -1,0 +1,12 @@
+{
+  "domain": "weather_app",
+  "name": "Weather App Dashboard",
+  "codeowners": ["@jameskorzekwa"],
+  "config_flow": true,
+  "dependencies": ["lovelace", "frontend", "hassio"],
+  "documentation": "https://github.com/jameskorzekwa/weather-app",
+  "integration_type": "service",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/jameskorzekwa/weather-app/issues",
+  "version": "0.1.0"
+}

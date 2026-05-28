@@ -78,6 +78,16 @@ changes.
 See [`homeassistant/DOCS.md`](./homeassistant/DOCS.md) for the full
 options reference + the API-key links repeated with more context.
 
+### Optional: turnkey "Weather" dashboard
+
+The add-on shows up as a sidebar panel, but HA won't let an ingress panel
+be your *default* dashboard. The companion
+[**Weather App Dashboard** integration](./custom_components/weather_app/)
+fixes that: install it via HACS (as an *Integration* custom repository),
+and it auto-registers a Lovelace card + a "Weather" dashboard that embeds
+the add-on over HA's HTTPS origin — which you *can* then set as your
+default dashboard. No HACS card to install by hand, no YAML to paste.
+
 ## Local development
 
 ```bash

@@ -40,3 +40,6 @@ next-env.d.ts
 
 # local-only files (secrets, scratch) — never commit
 *.local
+# Python (custom_components integration)
+__pycache__/
+*.pyc

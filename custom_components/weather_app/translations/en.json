@@ -1,0 +1,13 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Weather App Dashboard",
+        "description": "This adds a \"Weather\" dashboard that embeds the Weather App add-on (over ingress). Make sure the Weather App add-on is installed and started first. Click Submit to create the dashboard."
+      }
+    },
+    "abort": {
+      "already_configured": "The Weather App dashboard is already set up."
+    }
+  }
+}

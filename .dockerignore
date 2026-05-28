@@ -30,3 +30,7 @@ vitest.setup.ts
 README.md
 AGENTS.md
 CLAUDE.md
+
+# Companion HA integration + HACS metadata — not part of the addon image
+custom_components
+hacs.json
