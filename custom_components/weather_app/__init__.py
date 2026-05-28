@@ -160,11 +160,40 @@ async def _async_ensure_dashboard(hass: HomeAssistant) -> None:
         # Seed the dashboard's contents.
         await store.async_save(_DASHBOARD_CONFIG)
         _LOGGER.info("Created Weather dashboard at /%s", DASHBOARD_URL_PATH)
+        _notify_hard_refresh(hass)
     except Exception:  # noqa: BLE001
         _LOGGER.exception(
             "Created the Weather dashboard in storage but failed to register it "
             "live; it should appear after a Home Assistant restart"
         )
+
+
+def _notify_hard_refresh(hass: HomeAssistant) -> None:
+    """Tell the user to hard-refresh once.
+
+    HA's frontend service worker caches the app shell, so a freshly added
+    frontend module (our card) often isn't picked up until the browser does
+    a hard reload. Surface that instead of leaving them staring at a blank
+    dashboard.
+    """
+    try:
+        from homeassistant.components import (  # noqa: PLC0415
+            persistent_notification,
+        )
+
+        persistent_notification.async_create(
+            hass,
+            (
+                "A **Weather** dashboard was created. If it looks blank, do a "
+                "**hard refresh** of your browser once (Ctrl/Cmd+Shift+R) so it "
+                "picks up the new card, then set it as your default dashboard "
+                "under **Profile → Dashboard** if you like."
+            ),
+            title="Weather App Dashboard",
+            notification_id=f"{DOMAIN}_setup",
+        )
+    except Exception:  # noqa: BLE001
+        pass
 
 
 async def _async_remove_dashboard(hass: HomeAssistant) -> None:

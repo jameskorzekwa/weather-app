@@ -38,6 +38,11 @@ in **Profile → Dashboard** if you want it as your landing page.
 
 ## Notes
 
+- **If the dashboard looks blank right after install, hard-refresh your
+  browser once** (Ctrl/Cmd+Shift+R). Home Assistant's frontend service worker
+  caches the app shell, so a newly added card module isn't always picked up
+  until the next hard reload. The integration also posts a notification
+  reminding you of this.
 - The dashboard embeds the add-on over **ingress**, so it stays behind HA auth
   and per-user monochrome still works.
 - Removing the integration removes the dashboard it created.
