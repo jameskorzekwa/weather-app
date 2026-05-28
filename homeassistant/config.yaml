@@ -3,7 +3,7 @@
 # Docs: https://developers.home-assistant.io/docs/add-ons/configuration/
 
 name: Weather App
-version: "0.5.0"
+version: "0.6.0"
 slug: weather_app
 description: >-
   Animated weather backgrounds with current conditions and a 5-day forecast,
@@ -57,6 +57,11 @@ options:
   # that should always see the monochrome dashboard. Everyone else gets
   # the addon-wide `monochrome:` value above — which defaults to color.
   monochrome_users: []
+  # Substrings matched (case-insensitively) against the requesting
+  # device's User-Agent. Common values: "iPhone", "iPad", "Silk" (Fire
+  # tablets), "Android". A device that matches always sees mono,
+  # regardless of which HA user is signed in.
+  monochrome_devices: []
 
 # Validation schema. `?` suffix makes a field optional. `password` masks the
 # value in the HA UI but is passed to the addon in plain text — same trust
@@ -72,6 +77,8 @@ schema:
   weather_source: "list(OpenMeteo|OpenWeatherMap)"
   monochrome: "bool"
   monochrome_users:
+    - "str"
+  monochrome_devices:
     - "str"
 
 # The Settings modal in the app uses URL params as the source of truth, so

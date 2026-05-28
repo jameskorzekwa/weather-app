@@ -19,8 +19,9 @@ into the URL.
 | `awn_api_key`           | password | Ambient Weather Network key (local temp sensor).             |
 | `awn_application_key`   | password | Ambient Weather Network *application* key.                   |
 | `weather_source`        | list     | `OpenMeteo` (default) or `OpenWeatherMap`.                   |
-| `monochrome`            | bool     | Default color mode for everyone (`true` = mono, `false` = color). Adding a name to `monochrome_users` overrides this for that user. |
+| `monochrome`            | bool     | Default color mode for everyone (`true` = mono, `false` = color). Adding a name to `monochrome_users` or a substring to `monochrome_devices` overrides this. |
 | `monochrome_users`      | [string] | HA user display names that should always see **mono**. Everyone else uses the `monochrome` default. |
+| `monochrome_devices`    | [string] | Substrings matched (case-insensitively) against the request's `User-Agent`. A device that matches always sees **mono**, regardless of which user is signed in. |
 
 After saving, click **Restart**. The values are URL-encoded and injected
 into the request when you open `/` — exactly the same params documented in
@@ -91,33 +92,58 @@ this section if you don't have an AWN-connected station.
 If you'd rather skip AWN, leave both fields blank — the dashboard just
 uses the forecast provider's temperature.
 
-### Per-user mono
+### Per-user / per-device mono
 
-By default everyone sees the color dashboard. To switch specific HA users
-to mono, add their **display name** (e.g. `"James Korzekwa"`, not
-`"james_korzekwa"`) to `monochrome_users`. The match is exact and
+By default everyone sees the color dashboard. Two independent ways to
+override it for specific viewers:
+
+**By HA user** — add their **display name** (e.g. `"James Korzekwa"`,
+not `"james_korzekwa"`) to `monochrome_users`. The match is exact and
 case-sensitive against HA's `X-Remote-User-Display-Name` ingress header,
 which is the name shown under **Settings → People** in HA.
 
-Example: most users see color, but the kitchen tablet (signed in as
-"Kitchen") gets mono:
+**By device** — add a substring of the device's `User-Agent` to
+`monochrome_devices`. Matching is case-insensitive and treats each entry
+as a plain substring (no regex syntax). Common values:
+
+| Device | What to put in `monochrome_devices` |
+|---|---|
+| iPhone | `iPhone` |
+| iPad | `iPad` |
+| Fire tablet (Silk browser) | `Silk` |
+| Generic Android phone/tablet | `Android` |
+| Macintosh | `Macintosh` |
+
+If you're not sure of the exact User-Agent, open the dashboard on the
+device and visit `https://www.whatismybrowser.com/detect/what-is-my-user-agent`
+to see the full string — pick any uniquely-identifying substring.
+
+A user **or** a device matching forces mono. Both checks fire on every
+request, so the same dashboard URL renders differently depending on who
+opens it from which device.
+
+Example — most users see color, but the kitchen tablet (signed in as
+"Kitchen") and any iPhone get mono:
 
 ```yaml
 monochrome: false
 monochrome_users:
   - "Kitchen"
+monochrome_devices:
+  - "iPhone"
 ```
 
 If instead you want **everyone** to see mono by default, set
-`monochrome: true` and leave `monochrome_users` empty.
+`monochrome: true` and leave both lists empty.
 
 The override only applies when the page is opened from the HA sidebar
 (or any `/` URL without query params). If you bookmark a URL with an
 explicit `mono=1` or `mono=` already in it, that wins — the manual
 choice is preserved.
 
-Direct port access (no HA ingress, no user header) always falls back to
-the `monochrome` default.
+Direct port access (no HA ingress, no user header) falls back to the
+`monochrome` default, but device matching still works because
+`User-Agent` is sent on every HTTP request.
 
 ## Where does the configuration live?
 

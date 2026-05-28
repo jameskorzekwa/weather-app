@@ -41,12 +41,16 @@ if [ -f "$OPTIONS_FILE" ]; then
     # Defaults to an empty array via `.// []`. Pulled as a newline-
     # separated list for the bash loop below.
     MONO_USERS=$(jq -r '(.monochrome_users // []) | .[]' "$OPTIONS_FILE")
+    # Per-device mono override — substrings matched against the User-Agent
+    # header. Same shape as MONO_USERS but a separate option.
+    MONO_DEVICES=$(jq -r '(.monochrome_devices // []) | .[]' "$OPTIONS_FILE")
 else
     echo "[run.sh] /data/options.json not found — using empty defaults" >&2
     LAT=""; LON=""; ZIPCODE=""; GEOAPIFY_KEY=""; OWM_APPID=""
     AWN_API_KEY=""; AWN_APP_KEY=""; WEATHER_SOURCE="OpenMeteo"
     MONOCHROME="false"
     MONO_USERS=""
+    MONO_DEVICES=""
 fi
 
 # ---- Build the query string -----------------------------------------------
@@ -85,7 +89,8 @@ add_param weatherSource        "$WEATHER_SOURCE"
 # leaves a stray empty `mono=` param in the user's URL bar.
 if [ -n "$QUERY" ] \
    || [ "$MONOCHROME" = "true" ] \
-   || [ -n "$MONO_USERS" ]; then
+   || [ -n "$MONO_USERS" ] \
+   || [ -n "$MONO_DEVICES" ]; then
     QUERY="${QUERY}&mono=\$user_mono"
 fi
 
@@ -97,18 +102,26 @@ if [ -n "$QUERY" ]; then
     DEFAULT_REDIRECT="?${QUERY}"
 fi
 
-# ---- Build the per-user mono map entries ----------------------------------
-# Each entry maps a quoted HA display name to "1" (force mono) or "" (force
-# color). Generated as nginx-config syntax lines, ready to be sed'd into
-# the template at the @@USER_MONO_MAP_ENTRIES@@ marker.
+# ---- Build the per-user / per-device mono map entries ---------------------
+# Each entry maps a quoted matcher to "1" (force mono). Generated as nginx-
+# config syntax lines, ready to be sed/awk'd into the template at the
+# `@@USER_MONO_MAP_ENTRIES@@` and `@@DEVICE_MONO_MAP_ENTRIES@@` markers.
 
-USER_MONO_MAP_ENTRIES=""
 escape_nginx_string() {
     # Escape backslashes and double quotes for inclusion inside an nginx
     # double-quoted string. Newlines aren't valid in display names so we
     # don't worry about them.
     printf '%s' "$1" | sed -e 's/[\\"]/\\&/g'
 }
+
+escape_pcre() {
+    # Escape characters that have special meaning in PCRE (nginx's regex
+    # engine), so that authors can paste plain substrings like "iPhone"
+    # or "Silk/12.3" without thinking about regex syntax.
+    printf '%s' "$1" | sed -e 's|[][\\/.^$*+?(){}|]|\\&|g'
+}
+
+USER_MONO_MAP_ENTRIES=""
 if [ -n "$MONO_USERS" ]; then
     while IFS= read -r u; do
         [ -z "$u" ] && continue
@@ -116,10 +129,23 @@ if [ -n "$MONO_USERS" ]; then
         USER_MONO_MAP_ENTRIES="${USER_MONO_MAP_ENTRIES}        \"${esc}\" \"1\";"$'\n'
     done <<< "$MONO_USERS"
 fi
-# Trim trailing newline so the resulting nginx block isn't padded.
 USER_MONO_MAP_ENTRIES="${USER_MONO_MAP_ENTRIES%$'\n'}"
 
-# Addon-wide default for users not in either list.
+# Device entries use nginx's `~*` (case-insensitive regex) prefix so a
+# plain substring like "iPhone" matches a User-Agent containing
+# "iPhone" anywhere in the string.
+DEVICE_MONO_MAP_ENTRIES=""
+if [ -n "$MONO_DEVICES" ]; then
+    while IFS= read -r d; do
+        [ -z "$d" ] && continue
+        pcre=$(escape_pcre "$d")
+        esc=$(escape_nginx_string "$pcre")
+        DEVICE_MONO_MAP_ENTRIES="${DEVICE_MONO_MAP_ENTRIES}        \"~*${esc}\" \"1\";"$'\n'
+    done <<< "$MONO_DEVICES"
+fi
+DEVICE_MONO_MAP_ENTRIES="${DEVICE_MONO_MAP_ENTRIES%$'\n'}"
+
+# Addon-wide default applied when neither the user nor the device matches.
 if [ "$MONOCHROME" = "true" ]; then
     DEFAULT_MONO="1"
 else
@@ -142,25 +168,30 @@ sed \
     -e "s|@@DEFAULT_MONO@@|${DEFAULT_MONO}|g" \
     "$NGINX_TEMPLATE" > "$NGINX_CONF.partial"
 
-# Replace the map-entries line with the (possibly multi-line) per-user
-# entries block. We write the entries to a temp file and stream them in via
-# awk's getline so multi-line replacement works in both busybox awk
-# (alpine) and bsd awk (macOS, for dry-runs).
-ENTRIES_FILE="/tmp/.weather-app-mono-entries"
-printf '%s' "$USER_MONO_MAP_ENTRIES" > "$ENTRIES_FILE"
-awk -v entries_file="$ENTRIES_FILE" '
+# Replace the map-entries marker lines with the (possibly multi-line)
+# per-user / per-device entries blocks. We write each one to a temp file
+# and stream them in via awk's getline so multi-line replacement works in
+# both busybox awk (alpine) and bsd awk (macOS, for dry-runs).
+USER_ENTRIES_FILE="/tmp/.weather-app-mono-user-entries"
+DEVICE_ENTRIES_FILE="/tmp/.weather-app-mono-device-entries"
+printf '%s' "$USER_MONO_MAP_ENTRIES" > "$USER_ENTRIES_FILE"
+printf '%s' "$DEVICE_MONO_MAP_ENTRIES" > "$DEVICE_ENTRIES_FILE"
+awk \
+    -v user_entries_file="$USER_ENTRIES_FILE" \
+    -v device_entries_file="$DEVICE_ENTRIES_FILE" '
     /@@USER_MONO_MAP_ENTRIES@@/ {
-        # Stream the entries file in place of this marker line. Skip the
-        # marker itself (the `next` below). If the file is empty (no
-        # per-user overrides configured), nothing is emitted and the map
-        # block just contains its `default` line — which is correct.
-        while ((getline line < entries_file) > 0) print line
-        close(entries_file)
+        while ((getline line < user_entries_file) > 0) print line
+        close(user_entries_file)
+        next
+    }
+    /@@DEVICE_MONO_MAP_ENTRIES@@/ {
+        while ((getline line < device_entries_file) > 0) print line
+        close(device_entries_file)
         next
     }
     { print }
 ' "$NGINX_CONF.partial" > "$NGINX_CONF"
-rm -f "$NGINX_CONF.partial" "$ENTRIES_FILE"
+rm -f "$NGINX_CONF.partial" "$USER_ENTRIES_FILE" "$DEVICE_ENTRIES_FILE"
 
 # ---- Start Next.js --------------------------------------------------------
 
