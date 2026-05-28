@@ -3,7 +3,7 @@
 # Docs: https://developers.home-assistant.io/docs/add-ons/configuration/
 
 name: Weather App
-version: "0.5.0"
+version: "0.6.0"
 slug: weather_app
 description: >-
   Animated weather backgrounds with current conditions and a 5-day forecast,
@@ -37,10 +37,24 @@ panel_title: Weather
 # Visible to all HA users, not just admins (defaults to true = admin-only).
 panel_admin: false
 
-# No host port exposure by default — everything goes through ingress. Users
-# who want direct access can map a port from the add-on Network tab.
-ports: {}
-ports_description: {}
+# Direct web access on a host port, in addition to ingress. This lets you
+# point a plain Lovelace "Webpage" card (or any browser on the LAN) at
+# http://<your-ha-host>:8099/ with a stable URL — handy for using the
+# dashboard as a default/landing page or a wall display.
+#
+# Trade-offs vs. the ingress sidebar panel:
+#   - Traffic on this port does NOT go through Home Assistant's auth.
+#     Anyone on your network can open it, and the API keys ride in the
+#     redirected URL — so treat it as LAN-only.
+#   - The per-user monochrome override only works over ingress (it needs
+#     the X-Remote-User-Display-Name header that ingress adds). Over this
+#     port everyone gets the addon-wide `monochrome` default.
+# Remap the host port or remove it entirely from the add-on's Network tab
+# if you don't want direct access.
+ports:
+  "8099/tcp": 8099
+ports_description:
+  "8099/tcp": "Direct web UI access (no HA auth — keep to your LAN)"
 
 # Defaults shown in the add-on Configuration tab on first install.
 options:

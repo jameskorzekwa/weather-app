@@ -119,6 +119,39 @@ choice is preserved.
 Direct port access (no HA ingress, no user header) always falls back to
 the `monochrome` default.
 
+## Using it as a default dashboard / wall display
+
+The add-on shows up as a sidebar panel through HA's ingress. HA won't let
+an ingress panel be your *default* dashboard, so there are two ways to use
+the weather UI as a landing page:
+
+**Option 1 — Ingress, keeps auth + per-user mono (recommended).** Install
+the [Ingress webpage card](https://github.com/lovelylain/ha-addon-iframe-card)
+from HACS, add it to a Lovelace dashboard in **Panel (1 card)** mode:
+
+```yaml
+type: custom:addon-iframe-card
+url: 14c3574a_weather_app/
+```
+
+Then set that dashboard as your default in **Profile → Dashboard**.
+
+**Option 2 — Direct host port, works with the built-in Webpage card.**
+This add-on publishes its web UI on host port **8099** (remap it in the
+**Network** tab). Point a built-in Lovelace **Webpage** card at:
+
+```yaml
+type: iframe
+url: http://YOUR-HA-HOSTNAME:8099/
+```
+
+Simpler (no custom card), but note the trade-offs: this port has **no HA
+authentication** (anyone on your LAN can open it, and the API keys are
+visible in the redirected URL), and **per-user monochrome does not apply**
+over the direct port — everyone gets the addon-wide `monochrome` default,
+because the `X-Remote-User-Display-Name` header only exists on ingress
+requests. Keep this port to a trusted network.
+
 ## Where does the configuration live?
 
 HA Supervisor writes the saved options to `/data/options.json` inside the
