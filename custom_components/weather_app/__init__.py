@@ -33,6 +33,10 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+# hass.data flag so the card's static path + frontend module are only
+# registered once per HA session (not on every config-entry reload).
+_CARD_REGISTERED_KEY = f"{DOMAIN}_card_registered"
+
 # The dashboard config: one panel-mode view holding the single full-screen card.
 _DASHBOARD_CONFIG = {
     "views": [
@@ -59,13 +63,23 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def _async_register_card(hass: HomeAssistant) -> None:
-    """Serve the card JS and load it on the frontend (no HACS needed)."""
+    """Serve the card JS and load it on the frontend (no HACS needed).
+
+    Idempotent across config-entry reloads: aiohttp refuses to register the
+    same static GET route twice ("Added route will never be executed"), and
+    `add_extra_js_url` would stack duplicate <script> tags — so we only do
+    this once per Home Assistant session.
+    """
+    if hass.data.get(_CARD_REGISTERED_KEY):
+        return
+
     card_path = Path(__file__).parent / CARD_FILENAME
     await hass.http.async_register_static_paths(
         [StaticPathConfig(CARD_URL, str(card_path), False)]
     )
     # Append a cache-busting query so frontends pick up new versions on upgrade.
     frontend.add_extra_js_url(hass, f"{CARD_URL}?v={_card_version(card_path)}")
+    hass.data[_CARD_REGISTERED_KEY] = True
     _LOGGER.debug("Registered weather-app-card at %s", CARD_URL)
 
 
