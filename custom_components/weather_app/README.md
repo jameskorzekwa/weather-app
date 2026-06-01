@@ -45,6 +45,12 @@ in **Profile → Dashboard** if you want it as your landing page.
   reminding you of this.
 - The dashboard embeds the add-on over **ingress**, so it stays behind HA auth
   and per-user monochrome still works.
+- On first setup the integration **hides the add-on's own sidebar panel**
+  ("Show in sidebar" → off), since this integration's *Weather* dashboard
+  replaces it — otherwise you'd get two "Weather" entries. It only does this
+  once, so if you deliberately turn the add-on panel back on it won't be
+  overridden. (HA add-ons can't ship with that panel off by default, so the
+  integration flips it via the Supervisor API.)
 - Removing the integration removes the dashboard it created.
 - The card auto-detects the add-on; to pin a specific slug, edit the card and
   set `addon: <slug>`.

@@ -15,12 +15,16 @@ dashboard must never take down the rest of Home Assistant.
 from __future__ import annotations
 
 import logging
+import os
 from pathlib import Path
+
+import aiohttp
 
 from homeassistant.components import frontend
 from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
     CARD_FILENAME,
@@ -36,6 +40,15 @@ _LOGGER = logging.getLogger(__name__)
 # hass.data flag so the card's static path + frontend module are only
 # registered once per HA session (not on every config-entry reload).
 _CARD_REGISTERED_KEY = f"{DOMAIN}_card_registered"
+
+# Config-entry data flag: set once we've hidden the add-on's own sidebar
+# panel, so we don't re-hide it on every restart and fight a user who has
+# deliberately turned it back on.
+_PANEL_HIDDEN_FLAG = "addon_sidebar_panel_hidden"
+
+# The Supervisor is reachable at this host (with the SUPERVISOR_TOKEN env
+# var) from inside the Home Assistant Core container on supervised installs.
+_SUPERVISOR = "http://supervisor"
 
 # The dashboard config: one panel-mode view holding the single full-screen card.
 _DASHBOARD_CONFIG = {
@@ -53,6 +66,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the integration from a config entry."""
     await _async_register_card(hass)
     await _async_ensure_dashboard(hass)
+    await _async_hide_addon_panel_once(hass, entry)
     return True
 
 
@@ -89,6 +103,85 @@ def _card_version(card_path: Path) -> str:
         return str(int(card_path.stat().st_mtime))
     except OSError:
         return "0"
+
+
+async def _async_hide_addon_panel_once(
+    hass: HomeAssistant, entry: ConfigEntry
+) -> None:
+    """Turn off the Weather App add-on's own ingress sidebar panel.
+
+    The integration provides a proper "Weather" dashboard, so the add-on's
+    auto-registered sidebar entry is redundant. Home Assistant add-on
+    configs can't ship with that panel disabled by default (there's no
+    `ingress_panel` config.yaml key — the Supervisor defaults ingress
+    add-ons to *shown*), so we flip it off here via the Supervisor API.
+
+    Done only once per config entry (tracked in entry.data) so a user who
+    deliberately re-enables "Show in sidebar" on the add-on isn't overridden
+    on the next restart. No-ops cleanly when not running under the
+    Supervisor (e.g. HA Core in a plain container).
+    """
+    if entry.data.get(_PANEL_HIDDEN_FLAG):
+        return
+
+    token = os.environ.get("SUPERVISOR_TOKEN")
+    if not token:
+        return  # not a supervised install — no add-ons to manage
+
+    slug = await _async_resolve_addon_slug(hass, token)
+    if not slug:
+        _LOGGER.debug("Weather App add-on not found; leaving sidebar as-is")
+        return
+
+    session = async_get_clientsession(hass)
+    headers = {"Authorization": f"Bearer {token}"}
+    try:
+        async with session.post(
+            f"{_SUPERVISOR}/addons/{slug}/options",
+            headers=headers,
+            json={"ingress_panel": False},
+            timeout=aiohttp.ClientTimeout(total=15),
+        ) as resp:
+            if resp.status != 200:
+                _LOGGER.debug(
+                    "Could not hide add-on sidebar panel (HTTP %s)", resp.status
+                )
+                return
+    except (aiohttp.ClientError, TimeoutError):
+        _LOGGER.debug("Could not reach Supervisor to hide add-on panel", exc_info=True)
+        return
+
+    # Remember we've done it so we don't fight a manual re-enable later.
+    hass.config_entries.async_update_entry(
+        entry, data={**entry.data, _PANEL_HIDDEN_FLAG: True}
+    )
+    _LOGGER.info(
+        "Hid the Weather App add-on's sidebar panel (the integration's "
+        "Weather dashboard replaces it)"
+    )
+
+
+async def _async_resolve_addon_slug(hass: HomeAssistant, token: str) -> str | None:
+    """Find the installed add-on whose slug ends with `_weather_app`."""
+    session = async_get_clientsession(hass)
+    try:
+        async with session.get(
+            f"{_SUPERVISOR}/addons",
+            headers={"Authorization": f"Bearer {token}"},
+            timeout=aiohttp.ClientTimeout(total=15),
+        ) as resp:
+            if resp.status != 200:
+                return None
+            payload = await resp.json()
+    except (aiohttp.ClientError, TimeoutError, ValueError):
+        return None
+
+    addons = (payload.get("data") or {}).get("addons") or []
+    for addon in addons:
+        slug = addon.get("slug")
+        if isinstance(slug, str) and slug.endswith("_weather_app"):
+            return slug
+    return None
 
 
 async def _async_ensure_dashboard(hass: HomeAssistant) -> None:
