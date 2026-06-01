@@ -54,8 +54,10 @@ configuration:
   monochrome_users:
     name: Monochrome Users
     description: >-
-      HA user display names (e.g. "James Korzekwa") that should always
-      see the monochrome dashboard, regardless of the default above.
+      HA users that should always see the monochrome dashboard. Enter
+      either the username (e.g. "weather-bw") or the display name (e.g.
+      "Weather Station B&W") — both are matched. Type a value and press
+      Enter to add it.
 
 # The Network section title and port helper texts (if we ever expose host
 # ports). We don't expose any today, so this is just here for future use.
