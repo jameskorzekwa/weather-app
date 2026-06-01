@@ -94,18 +94,24 @@ uses the forecast provider's temperature.
 ### Per-user mono
 
 By default everyone sees the color dashboard. To switch specific HA users
-to mono, add their **display name** (e.g. `"James Korzekwa"`, not
-`"james_korzekwa"`) to `monochrome_users`. The match is exact and
-case-sensitive against HA's `X-Remote-User-Display-Name` ingress header,
-which is the name shown under **Settings → People** in HA.
+to mono, add them to `monochrome_users`. Each entry is matched against
+**both** the user's **username** and their **display name** — so enter
+whichever you like. Both are the values shown under **Settings → People**
+in HA (e.g. username `weather-bw`, display name `Weather Station B&W`).
+The match is exact and case-sensitive.
 
-Example: most users see color, but the kitchen tablet (signed in as
-"Kitchen") gets mono:
+> **Why two?** HA add-on configuration fields can't show a user *picker*
+> (the add-on schema has no "user" selector type), so this is a free-text
+> list — type a value and press Enter. Matching on both the username and
+> the display name means you don't have to remember which one HA forwards.
+
+Example: most users see color, but the kitchen tablet (signed in as the
+user `kitchen`) gets mono:
 
 ```yaml
 monochrome: false
 monochrome_users:
-  - "Kitchen"
+  - "kitchen"
 ```
 
 If instead you want **everyone** to see mono by default, set

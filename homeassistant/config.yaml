@@ -3,7 +3,7 @@
 # Docs: https://developers.home-assistant.io/docs/add-ons/configuration/
 
 name: Weather App
-version: "0.6.0"
+version: "0.7.0"
 slug: weather_app
 description: >-
   Animated weather backgrounds with current conditions and a 5-day forecast,
@@ -67,9 +67,11 @@ options:
   awn_application_key: null
   weather_source: OpenMeteo
   monochrome: false
-  # HA user display names (the same string shown under Settings → People)
-  # that should always see the monochrome dashboard. Everyone else gets
-  # the addon-wide `monochrome:` value above — which defaults to color.
+  # HA users that should always see the monochrome dashboard. Each entry
+  # is matched against both the user's username AND their display name
+  # (the strings shown under Settings → People), so either works — e.g.
+  # "weather-bw" or "Weather Station B&W". Everyone else gets the
+  # addon-wide `monochrome:` value above, which defaults to color.
   monochrome_users: []
 
 # Validation schema. `?` suffix makes a field optional. `password` masks the
