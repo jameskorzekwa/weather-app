@@ -77,12 +77,21 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def _async_register_card(hass: HomeAssistant) -> None:
-    """Serve the card JS and load it on the frontend (no HACS needed).
+    """Serve the card JS and make Lovelace load it before rendering cards.
 
-    Idempotent across config-entry reloads: aiohttp refuses to register the
-    same static GET route twice ("Added route will never be executed"), and
-    `add_extra_js_url` would stack duplicate <script> tags — so we only do
-    this once per Home Assistant session.
+    The card is registered as a Lovelace **resource** (the same mechanism
+    HACS cards use), NOT via `add_extra_js_url`. Resources are loaded by the
+    Lovelace engine *before* any card renders, so the custom element is
+    guaranteed defined in time. `add_extra_js_url` loads the module at app
+    boot instead, which races a panel-mode dashboard's first render — when
+    the module loses that race (e.g. a cold load with no service-worker
+    cache) the view shows "Configuration error" and never retries.
+
+    Falls back to `add_extra_js_url` only when the resource collection isn't
+    writable (a YAML-managed `lovelace: resources:` setup).
+
+    Idempotent across config-entry reloads (aiohttp refuses to register the
+    same static GET route twice), guarded by a hass.data flag.
     """
     if hass.data.get(_CARD_REGISTERED_KEY):
         return
@@ -91,10 +100,59 @@ async def _async_register_card(hass: HomeAssistant) -> None:
     await hass.http.async_register_static_paths(
         [StaticPathConfig(CARD_URL, str(card_path), False)]
     )
-    # Append a cache-busting query so frontends pick up new versions on upgrade.
-    frontend.add_extra_js_url(hass, f"{CARD_URL}?v={_card_version(card_path)}")
+
+    if await _async_register_card_resource(hass):
+        _LOGGER.debug("Registered weather-app-card as a Lovelace resource")
+    else:
+        # Fallback for YAML resource mode: load at boot (racy, but works
+        # once the browser has the module cached).
+        frontend.add_extra_js_url(hass, f"{CARD_URL}?v={_card_version(card_path)}")
+        _LOGGER.debug("Registered weather-app-card as an extra JS module")
+
     hass.data[_CARD_REGISTERED_KEY] = True
-    _LOGGER.debug("Registered weather-app-card at %s", CARD_URL)
+
+
+async def _async_register_card_resource(hass: HomeAssistant) -> bool:
+    """Add the card to Lovelace resources. True if registered or already present.
+
+    Returns False when the resource collection is unavailable or read-only
+    (YAML mode), so the caller can fall back to an extra-JS module URL.
+    """
+    try:
+        from homeassistant.components.lovelace import (  # noqa: PLC0415
+            LOVELACE_DATA,
+        )
+    except ImportError:  # pragma: no cover - depends on HA internals
+        return False
+
+    lovelace_data = hass.data.get(LOVELACE_DATA)
+    resources = getattr(lovelace_data, "resources", None)
+    if resources is None:
+        return False
+
+    # Lovelace loads the collection at startup, but be defensive.
+    try:
+        if not getattr(resources, "loaded", True):
+            await resources.async_load()
+    except Exception:  # noqa: BLE001
+        return False
+
+    try:
+        existing = list(resources.async_items())
+    except Exception:  # noqa: BLE001
+        return False
+
+    if any(
+        (item.get("url") or "").split("?", 1)[0] == CARD_URL for item in existing
+    ):
+        return True  # already registered
+
+    # Only storage-mode collections support creation; YAML mode raises.
+    try:
+        await resources.async_create_item({"res_type": "module", "url": CARD_URL})
+    except Exception:  # noqa: BLE001
+        return False
+    return True
 
 
 def _card_version(card_path: Path) -> str:
