@@ -14,6 +14,7 @@ dashboard must never take down the rest of Home Assistant.
 
 from __future__ import annotations
 
+import hashlib
 import logging
 import os
 from pathlib import Path
@@ -101,7 +102,7 @@ async def _async_register_card(hass: HomeAssistant) -> None:
         [StaticPathConfig(CARD_URL, str(card_path), False)]
     )
 
-    if await _async_register_card_resource(hass):
+    if await _async_register_card_resource(hass, card_path):
         _LOGGER.debug("Registered weather-app-card as a Lovelace resource")
     else:
         # Fallback for YAML resource mode: load at boot (racy, but works
@@ -112,8 +113,17 @@ async def _async_register_card(hass: HomeAssistant) -> None:
     hass.data[_CARD_REGISTERED_KEY] = True
 
 
-async def _async_register_card_resource(hass: HomeAssistant) -> bool:
-    """Add the card to Lovelace resources. True if registered or already present.
+async def _async_register_card_resource(
+    hass: HomeAssistant, card_path: Path
+) -> bool:
+    """Add (or update) the card in Lovelace resources, with a versioned URL.
+
+    The resource URL carries a `?v=<content hash>` so a card update busts the
+    browser cache: the file is served without no-cache headers, so an
+    unversioned URL would keep serving the *old* card to a long-running
+    kiosk that never gets a hard refresh. When the card changes, the hash
+    changes, the resource URL changes, and the next dashboard load fetches
+    the new module.
 
     Returns False when the resource collection is unavailable or read-only
     (YAML mode), so the caller can fall back to an extra-JS module URL.
@@ -137,22 +147,39 @@ async def _async_register_card_resource(hass: HomeAssistant) -> bool:
     except Exception:  # noqa: BLE001
         return False
 
+    versioned_url = f"{CARD_URL}?v={_card_content_version(card_path)}"
+
     try:
-        existing = list(resources.async_items())
+        items = list(resources.async_items())
     except Exception:  # noqa: BLE001
         return False
 
-    if any(
-        (item.get("url") or "").split("?", 1)[0] == CARD_URL for item in existing
-    ):
-        return True  # already registered
+    existing = next(
+        (i for i in items if (i.get("url") or "").split("?", 1)[0] == CARD_URL),
+        None,
+    )
 
-    # Only storage-mode collections support creation; YAML mode raises.
+    # Only storage-mode collections support create/update; YAML mode raises.
     try:
-        await resources.async_create_item({"res_type": "module", "url": CARD_URL})
+        if existing is None:
+            await resources.async_create_item(
+                {"res_type": "module", "url": versioned_url}
+            )
+        elif existing.get("url") != versioned_url:
+            await resources.async_update_item(
+                existing["id"], {"res_type": "module", "url": versioned_url}
+            )
     except Exception:  # noqa: BLE001
         return False
     return True
+
+
+def _card_content_version(card_path: Path) -> str:
+    """Short content hash of the card file, for cache-busting the resource URL."""
+    try:
+        return hashlib.sha256(card_path.read_bytes()).hexdigest()[:10]
+    except OSError:
+        return "0"
 
 
 def _card_version(card_path: Path) -> str:
