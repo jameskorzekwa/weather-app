@@ -46,11 +46,12 @@ in **Profile → Dashboard** if you want it as your landing page.
 - The dashboard embeds the add-on over **ingress**, so it stays behind HA auth
   and per-user monochrome still works.
 - **Self-healing on a kiosk:** the card health-checks the add-on every ~30s and
-  automatically reloads the embed if it gets stuck on a transient error (e.g.
-  a brief 502 while the add-on auto-updates overnight, or an expired ingress
-  session). So a wall tablet won't sit on a dead page until someone
-  re-navigates to it. Tune or disable via `watchdog_interval: <seconds>` on the
-  card.
+  automatically reloads the embed when it's stuck — whether the add-on is
+  unreachable (a brief 502 while it auto-updates overnight, an expired ingress
+  session) **or** the add-on is reachable but the app never rendered (loaded but
+  its first data fetch failed with "Failed to fetch", leaving it on the splash).
+  So a wall tablet won't sit on a dead page until someone re-navigates to it.
+  Tune or disable via `watchdog_interval: <seconds>` on the card.
 - On first setup the integration **hides the add-on's own sidebar panel**
   ("Show in sidebar" → off), since this integration's *Weather* dashboard
   replaces it — otherwise you'd get two "Weather" entries. It only does this

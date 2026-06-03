@@ -27,6 +27,12 @@
 
 const INGRESS_PATH = "/api/hassio_ingress/";
 const DEFAULT_WATCHDOG_INTERVAL = 30; // seconds
+// If the add-on is reachable but the embed shows less than this much text for
+// longer than STUCK_TIMEOUT_MS, treat it as stuck (e.g. loaded but its initial
+// data fetch failed, leaving it on the splash) and reload it. The fully
+// rendered app has ~180 chars of text; the splash/blank has almost none.
+const EMBED_CONTENT_MIN = 40;
+const STUCK_TIMEOUT_MS = 90 * 1000;
 
 class WeatherAppCard extends HTMLElement {
   setConfig(config) {
@@ -160,6 +166,7 @@ class WeatherAppCard extends HTMLElement {
     this._ingressUrl = ingressUrl;
     this._lastHealthy = true;
     this._iframeErrored = false;
+    this._stuckSince = 0;
     await this._createSession();
     this._iframe.src = ingressUrl;
     // Single loop: keep the ingress session alive AND watchdog the embed.
@@ -223,6 +230,18 @@ class WeatherAppCard extends HTMLElement {
       });
   }
 
+  // True if the embed has rendered real content (vs sitting on the splash or
+  // a blank/black screen). Same-origin, so we can read the document.
+  _embedHasContent() {
+    try {
+      const doc = this._iframe.contentDocument;
+      if (!doc || !doc.body) return false;
+      return (doc.body.innerText || "").trim().length >= EMBED_CONTENT_MIN;
+    } catch (e) {
+      return true; // can't inspect (mid-navigation) — don't reload blindly
+    }
+  }
+
   async _watchdogTick() {
     if (!this._ingressUrl) return;
     // Keep the ingress session fresh.
@@ -242,17 +261,33 @@ class WeatherAppCard extends HTMLElement {
     const iframeBad = this._iframeErrored || this._looksBroken();
 
     if (healthy) {
-      // Add-on is reachable. Reload the iframe if it's stuck on an error or
-      // if we're recovering from a previously-unhealthy state. When
-      // everything's fine we leave the iframe untouched (no kiosk flicker).
+      // Add-on is reachable.
       if (iframeBad || this._lastHealthy === false) {
+        // Stuck on a server error, or recovering from a down add-on.
         this._reloadIframe();
+        this._stuckSince = 0;
+      } else if (this._embedHasContent()) {
+        // Rendering fine — leave it alone (no kiosk flicker).
+        this._stuckSince = 0;
+      } else {
+        // Reachable, but the embed shows no real content — stuck on the
+        // splash or blank (e.g. its initial data fetch failed). Give it a
+        // grace period, then reload; the reload re-runs the app's fetches,
+        // which typically succeed on retry.
+        const now = Date.now();
+        if (!this._stuckSince) {
+          this._stuckSince = now;
+        } else if (now - this._stuckSince > STUCK_TIMEOUT_MS) {
+          this._reloadIframe();
+          this._stuckSince = 0;
+        }
       }
       this._lastHealthy = true;
     } else {
       // Add-on down — don't thrash; the reload happens on the next tick that
       // sees it healthy again.
       this._lastHealthy = false;
+      this._stuckSince = 0;
     }
   }
 
