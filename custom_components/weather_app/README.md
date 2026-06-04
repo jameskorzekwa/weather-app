@@ -53,14 +53,22 @@ in **Profile → Dashboard** if you want it as your landing page.
   So a wall tablet won't sit on a dead page until someone re-navigates to it.
   Tune or disable via `watchdog_interval: <seconds>` on the card.
 - **Survives the card itself failing to load:** a separate page-level self-heal
-  script (loaded on every frontend page, independent of the card) reloads the
-  dashboard — clearing the stale frontend cache — if the card shows a
-  "Configuration error" / missing-element for >90s. That's the failure a 24/7
-  tablet hits after a **Home Assistant update**: the new frontend makes the
-  tablet's cached session incompatible and the card module won't load. The
-  in-card watchdog can't help there (it never ran), so this outer watchdog
-  recovers the page. It's conservative — only the weather dashboard, only after
-  a long grace period, at most once every few minutes.
+  script (loaded on every frontend page, independent of the card) recovers the
+  dashboard when it shows a "Configuration error" / "Custom element doesn't
+  exist: weather-app-card". The in-card watchdog can't help there — the card
+  never ran — so this outer watchdog handles it, in two stages:
+  1. **Soft re-render** (the common case): if the card *module* loaded but the
+     view painted before the element was defined — a first-render race — it
+     bounces to another panel and back via HA's SPA router, exactly like
+     manually switching dashboards and back. No page reload; recovers in
+     seconds.
+  2. **Hard reload** (fallback): if the soft bounce doesn't take — the module
+     is genuinely missing, e.g. a stale frontend service-worker shell — it
+     clears the service worker + caches and reloads to refetch a fresh shell.
+
+  It's conservative — only the weather dashboard, only after a grace period (so
+  a normal slow load is never disturbed), and the heavy reload is rate-limited
+  so a persistent problem can't become a reload loop.
 - On first setup the integration **hides the add-on's own sidebar panel**
   ("Show in sidebar" → off), since this integration's *Weather* dashboard
   replaces it — otherwise you'd get two "Weather" entries. It only does this
