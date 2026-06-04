@@ -52,6 +52,15 @@ in **Profile → Dashboard** if you want it as your landing page.
   its first data fetch failed with "Failed to fetch", leaving it on the splash).
   So a wall tablet won't sit on a dead page until someone re-navigates to it.
   Tune or disable via `watchdog_interval: <seconds>` on the card.
+- **Survives the card itself failing to load:** a separate page-level self-heal
+  script (loaded on every frontend page, independent of the card) reloads the
+  dashboard — clearing the stale frontend cache — if the card shows a
+  "Configuration error" / missing-element for >90s. That's the failure a 24/7
+  tablet hits after a **Home Assistant update**: the new frontend makes the
+  tablet's cached session incompatible and the card module won't load. The
+  in-card watchdog can't help there (it never ran), so this outer watchdog
+  recovers the page. It's conservative — only the weather dashboard, only after
+  a long grace period, at most once every few minutes.
 - On first setup the integration **hides the add-on's own sidebar panel**
   ("Show in sidebar" → off), since this integration's *Weather* dashboard
   replaces it — otherwise you'd get two "Weather" entries. It only does this

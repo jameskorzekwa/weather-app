@@ -6,6 +6,11 @@ DOMAIN = "weather_app"
 CARD_URL = "/weather_app_dashboard/weather-app-card.js"
 CARD_FILENAME = "weather-app-card.js"
 
+# Page-level self-heal script, loaded on every frontend page (independent of
+# the card) so it can recover the dashboard even when the card fails to load.
+SELFHEAL_URL = "/weather_app_dashboard/weather-app-selfheal.js"
+SELFHEAL_FILENAME = "weather-app-selfheal.js"
+
 # The Lovelace dashboard this integration creates.
 DASHBOARD_URL_PATH = "weather-wall"
 DASHBOARD_TITLE = "Weather"
