@@ -34,6 +34,8 @@ from .const import (
     DASHBOARD_TITLE,
     DASHBOARD_URL_PATH,
     DOMAIN,
+    SELFHEAL_FILENAME,
+    SELFHEAL_URL,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -41,6 +43,9 @@ _LOGGER = logging.getLogger(__name__)
 # hass.data flag so the card's static path + frontend module are only
 # registered once per HA session (not on every config-entry reload).
 _CARD_REGISTERED_KEY = f"{DOMAIN}_card_registered"
+
+# hass.data flag so the page-level self-heal module is only registered once.
+_SELFHEAL_REGISTERED_KEY = f"{DOMAIN}_selfheal_registered"
 
 # Config-entry data flag: set once we've hidden the add-on's own sidebar
 # panel, so we don't re-hide it on every restart and fight a user who has
@@ -66,9 +71,32 @@ _DASHBOARD_CONFIG = {
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the integration from a config entry."""
     await _async_register_card(hass)
+    await _async_register_selfheal(hass)
     await _async_ensure_dashboard(hass)
     await _async_hide_addon_panel_once(hass, entry)
     return True
+
+
+async def _async_register_selfheal(hass: HomeAssistant) -> None:
+    """Serve + load the page-level self-heal module on every frontend page.
+
+    Loaded via `add_extra_js_url` (a frontend "extra module"), NOT as a
+    Lovelace resource — so it loads independently of the dashboard card and
+    can recover the page even when the card module fails. Versioned by
+    content hash so updates cache-bust. Registered once per HA session.
+    """
+    if hass.data.get(_SELFHEAL_REGISTERED_KEY):
+        return
+    path = Path(__file__).parent / SELFHEAL_FILENAME
+    try:
+        await hass.http.async_register_static_paths(
+            [StaticPathConfig(SELFHEAL_URL, str(path), False)]
+        )
+        frontend.add_extra_js_url(hass, f"{SELFHEAL_URL}?v={_card_content_version(path)}")
+        hass.data[_SELFHEAL_REGISTERED_KEY] = True
+        _LOGGER.debug("Registered weather-app self-heal module")
+    except Exception:  # noqa: BLE001 - never break setup over the self-heal
+        _LOGGER.exception("Failed to register the self-heal module")
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
