@@ -8,13 +8,17 @@ interface Props {
     current: Current;
     isNight: boolean;
     tempSensor?: TempSensor;
+    haSunrise?: number;
+    haSunset?: number;
 }
 
 export default function CurrentWeather({
     location,
     current,
     isNight,
-    tempSensor
+    tempSensor,
+    haSunrise,
+    haSunset
 }: Props) {
     let temp = current.temp;
     if (
@@ -53,13 +57,17 @@ export default function CurrentWeather({
                         <div className="flex flex-row gap-2">
                             <i className={`text wi wi-sunrise text-4xl`} />
                             <div className={`text text-3xl`}>
-                                {moment.unix(current.sunrise).format('LT')}
+                                {moment
+                                    .unix(haSunrise ?? current.sunrise)
+                                    .format('LT')}
                             </div>
                         </div>
                         <div className="flex flex-row gap-2">
                             <i className={`text wi wi-sunset text-4xl`} />
                             <div className={`text text-3xl`}>
-                                {moment.unix(current.sunset).format('LT')}
+                                {moment
+                                    .unix(haSunset ?? current.sunset)
+                                    .format('LT')}
                             </div>
                         </div>
                     </div>

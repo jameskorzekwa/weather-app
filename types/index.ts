@@ -481,3 +481,11 @@ export type OMWeatherCode =
     | 99;
 
 export type WeatherSource = 'OpenMeteo' | 'OpenWeatherMap';
+
+export type Sun2Pair = {
+    prefix: string;
+    friendlyName: string;
+    sunrise: string;
+    sunset: string;
+    entities: { rising: string; setting: string };
+};

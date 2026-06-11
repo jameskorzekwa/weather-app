@@ -13,7 +13,7 @@ import {
     Select,
     Spinner
 } from '@material-tailwind/react';
-import { FakeWeatherKey, LatLon, WeatherSource } from '@/types';
+import { FakeWeatherKey, LatLon, Sun2Pair, WeatherSource } from '@/types';
 import { fakeWeather } from '@/constants/data';
 import InputWrapper from '@/components/inputwrapper';
 
@@ -41,6 +41,9 @@ interface Props {
     setWeatherSource: (state: WeatherSource) => void;
     openWeatherMapAppId?: string;
     setOpenWeatherMapAppId: (state: string) => void;
+    sun2Pairs: Sun2Pair[];
+    sun2Prefix?: string;
+    setSun2Prefix: (state: string | undefined) => void;
     spoofWeather?: FakeWeatherKey;
     setSpoofWeather: (state: FakeWeatherKey | undefined) => void;
     isNight?: boolean;
@@ -58,6 +61,7 @@ type Form = {
     awnApiKey: { value?: string; error?: string };
     weatherSource: { value?: WeatherSource; error?: string };
     openWeatherMapAppId: { value?: string; error?: string };
+    sun2Prefix: { value?: string; error?: string };
     spoofWeather: { value: FakeWeatherKey | 'actual'; error?: string };
     isNight: { value?: boolean; error?: string };
     mono: { value: boolean; error?: string };
@@ -80,6 +84,9 @@ export default function Settings({
     setWeatherSource,
     openWeatherMapAppId,
     setOpenWeatherMapAppId,
+    sun2Pairs,
+    sun2Prefix,
+    setSun2Prefix,
     spoofWeather,
     setSpoofWeather,
     isNight,
@@ -99,6 +106,7 @@ export default function Settings({
         awnApiKey: { value: awnApiKey, error: undefined },
         weatherSource: { value: weatherSource, error: undefined },
         openWeatherMapAppId: { value: openWeatherMapAppId, error: undefined },
+        sun2Prefix: { value: sun2Prefix, error: undefined },
         spoofWeather: { value: spoofWeather || 'actual', error: undefined },
         isNight: { value: isNight, error: undefined },
         mono: { value: !!mono, error: undefined }
@@ -206,6 +214,7 @@ export default function Settings({
             setAwnApplicationKey(form.awnApplicationKey.value || '');
             setWeatherSource(form.weatherSource.value || 'OpenMeteo');
             setOpenWeatherMapAppId(form.openWeatherMapAppId.value || '');
+            setSun2Prefix(form.sun2Prefix.value || undefined);
             setSpoofWeather(
                 form.spoofWeather.value === 'actual'
                     ? undefined
@@ -265,6 +274,12 @@ export default function Settings({
             openWeatherMapAppId: { ...form.openWeatherMapAppId, value: openWeatherMapAppId }
         }));
     }, [openWeatherMapAppId]);
+    useEffect(() => {
+        setForm((prevState) => ({
+            ...prevState,
+            sun2Prefix: { ...prevState.sun2Prefix, value: sun2Prefix }
+        }));
+    }, [sun2Prefix]);
     useEffect(() => {
         setForm((prevState) => ({
             ...prevState,
@@ -472,6 +487,35 @@ export default function Settings({
                                     </Select>
                                 </InputWrapper>
                             </div>
+                            {sun2Pairs.length > 1 && (
+                                <div className="w-72">
+                                    <InputWrapper error={form.sun2Prefix.error}>
+                                        <Select
+                                            label="Sun2 Source"
+                                            value={form.sun2Prefix.value || ''}
+                                            onChange={(val) =>
+                                                setForm((form) => ({
+                                                    ...form,
+                                                    sun2Prefix: {
+                                                        ...form.sun2Prefix,
+                                                        value: val || undefined
+                                                    }
+                                                }))
+                                            }
+                                        >
+                                            {sun2Pairs.map((p) => (
+                                                <Option
+                                                    key={p.prefix}
+                                                    value={p.prefix}
+                                                >
+                                                    {p.friendlyName} (
+                                                    {p.entities.rising})
+                                                </Option>
+                                            ))}
+                                        </Select>
+                                    </InputWrapper>
+                                </div>
+                            )}
                             <div className="w-72">
                                 <InputWrapper error={form.mono.error}>
                                     <Select

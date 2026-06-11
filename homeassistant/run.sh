@@ -35,6 +35,11 @@ if [ -f "$OPTIONS_FILE" ]; then
     AWN_API_KEY=$(jq -r '.awn_api_key // empty' "$OPTIONS_FILE")
     AWN_APP_KEY=$(jq -r '.awn_application_key // empty' "$OPTIONS_FILE")
     WEATHER_SOURCE=$(jq -r '.weather_source // "OpenMeteo"' "$OPTIONS_FILE")
+    # Sun2 auto-discovery is on by default. We only need to push it onto
+    # the URL when the user explicitly turns it off — see add_param call
+    # below. Defaulting to true here keeps the no-options.json branch in
+    # sync with the schema default.
+    USE_SUN2=$(jq -r '.use_sun2 // true' "$OPTIONS_FILE")
     MONOCHROME=$(jq -r '.monochrome // false' "$OPTIONS_FILE")
     # Per-user mono override — array of HA display names that should
     # always see the mono dashboard, regardless of the default above.
@@ -45,6 +50,7 @@ else
     echo "[run.sh] /data/options.json not found — using empty defaults" >&2
     LAT=""; LON=""; ZIPCODE=""; GEOAPIFY_KEY=""; OWM_APPID=""
     AWN_API_KEY=""; AWN_APP_KEY=""; WEATHER_SOURCE="OpenMeteo"
+    USE_SUN2="true"
     MONOCHROME="false"
     MONO_USERS=""
 fi
@@ -72,6 +78,13 @@ add_param openWeatherMapAppId  "$OWM_APPID"
 add_param awnApiKey            "$AWN_API_KEY"
 add_param awnApplicationKey    "$AWN_APP_KEY"
 add_param weatherSource        "$WEATHER_SOURCE"
+
+# Sun2 auto-discovery defaults to on inside the app, so only emit the
+# param when the user has explicitly turned it off — the URL stays clean
+# in the common case.
+if [ "$USE_SUN2" = "false" ]; then
+    add_param useSun2 "0"
+fi
 
 # `mono` is NOT a static query param anymore — its value is determined
 # per-request inside nginx based on the requesting HA user. We append a

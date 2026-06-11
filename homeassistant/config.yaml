@@ -3,7 +3,7 @@
 # Docs: https://developers.home-assistant.io/docs/add-ons/configuration/
 
 name: Weather App
-version: "0.7.0"
+version: "0.8.0"
 slug: weather_app
 description: >-
   Animated weather backgrounds with current conditions and a 5-day forecast,
@@ -32,6 +32,15 @@ init: false
 # panel without the user touching configuration.yaml.
 ingress: true
 ingress_port: 8099
+
+# Grants the addon a SUPERVISOR_TOKEN with permission to call the Home
+# Assistant Core REST API via the Supervisor proxy at
+# `http://supervisor/core/api/*`. Used by `pages/api/ha/sun.ts` to read
+# the user-configured Sun2 sunrise/sunset sensors so the app can swap
+# the weather provider's sunrise/sunset for the ones Sun2 reports.
+# Without this flag the token is still present but Supervisor returns
+# 403 for /core/api routes.
+homeassistant_api: true
 panel_icon: mdi:weather-partly-cloudy
 panel_title: Weather
 # Visible to all HA users, not just admins (defaults to true = admin-only).
@@ -66,6 +75,12 @@ options:
   awn_api_key: null
   awn_application_key: null
   weather_source: OpenMeteo
+  # If the Sun2 integration is installed in HA, the addon auto-discovers
+  # its sunrise/sunset sensors (any pair named `sensor.<name>_sun_rising`
+  # + `sensor.<name>_sun_setting`) and uses those for the displayed times
+  # and the day/night switch. Set to false to ignore Sun2 and keep using
+  # whichever weather provider sunrise/sunset is selected above.
+  use_sun2: true
   monochrome: false
   # HA users that should always see the monochrome dashboard. Each entry
   # is matched against both the user's username AND their display name
@@ -86,6 +101,7 @@ schema:
   awn_api_key: "password?"
   awn_application_key: "password?"
   weather_source: "list(OpenMeteo|OpenWeatherMap)"
+  use_sun2: "bool"
   monochrome: "bool"
   monochrome_users:
     - "str"

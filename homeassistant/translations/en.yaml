@@ -46,6 +46,15 @@ configuration:
       Which provider supplies current conditions and the 5-day
       forecast. OpenMeteo is free and needs no key; OpenWeatherMap
       needs an App ID.
+  use_sun2:
+    name: Use Sun2 for Sunrise/Sunset
+    description: >-
+      When the Sun2 integration is installed, auto-discover its
+      sunrise/sunset sensors and use them instead of the weather
+      provider's values. Off = always use the weather provider. If you
+      have more than one Sun2 location configured, the addon can't tell
+      which one you want — pick it in the in-app Settings dialog
+      (top-left corner of the dashboard) → "Sun2 Source".
   monochrome:
     name: Default to Monochrome
     description: >-

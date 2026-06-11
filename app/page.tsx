@@ -19,6 +19,7 @@ import {
     OWCurrent,
     OWWeather,
     ReverseLocation,
+    Sun2Pair,
     TempSensor,
     WeatherSource,
     ZipcodeLocation
@@ -81,6 +82,11 @@ function HomeContent() {
     const [weatherSource, setWeatherSource] = useState<
         WeatherSource | undefined
     >('OpenMeteo');
+    const [useSun2, setUseSun2] = useState<boolean>(true);
+    const [sun2Pairs, setSun2Pairs] = useState<Sun2Pair[]>([]);
+    const [sun2Prefix, setSun2Prefix] = useState<string | undefined>();
+    const [haSunrise, setHaSunrise] = useState<number | undefined>();
+    const [haSunset, setHaSunset] = useState<number | undefined>();
     const [mono, setMono] = useState<boolean>(false);
     const [spoofWeather, setSpoofWeather] = useState<
         FakeWeatherKey | undefined
@@ -88,10 +94,12 @@ function HomeContent() {
 
     const checkIsNight = () => {
         if (!spoofWeather) {
+            const sunriseUnix = haSunrise ?? current?.sunrise;
+            const sunsetUnix = haSunset ?? current?.sunset;
             setIsNight(
-                current
-                    ? moment().isAfter(moment.unix(current.sunset)) ||
-                          moment().isBefore(moment.unix(current.sunrise))
+                sunriseUnix !== undefined && sunsetUnix !== undefined
+                    ? moment().isAfter(moment.unix(sunsetUnix)) ||
+                          moment().isBefore(moment.unix(sunriseUnix))
                     : false
             );
         }
@@ -189,6 +197,22 @@ function HomeContent() {
             addAlert(e);
         }
     };
+    const getHaSun2 = async () => {
+        // Lists every Sun2 sunrise/sunset pair the addon can see. 503 =
+        // not inside HA — we stay quiet and let the weather provider's
+        // sunrise/sunset win the fallback. The picker logic in the
+        // sun2Pairs useEffect below decides which pair (if any) populates
+        // haSunrise/haSunset.
+        try {
+            const r = await fetch('api/ha/sun2');
+            if (!r.ok) return;
+            const json = await r.json();
+            setSun2Pairs(Array.isArray(json.pairs) ? json.pairs : []);
+        } catch {
+            // network error or non-JSON body — ignore, fallback wins
+        }
+    };
+
     let getWeather = async (location: Location, force: boolean = false) => {
         const localStorageCurrent = localStorage.getItem('current');
         const localStorageForecast = localStorage.getItem('forecast');
@@ -456,6 +480,9 @@ function HomeContent() {
         if (awnApiKey && awnApplicationKey) {
             void getTempSensor(awnApiKey, awnApplicationKey);
         }
+        if (useSun2) {
+            void getHaSun2();
+        }
         if (current) {
             checkIsNight();
         }
@@ -471,6 +498,10 @@ function HomeContent() {
                 (searchParams.get('weatherSource') as WeatherSource) ||
                     'OpenMeteo'
             );
+            // useSun2 defaults to on; only `useSun2=0` turns it off so
+            // that an unset URL param means "use Sun2 if it's there".
+            setUseSun2(searchParams.get('useSun2') !== '0');
+            setSun2Prefix(searchParams.get('sun2Prefix') || undefined);
             setMono(searchParams.get('mono') === '1');
             const zipcode = searchParams.get('zipcode');
             const lat = searchParams.get('lat');
@@ -526,6 +557,8 @@ function HomeContent() {
                 ...(awnApiKey ? { awnApiKey } : {}),
                 ...(awnApplicationKey ? { awnApplicationKey } : {}),
                 ...(weatherSource ? { weatherSource } : {}),
+                ...(useSun2 ? {} : { useSun2: '0' }),
+                ...(sun2Prefix ? { sun2Prefix } : {}),
                 ...(mono ? { mono: '1' } : {})
             };
             const queryParams = new URLSearchParams(queryObj);
@@ -540,7 +573,7 @@ function HomeContent() {
                 window.history.pushState({ path: newUrl }, '', newUrl);
             }
         }
-    }, [zipcode, geoapifyApiKey, awnApiKey, awnApplicationKey, openWeatherMapAppId, latLon, weatherSource, mono]);
+    }, [zipcode, geoapifyApiKey, awnApiKey, awnApplicationKey, openWeatherMapAppId, latLon, weatherSource, useSun2, sun2Prefix, mono]);
 
     useEffect(() => {
         if (awnApiKey && awnApplicationKey) {
@@ -587,6 +620,48 @@ function HomeContent() {
             checkIsNight();
         }
     }, [current]);
+
+    useEffect(() => {
+        if (useSun2) {
+            void getHaSun2();
+        } else {
+            setSun2Pairs([]);
+            setHaSunrise(undefined);
+            setHaSunset(undefined);
+        }
+    }, [useSun2]);
+
+    useEffect(() => {
+        // Picker logic: 0 pairs → fall back; 1 pair → use it; >1 pair →
+        // require the user to choose (via sun2Prefix). Without a valid
+        // choice we deliberately leave haSunrise/haSunset undefined so
+        // the Settings modal can prompt rather than silently picking the
+        // wrong location.
+        if (!useSun2 || sun2Pairs.length === 0) {
+            setHaSunrise(undefined);
+            setHaSunset(undefined);
+            return;
+        }
+        const chosen =
+            sun2Pairs.length === 1
+                ? sun2Pairs[0]
+                : sun2Pairs.find((p) => p.prefix === sun2Prefix);
+        if (!chosen) {
+            setHaSunrise(undefined);
+            setHaSunset(undefined);
+            return;
+        }
+        const rise = moment(chosen.sunrise);
+        const set = moment(chosen.sunset);
+        setHaSunrise(rise.isValid() ? rise.unix() : undefined);
+        setHaSunset(set.isValid() ? set.unix() : undefined);
+    }, [useSun2, sun2Pairs, sun2Prefix]);
+
+    useEffect(() => {
+        if (current) {
+            checkIsNight();
+        }
+    }, [haSunrise, haSunset]);
 
     useEffect(() => {
         if (spoofWeather) {
@@ -649,6 +724,8 @@ function HomeContent() {
                             current={current}
                             isNight={isNight}
                             tempSensor={tempSensor}
+                            haSunrise={haSunrise}
+                            haSunset={haSunset}
                         />
                         <WeeklyWeather forecast={forecast} />
                     </div>
@@ -673,6 +750,9 @@ function HomeContent() {
                 setWeatherSource={setWeatherSource}
                 openWeatherMapAppId={openWeatherMapAppId}
                 setOpenWeatherMapAppId={setOpenWeatherMapAppId}
+                sun2Pairs={sun2Pairs}
+                sun2Prefix={sun2Prefix}
+                setSun2Prefix={setSun2Prefix}
                 spoofWeather={spoofWeather}
                 setSpoofWeather={setSpoofWeather}
                 isNight={isNight}
