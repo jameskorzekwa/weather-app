@@ -2,6 +2,7 @@ import seedrandom from 'seedrandom';
 import {
     Current,
     Forecast,
+    Location,
     OMWeather,
     OMWeatherCode,
     OWCurrent,
@@ -24,6 +25,32 @@ export const getTemp = (temp: number, from: string, to: string): number => {
         temp = (temp - 273) * (9 / 5) + 32;
     }
     return Math.round(temp);
+};
+
+// Best available place name for the header. Geoapify only fills `city` for
+// incorporated places; rural/unincorporated coordinates come back with
+// `city: null` and a coarser field (county/state) populated instead — e.g.
+// ZIP 80465 reverse-geocodes to "Jefferson County", not its USPS mailing
+// city "Morrison". `zipCity` is the USPS place name looked up from the
+// postcode (see getZipCity in page.tsx); it slots in right after the
+// geocoder's own city so an unincorporated address shows its mailing city
+// rather than the county. Walk fine-to-coarse and never render blank.
+export const getLocationName = (
+    location: Location,
+    zipCity?: string
+): string => {
+    return (
+        location.city ||
+        zipCity ||
+        location.town ||
+        location.village ||
+        location.hamlet ||
+        location.suburb ||
+        location.municipality ||
+        location.county ||
+        location.state ||
+        ''
+    );
 };
 
 export const getPrecipitationPercent = (pop: number): number => {
@@ -150,18 +177,55 @@ export const owCurrentToCurrent = (current: OWCurrent): Current => {
     };
 };
 
+// OpenMeteo weather codes that imply liquid precipitation reaching the
+// ground (drizzle / rain / showers / thunderstorm). Snow codes are
+// deliberately excluded — the dry-storm guard keys off the `rain`/
+// `precipitation` fields, which are legitimately 0 during snow.
+const OM_WET_CODES = new Set<OMWeatherCode>([
+    51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82, 95, 96, 99
+]);
+
+// Map an OpenMeteo cloud-cover percentage onto the OpenWeatherMap-style
+// clear/clouds ids the backgrounds route on (800 clear, 801–804 clouds).
+export const cloudCoverToId = (cloudCover?: number): OWWeatherId => {
+    if (cloudCover === undefined) return 803; // no data → assume cloudy
+    if (cloudCover < 13) return 800; // clear
+    if (cloudCover < 50) return 801; // few clouds
+    if (cloudCover < 85) return 803; // broken clouds
+    return 804; // overcast
+};
+
 export const omWeatherToCurrent = (current: OMWeather): Current => {
+    const code = current.current.weather_code as OMWeatherCode;
+    let id = omWeatherCodeToId(code);
+    let description = omWeatherCodeToDescription(code);
+
+    // Dry-storm guard: OpenMeteo over-reports thunderstorms/rain — it returns
+    // a wet code (e.g. 95) even when its own `precipitation`/`rain` read 0mm.
+    // When the code says wet but nothing is actually falling, trust the cloud
+    // cover instead so an overcast-but-dry sky doesn't render as a storm. The
+    // fields are optional (older cached responses lack them); if precipitation
+    // is absent we leave the provider's code untouched.
+    const precip = current.current.precipitation;
+    const rain = current.current.rain;
+    if (
+        OM_WET_CODES.has(code) &&
+        precip === 0 &&
+        (rain ?? 0) === 0
+    ) {
+        id = cloudCoverToId(current.current.cloud_cover);
+        description = id === 800 ? 'Clear' : 'Clouds';
+    }
+
     return {
         source: 'OpenMeteo',
-        id: omWeatherCodeToId(current.current.weather_code as OMWeatherCode),
+        id,
         temp: getTemp(current.current.temperature, 'f', 'f'),
         min_temp: getTemp(current.daily.temperature_2m_min[0], 'f', 'f'),
         max_temp: getTemp(current.daily.temperature_2m_max[0], 'f', 'f'),
         sunrise: moment(current.daily.sunrise[0]).unix(),
         sunset: moment(current.daily.sunset[0]).unix(),
-        description: omWeatherCodeToDescription(
-            current.current.weather_code as OMWeatherCode
-        ),
+        description,
         lat: current.latitude,
         lon: current.longitude
     };

@@ -31,6 +31,7 @@ import DateTime from '@/components/dateTime';
 import Loading from '@/components/loading';
 import {
     AWNDeviceToTempSensor,
+    getLocationName,
     omWeatherToCurrent,
     omWeatherToForecast,
     owCurrentToCurrent,
@@ -78,6 +79,7 @@ function HomeContent() {
     const [current, setCurrent] = useState<Current | undefined>();
     const [location, setLocation] = useState<Location | undefined>();
     const [zipcode, setZipcode] = useState<string | undefined>();
+    const [zipCity, setZipCity] = useState<string | undefined>();
     const [tempSensor, setTempSensor] = useState<TempSensor | undefined>();
     const [weatherSource, setWeatherSource] = useState<
         WeatherSource | undefined
@@ -251,7 +253,7 @@ function HomeContent() {
         }
         try {
             const result = await fetch(
-                `https://api.open-meteo.com/v1/forecast?latitude=${location.lat}&longitude=${location.lon}&current=temperature,weather_code&daily=temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_mean,weather_code&timezone=${moment.tz.guess()}&temperature_unit=fahrenheit`
+                `https://api.open-meteo.com/v1/forecast?latitude=${location.lat}&longitude=${location.lon}&current=temperature,weather_code,precipitation,rain,cloud_cover&daily=temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_mean,weather_code&timezone=${moment.tz.guess()}&temperature_unit=fahrenheit`
             );
             if (result.status < 200 || result.status > 299) {
                 throw new Error(
@@ -472,6 +474,34 @@ function HomeContent() {
             addAlert(e);
         }
     };
+    // Resolve a ZIP to its USPS place name (the "mailing city"). Geoapify
+    // returns `city: null` for unincorporated areas — e.g. 80465 comes back
+    // as "Jefferson County" even though its mailing city is Morrison — so we
+    // look the postcode up via Zippopotam (free, no key, US data) and let
+    // getLocationName prefer it over the county. Best-effort: a 404 (unknown
+    // or non-US ZIP) or network error just leaves zipCity unset and the
+    // geocoder's own fields win. Cached in localStorage so kiosks survive a
+    // reload offline.
+    const getZipCity = async (zip: string) => {
+        const cacheKey = `zipCity:${zip}`;
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) {
+            setZipCity(cached);
+            return;
+        }
+        try {
+            const result = await fetch(`https://api.zippopotam.us/us/${zip}`);
+            if (!result.ok) return;
+            const data = await result.json();
+            const name: string | undefined = data?.places?.[0]?.['place name'];
+            if (name) {
+                setZipCity(name);
+                localStorage.setItem(cacheKey, name);
+            }
+        } catch {
+            // unknown/non-US ZIP or network error — fall back to geocoder name
+        }
+    };
 
     useInterval(() => {
         if (location) {
@@ -530,6 +560,17 @@ function HomeContent() {
     useEffect(() => {
         if (geoapifyApiKey && zipcode && (!location || location.postcode !== zipcode)) {
             void getZipcodeLocation(zipcode);
+        }
+    }, [zipcode]);
+
+    // Look up the USPS mailing city for the displayed header whenever we know
+    // a ZIP — whether it came straight from config or was filled in from the
+    // resolved location's postcode (e.g. a lat/lon config). Needs no API key.
+    useEffect(() => {
+        if (zipcode) {
+            void getZipCity(zipcode);
+        } else {
+            setZipCity(undefined);
         }
     }, [zipcode]);
 
@@ -704,7 +745,7 @@ function HomeContent() {
                         <div className="flex flex-row justify-between">
                             <div className="flex flex-row gap-5 content-center shrink">
                                 <div className="text text-7xl">
-                                    {location.city}
+                                    {getLocationName(location, zipCity)}
                                 </div>
                                 <div>
                                     {localTemp && (

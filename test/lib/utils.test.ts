@@ -11,8 +11,11 @@ import {
     omWeatherToCurrent,
     owWeatherToForecast,
     omWeatherToForecast,
-    AWNDeviceToTempSensor
+    AWNDeviceToTempSensor,
+    getLocationName,
+    cloudCoverToId
 } from '@/lib/utils';
+import { Location } from '@/types';
 
 describe('getTemp', () => {
     it('f -> f round-trips a value', () => {
@@ -171,6 +174,92 @@ describe('omWeatherToCurrent', () => {
         expect(typeof c.sunrise).toBe('number');
         expect(typeof c.sunset).toBe('number');
     });
+
+    const baseDaily = {
+        temperature_2m_min: [50],
+        temperature_2m_max: [80],
+        sunrise: ['2026-06-24T05:34'],
+        sunset: ['2026-06-24T20:32']
+    };
+
+    it('dry-storm guard: thunderstorm code with 0 precip + overcast → Clouds', () => {
+        // The exact Morrison case: OpenMeteo returns code 95 but precip 0 and
+        // 100% cloud cover. Should render as overcast clouds, not a storm.
+        const om: any = {
+            latitude: 39.58,
+            longitude: -105.25,
+            current: {
+                temperature: 77,
+                weather_code: 95,
+                precipitation: 0,
+                rain: 0,
+                cloud_cover: 100
+            },
+            daily: baseDaily
+        };
+        const c = omWeatherToCurrent(om);
+        expect(c.id).toBe(804);
+        expect(c.description).toBe('Clouds');
+    });
+
+    it('dry-storm guard: wet code with 0 precip + clear sky → Clear', () => {
+        const om: any = {
+            latitude: 39.58,
+            longitude: -105.25,
+            current: { temperature: 77, weather_code: 61, precipitation: 0, rain: 0, cloud_cover: 5 },
+            daily: baseDaily
+        };
+        const c = omWeatherToCurrent(om);
+        expect(c.id).toBe(800);
+        expect(c.description).toBe('Clear');
+    });
+
+    it('does NOT downgrade when precipitation is actually falling', () => {
+        const om: any = {
+            latitude: 39.58,
+            longitude: -105.25,
+            current: { temperature: 60, weather_code: 95, precipitation: 2.5, rain: 2.5, cloud_cover: 100 },
+            daily: baseDaily
+        };
+        const c = omWeatherToCurrent(om);
+        expect(c.id).toBe(202); // real thunderstorm preserved
+        expect(c.description).toBe('Thunderstorm');
+    });
+
+    it('does NOT touch snow codes (rain is legitimately 0 in snow)', () => {
+        const om: any = {
+            latitude: 39.58,
+            longitude: -105.25,
+            current: { temperature: 28, weather_code: 75, precipitation: 0, rain: 0, cloud_cover: 100 },
+            daily: baseDaily
+        };
+        const c = omWeatherToCurrent(om);
+        expect(c.id).toBe(602); // heavy snow preserved
+    });
+
+    it('leaves the provider code untouched when precip fields are absent (old cache)', () => {
+        const om: any = {
+            latitude: 39.58,
+            longitude: -105.25,
+            current: { temperature: 60, weather_code: 95 },
+            daily: baseDaily
+        };
+        const c = omWeatherToCurrent(om);
+        expect(c.id).toBe(202);
+    });
+});
+
+describe('cloudCoverToId', () => {
+    it('maps cloud cover percentage to clear/clouds ids', () => {
+        expect(cloudCoverToId(0)).toBe(800);
+        expect(cloudCoverToId(12)).toBe(800);
+        expect(cloudCoverToId(30)).toBe(801);
+        expect(cloudCoverToId(70)).toBe(803);
+        expect(cloudCoverToId(100)).toBe(804);
+    });
+    it('assumes cloudy when cloud cover is unknown', () => {
+        expect(cloudCoverToId(undefined)).toBe(803);
+    });
 });
 
 describe('owWeatherToForecast', () => {
@@ -244,5 +333,52 @@ describe('AWNDeviceToTempSensor', () => {
             lat: 39.58,
             lon: -105.24
         });
+    });
+});
+
+describe('getLocationName', () => {
+    it('prefers city when present', () => {
+        const loc = { city: 'Denver', county: 'Denver County', state: 'Colorado' } as Location;
+        expect(getLocationName(loc)).toBe('Denver');
+    });
+
+    it('falls back to county when city/town/village are absent (unincorporated coords)', () => {
+        // Geoapify returns city: null for rural addresses; this is the bug
+        // that left the header blank.
+        const loc = {
+            city: null,
+            county: 'Jefferson County',
+            state: 'Colorado',
+            postcode: '80465'
+        } as unknown as Location;
+        expect(getLocationName(loc)).toBe('Jefferson County');
+    });
+
+    it('walks the fine-to-coarse chain', () => {
+        const loc = { town: 'Conifer', county: 'Jefferson County' } as Location;
+        expect(getLocationName(loc)).toBe('Conifer');
+    });
+
+    it('returns an empty string when nothing is available', () => {
+        expect(getLocationName({} as Location)).toBe('');
+    });
+
+    it('uses the USPS zipCity (e.g. Morrison) when the geocoder has no city', () => {
+        const loc = {
+            city: null,
+            county: 'Jefferson County',
+            postcode: '80465'
+        } as unknown as Location;
+        expect(getLocationName(loc, 'Morrison')).toBe('Morrison');
+    });
+
+    it('still prefers the geocoder city over zipCity when both exist', () => {
+        const loc = { city: 'Denver' } as Location;
+        expect(getLocationName(loc, 'Morrison')).toBe('Denver');
+    });
+
+    it('prefers zipCity over coarser county/state', () => {
+        const loc = { county: 'Jefferson County', state: 'Colorado' } as Location;
+        expect(getLocationName(loc, 'Morrison')).toBe('Morrison');
     });
 });

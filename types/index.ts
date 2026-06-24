@@ -262,6 +262,12 @@ export type OMWeather = {
         interval: number;
         temperature: number;
         weather_code: number;
+        // Used by the dry-storm guard in omWeatherToCurrent: OpenMeteo's
+        // weather_code over-reports thunderstorms (returns 95 with 0mm
+        // precip), so we cross-check actual precipitation + cloud cover.
+        precipitation?: number;
+        rain?: number;
+        cloud_cover?: number;
     };
     daily_units: {
         time: string;
@@ -303,6 +309,15 @@ export type Location = {
     distance: number;
     result_type: string;
     city: string;
+    // Geoapify omits `city` for unincorporated/rural areas and instead
+    // populates one of these finer- or coarser-grained place fields. All
+    // optional — any given result has only a subset. `getLocationName()`
+    // in lib/utils picks the best available for the header.
+    town?: string;
+    village?: string;
+    hamlet?: string;
+    suburb?: string;
+    municipality?: string;
     formatted: string;
     address_line1: string;
     address_line2: string;
