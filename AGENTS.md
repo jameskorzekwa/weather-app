@@ -64,7 +64,7 @@ Vitest + React Testing Library (jsdom). Config: `vitest.config.ts`
 (jest-dom + matchMedia/ResizeObserver polyfills). Tests live in `test/**`.
 
 ```bash
-npm test          # vitest run  (74 tests, 11 files)
+npm test          # vitest run  (~83 tests, 12 files)
 npm run test:watch
 npm run lint      # next lint
 ```
@@ -87,6 +87,11 @@ Coverage / conventions:
   `ambient-weather-api`/`fetch`/`uuid` mocked.
 - `test/app/page.test.tsx` — smoke only (heavy children + `next/navigation`
   stubbed); asserts the loading splash mounts.
+- `test/components/weatherAppCard.test.ts` — regression test for the HA
+  integration's `custom_components/weather_app/weather-app-card.js` per-user
+  monochrome-after-reboot fix (imports the card module for its side effect to
+  register the custom element; recovery reload must refresh the ingress URL +
+  require a valid session before loading).
 
 Known gotcha encoded in tests: `components/settings.tsx` `validate()` is
 effectively a **no-op** — it runs validation inside an async `setForm`
