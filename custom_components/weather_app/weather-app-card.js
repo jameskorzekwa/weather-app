@@ -33,6 +33,10 @@ const DEFAULT_WATCHDOG_INTERVAL = 30; // seconds
 // rendered app has ~180 chars of text; the splash/blank has almost none.
 const EMBED_CONTENT_MIN = 40;
 const STUCK_TIMEOUT_MS = 90 * 1000;
+// How often to re-check that the embed's monochrome state matches what the
+// add-on reports for the current user. Drives recovery of the per-user mono
+// override after an HA restart (see _reconcileMono).
+const MONO_RECONCILE_INTERVAL_MS = 15 * 1000;
 
 class WeatherAppCard extends HTMLElement {
   setConfig(config) {
@@ -175,6 +179,13 @@ class WeatherAppCard extends HTMLElement {
       () => this._watchdogTick().catch(() => {}),
       this._watchdogInterval
     );
+    // Separate, faster loop: reconcile the embed's monochrome state with what
+    // the add-on actually reports for this user. See _reconcileMono — this is
+    // what recovers the per-user mono override after an HA restart.
+    this._reconcileTimer = window.setInterval(
+      () => this._reconcileMono().catch(() => {}),
+      MONO_RECONCILE_INTERVAL_MS
+    );
   }
 
   // Health-check URL: append a query param so the add-on's nginx proxies
@@ -185,6 +196,52 @@ class WeatherAppCard extends HTMLElement {
     return (
       this._ingressUrl + (this._ingressUrl.includes("?") ? "&" : "?") + "wa_health=1"
     );
+  }
+
+  // Reconcile the embed's monochrome state with what the add-on says THIS user
+  // should get, and reload if they disagree.
+  //
+  // Why this exists: per-user mono is decided entirely by the add-on's nginx,
+  // which 302-redirects the ingress root to `?...&mono=<0|1>` based on the
+  // `X-Remote-User-*` header HA ingress attaches. After an HA restart the
+  // frontend rebuilds this card and runs `_init` while Core is still starting
+  // up — Core answers HTTP before it wires up ingress' user identity, so that
+  // first redirect comes back with no header → `mono=` (empty) → the app loads
+  // in color and never corrects. Nothing else notices: the page renders fine,
+  // just the wrong palette, so neither watchdog nor the page-level self-heal
+  // treats it as broken. (Manually switching dashboards fixed it only because
+  // that happens later, once Core is fully up.)
+  //
+  // We can't rely on any HA "is it ready yet" signal — after a reconnect the
+  // frontend hands the card a stale `config.state: RUNNING`, then freezes it,
+  // and the `homeassistant_started` event fires during the reconnect gap and is
+  // missed. So instead we ask the add-on directly: fetching the ingress root
+  // follows nginx's redirect, and `response.url` is the target — i.e. the
+  // authoritative mono decision for the current user. Compare it to what the
+  // embed actually loaded; if they differ, reload. During startup both read
+  // "no header" so they agree and we do nothing; the moment Core is ready the
+  // add-on reports the real value, the mismatch appears, and one reload fixes
+  // it. Self-healing, no readiness detection required.
+  async _reconcileMono() {
+    if (!this._ingressUrl || this._reloading) return;
+    let want;
+    try {
+      const resp = await fetch(this._ingressUrl, { cache: "no-store" });
+      want = new URL(resp.url).searchParams.get("mono") === "1";
+    } catch (e) {
+      return; // add-on unreachable — the health watchdog handles that
+    }
+    let have;
+    try {
+      have = new URL(
+        this._iframe.contentWindow.location.href
+      ).searchParams.get("mono") === "1";
+    } catch (e) {
+      return; // mid-navigation / not yet readable — retry next tick
+    }
+    if (want !== have) {
+      this._reloadIframe();
+    }
   }
 
   // Best-effort: is the iframe currently showing a server error page?
@@ -334,6 +391,10 @@ class WeatherAppCard extends HTMLElement {
       window.clearInterval(this._timer);
       this._timer = undefined;
     }
+    if (this._reconcileTimer) {
+      window.clearInterval(this._reconcileTimer);
+      this._reconcileTimer = undefined;
+    }
     this._wrap.innerHTML = "";
     const div = document.createElement("div");
     div.className = "msg";
@@ -345,6 +406,10 @@ class WeatherAppCard extends HTMLElement {
     if (this._timer) {
       window.clearInterval(this._timer);
       this._timer = undefined;
+    }
+    if (this._reconcileTimer) {
+      window.clearInterval(this._reconcileTimer);
+      this._reconcileTimer = undefined;
     }
   }
 }
