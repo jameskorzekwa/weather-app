@@ -38,11 +38,17 @@ on:
       - 'tailwind.config.ts'
       - 'postcss.config.js'
       - '.github/workflows/build.yaml'
+      # Doc-only edits never change the image — every *.md is excluded from
+      # the Docker context via .dockerignore — so don't rebuild for them.
+      # (A negated pattern must come after the positive ones; a change that
+      # also touches real source still matches a positive pattern and builds.)
+      - '!**/*.md'
   pull_request:
     branches: [main]
     paths:
       - 'homeassistant/**'
       - '.github/workflows/build.yaml'
+      - '!**/*.md'
   workflow_dispatch:
 
 permissions:
