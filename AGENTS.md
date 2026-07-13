@@ -23,25 +23,27 @@ fetched client-side.
 
 ## Project layout
 
-- `app/page.tsx` — the whole app. `HomeContent` holds all state; wrapped in
-  `<Suspense>` because it uses `useSearchParams()`. State is driven by URL
-  params and synced back to the URL via `history.pushState`.
-- `app/layout.tsx` — root layout. Rubik font via `next/font/google`. Inline
-  `<script>` adds `mono-init`/`invert` classes to `<html>` before paint.
-- `app/globals.css` — Tailwind import, MT compat shims, the mono/invert filter
-  rules, splash styles.
-- `components/background.tsx` — routes `current.id` (OpenWeatherMap-style code)
-  to the right `components/backgrounds/*` component. Computes `night` and
-  `inverted` flags here.
-- `components/backgrounds/*` — one per weather family. Each takes `isNight` and
-  sometimes `mono`/`inverted`.
-- `components/sun.tsx`, `moon.tsx`, `cloud.tsx`, `raining.tsx`,
-  `thunderCloud.tsx` — animated SVG primitives.
-- `components/settings.tsx` — the MT `<Dialog>` config modal.
-- `components/currentWeather.tsx`, `weeklyWeather.tsx`, `dateTime.tsx`,
-  `alerts.tsx` — foreground UI.
-- `constants/data.ts` — `fakeWeather` fixtures used by the spoof-weather feature.
-- `types/index.ts` — shared types. `lib/utils.ts`, `hooks/` — helpers.
+Each top-level area has its own `AGENTS.md` with a navigation map + directory
+gotchas — consult the child file when working in that directory:
+
+- `app/` → [`app/AGENTS.md`](./app/AGENTS.md) — `page.tsx` (the whole app),
+  `layout.tsx`, `globals.css`.
+- `components/` → [`components/AGENTS.md`](./components/AGENTS.md) —
+  `background.tsx` router, `backgrounds/*` families, animated SVG primitives,
+  foreground UI, `settings.tsx`.
+- `pages/api/` → [`pages/api/AGENTS.md`](./pages/api/AGENTS.md) — the
+  server-side proxy routes (the only backend).
+- `homeassistant/` → [`homeassistant/AGENTS.md`](./homeassistant/AGENTS.md) —
+  the HA add-on packaging (Docker / nginx / bash).
+- `custom_components/weather_app/` →
+  [`custom_components/weather_app/AGENTS.md`](./custom_components/weather_app/AGENTS.md)
+  — the companion HACS integration.
+
+Directories without their own file (covered here):
+
+- `constants/data.ts` — `fakeWeather` fixtures for the spoof-weather feature
+  (note: stale 2024 sunrise/sunset timestamps).
+- `types/index.ts` — shared types. `lib/utils.ts`, `hooks/` — pure helpers.
 
 ## Running the dev server
 
