@@ -151,6 +151,7 @@ class WeatherAppCard extends HTMLElement {
       );
       return;
     }
+    this._slug = slug;
     const info = await this._hass.callWS({
       type: "supervisor/api",
       endpoint: "/addons/" + slug + "/info",
@@ -204,30 +205,67 @@ class WeatherAppCard extends HTMLElement {
     }
   }
 
+  // Re-resolve the add-on's ingress URL. HA can rotate the ingress token when
+  // the add-on restarts (e.g. after an HA reboot or an add-on update), which
+  // leaves the cached _ingressUrl pointing at a dead session. A request to a
+  // dead ingress URL is proxied to the add-on WITHOUT the X-Remote-User-*
+  // headers it uses to decide per-user monochrome — so the embed comes back in
+  // color instead of mono. Refetch the URL before a recovery reload so the
+  // reload behaves like a fresh init (which is why the manual "switch
+  // dashboards and back" workaround fixes it).
+  async _refreshIngressUrl() {
+    const slug = this._slug || (await this._resolveSlug());
+    if (!slug) return;
+    this._slug = slug;
+    const info = await this._hass.callWS({
+      type: "supervisor/api",
+      endpoint: "/addons/" + slug + "/info",
+      method: "get",
+    });
+    if (info && info.ingress_url) {
+      this._ingressUrl = info.ingress_url;
+    }
+  }
+
   _reloadIframe() {
     if (this._reloading) return;
     this._reloading = true;
-    // Refresh the ingress session first (covers session expiry), then force
-    // a clean reload via about:blank -> url.
-    this._createSession()
-      .catch(() => {})
-      .then(() => {
-        const url = this._ingressUrl;
+    // Recover like a fresh init, not a bare reload. Re-resolve the ingress URL
+    // (the token may have rotated across an add-on restart) AND establish a
+    // valid, user-scoped ingress session BEFORE pointing the iframe at it. If
+    // either step fails — common in the seconds after an HA reboot, before
+    // Supervisor is ready — do NOT load a stale/unauthenticated URL: that's
+    // what strips the X-Remote-User-* header and brings the embed back in
+    // color, and because a rendered-but-wrong page never trips the watchdog it
+    // stays stuck. Instead leave the current page up and flag for a retry on
+    // the next healthy tick.
+    (async () => {
+      try {
+        await this._refreshIngressUrl();
+        await this._createSession();
+      } catch (e) {
+        // Couldn't re-establish the session yet — force the next healthy
+        // watchdog tick to retry rather than leaving it on a stale page.
+        this._iframeErrored = true;
+        this._reloading = false;
+        return;
+      }
+      const url = this._ingressUrl;
+      try {
+        this._iframe.src = "about:blank";
+      } catch (e) {
+        /* ignore */
+      }
+      window.setTimeout(() => {
         try {
-          this._iframe.src = "about:blank";
+          this._iframe.src = url;
         } catch (e) {
           /* ignore */
         }
-        window.setTimeout(() => {
-          try {
-            this._iframe.src = url;
-          } catch (e) {
-            /* ignore */
-          }
-          this._iframeErrored = false;
-          this._reloading = false;
-        }, 100);
-      });
+        this._iframeErrored = false;
+        this._reloading = false;
+      }, 100);
+    })();
   }
 
   // True if the embed has rendered real content (vs sitting on the splash or
