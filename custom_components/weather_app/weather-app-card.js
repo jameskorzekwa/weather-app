@@ -224,13 +224,30 @@ class WeatherAppCard extends HTMLElement {
   // it. Self-healing, no readiness detection required.
   async _reconcileMono() {
     if (!this._ingressUrl || this._reloading) return;
-    let want;
+    let resp;
     try {
-      const resp = await fetch(this._ingressUrl, { cache: "no-store" });
-      want = new URL(resp.url).searchParams.get("mono") === "1";
+      resp = await fetch(this._ingressUrl, { cache: "no-store" });
     } catch (e) {
       return; // add-on unreachable — the health watchdog handles that
     }
+    // The add-on answered with its identity-wait page: HA proxied our request
+    // without X-Remote-User-* headers. Beyond the brief Core-startup window,
+    // this means our ingress session is ORPHANED — a Core restart keeps old
+    // sessions valid but permanently drops their user attribution, so identity
+    // will never arrive on this session again. The only fix is a NEW session,
+    // which _reloadIframe establishes before reloading. Require two
+    // consecutive ticks so we don't churn while Core is genuinely starting
+    // (where identity arrives by itself and the wait page resolves alone).
+    if (resp.headers.get("X-WA-Identity-Wait")) {
+      this._identityWaitTicks = (this._identityWaitTicks || 0) + 1;
+      if (this._identityWaitTicks >= 2) {
+        this._identityWaitTicks = 0;
+        this._reloadIframe();
+      }
+      return;
+    }
+    this._identityWaitTicks = 0;
+    const want = new URL(resp.url).searchParams.get("mono") === "1";
     let have;
     try {
       have = new URL(
