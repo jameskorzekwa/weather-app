@@ -23,10 +23,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version-file: '.nvmrc'
           cache: npm
@@ -51,7 +51,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Validate add-on configuration
         uses: frenck/action-addon-linter@v2.21.0
@@ -63,7 +63,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Hassfest
         uses: home-assistant/actions/hassfest@master
@@ -73,6 +73,9 @@ jobs:
         with:
           category: integration
           comment: false
+          # HACS reads the license from the default branch, where this PR's
+          # first LICENSE file cannot exist yet. Main runs do not ignore it.
+          ignore: ${{ github.event_name == 'pull_request' && 'license' || '' }}
 
   docker:
     name: Docker build (${{ matrix.arch }})
@@ -87,7 +90,7 @@ jobs:
             platform: linux/arm64
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -126,12 +129,12 @@ jobs:
       version: ${{ steps.release.outputs.version }}
     steps:
       - name: Checkout tested commit
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version-file: '.nvmrc'
 
@@ -204,7 +207,7 @@ jobs:
             platform: linux/arm64
     steps:
       - name: Checkout release commit
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ needs.prepare-release.outputs.sha }}
 
