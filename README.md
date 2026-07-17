@@ -69,14 +69,28 @@ Extras the HA version adds on top of the Vercel deploy:
   while everyone else keeps color, via the `monochrome_users` option.
 - A sidebar panel entry that respects HA's auth.
 
-The add-on files live in [`homeassistant/`](./homeassistant/). Docker
-images are built and pushed to GHCR by
-[`.github/workflows/build.yaml`](./.github/workflows/build.yaml) on every
-push to `main` and on tagged releases — nothing about the Vercel deploy
-changes.
+The add-on files live in [`homeassistant/`](./homeassistant/). The unified
+[`CI and release` workflow](./.github/workflows/ci-release.yaml) validates the
+app, add-on, integration, and both Docker architectures on every pull request
+and `main` push. Nothing about the Vercel deploy changes.
 
 See [`homeassistant/DOCS.md`](./homeassistant/DOCS.md) for the full
 options reference + the API-key links repeated with more context.
+
+## Releases
+
+`VERSION` is the shared release version for the Home Assistant add-on and HACS
+integration. Keep it equal to `homeassistant/config.yaml` and
+`custom_components/weather_app/manifest.json`; CI rejects drift.
+
+After every successful non-`AGENTS.md`-only push to `main`, CI increments the
+patch version and commits all three version files. It then publishes the
+existing `ghcr.io/jameskorzekwa/weather-app-amd64` and
+`ghcr.io/jameskorzekwa/weather-app-aarch64` images with the new version and
+`latest` tags. Only after both image pushes succeed does it create the matching
+`v<version>` GitHub tag and release used by HACS. The workflow's `GITHUB_TOKEN`
+needs repository `contents: write` and `packages: write` access, and branch
+rules must allow its version commit.
 
 ### Optional: turnkey "Weather" dashboard
 

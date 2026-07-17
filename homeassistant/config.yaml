@@ -31,7 +31,7 @@ init: false
 # Ingress puts the addon behind HA's auth proxy and lets us add a sidebar
 # panel without the user touching configuration.yaml.
 ingress: true
-ingress_port: 8099
+# Supervisor's default ingress port is 8099, which matches nginx and EXPOSE.
 
 # Grants the addon a SUPERVISOR_TOKEN with permission to call the Home
 # Assistant Core REST API via the Supervisor proxy at
@@ -105,8 +105,3 @@ schema:
   monochrome: "bool"
   monochrome_users:
     - "str"
-
-# The Settings modal in the app uses URL params as the source of truth, so
-# we don't need persistent storage. /data is mounted only because HA writes
-# options.json there.
-map: []

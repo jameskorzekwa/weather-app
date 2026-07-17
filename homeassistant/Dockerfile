@@ -1,7 +1,7 @@
 # Home Assistant add-on Dockerfile for the weather-app.
 #
 # Build context is the *repository root* — the workflow in
-# .github/workflows/build.yaml passes `--build-arg BUILD_FROM=...` and sets
+# .github/workflows/ci-release.yaml passes `--build-arg BUILD_FROM=...` and sets
 # the context to `.` so we can COPY the Next.js sources from one level up.
 #
 # Two stages:
@@ -61,7 +61,7 @@ RUN npm prune --omit=dev
 
 # ---- Stage 2: runtime image -------------------------------------------------
 # Uses BUILD_FROM declared at the top of this file. The GitHub Actions
-# workflow (see .github/workflows/build.yaml) and Home Assistant's local
+# workflow (see .github/workflows/ci-release.yaml) and Home Assistant's local
 # builder (via build.yaml) both pass BUILD_FROM as a build arg; if neither
 # is in play the global default (node:24-alpine) is used.
 FROM ${BUILD_FROM}
@@ -91,9 +91,9 @@ COPY homeassistant/nginx.conf /etc/nginx/nginx.conf.template
 COPY homeassistant/run.sh     /run.sh
 RUN chmod +x /run.sh
 
-# HA reads this port from config.yaml's `ingress_port`. Anything inside the
-# container that is reachable from HA must be bound to this port — only
-# nginx is, so we expose it for documentation.
+# HA's default ingress port is 8099. Anything inside the container that is
+# reachable from HA must be bound to this port — only nginx is, so we expose
+# it for documentation.
 EXPOSE 8099
 
 # Labels expected by HA Supervisor / community add-on tooling.
