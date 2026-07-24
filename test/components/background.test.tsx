@@ -51,8 +51,7 @@ vi.mock('@/components/backgrounds/atmosphere', () => ({
 
 import Background from '@/components/background';
 
-const cur = (id: number): Current =>
-    ({ id, source: 'OpenMeteo' } as Current);
+const cur = (id: number): Current => ({ id, source: 'OpenMeteo' }) as Current;
 
 describe('Background routing', () => {
     const cases: [number, string][] = [
@@ -83,9 +82,7 @@ describe('Background night/inverted flags', () => {
         rerender(<Background current={cur(501)} isNight={true} />);
         expect(getByTestId('rain').dataset.isnight).toBe('true');
 
-        rerender(
-            <Background current={cur(501)} isNight={false} mono={true} />
-        );
+        rerender(<Background current={cur(501)} isNight={false} mono={true} />);
         expect(getByTestId('rain').dataset.isnight).toBe('true');
     });
 
@@ -94,9 +91,7 @@ describe('Background night/inverted flags', () => {
             <Background current={cur(741)} isNight={false} />
         );
         expect(getByTestId('atmosphere').dataset.inverted).toBe('false');
-        rerender(
-            <Background current={cur(741)} isNight={false} mono={true} />
-        );
+        rerender(<Background current={cur(741)} isNight={false} mono={true} />);
         expect(getByTestId('atmosphere').dataset.inverted).toBe('true');
     });
 
@@ -108,5 +103,74 @@ describe('Background night/inverted flags', () => {
         expect(el.dataset.isnight).toBe('false');
         expect(el.dataset.mono).toBe('true');
         expect(el.dataset.inverted).toBe('true');
+    });
+});
+
+describe('Background solar transition colors', () => {
+    const sunrise = new Date('2026-07-23T05:45:00').getTime() / 1000;
+    const sunset = new Date('2026-07-23T20:23:00').getTime() / 1000;
+
+    it('provides a sunrise gradient to colored weather scenes', () => {
+        const { container } = render(
+            <Background
+                current={cur(800)}
+                isNight={false}
+                sunrise={sunrise}
+                fakeTime="05:45"
+            />
+        );
+        const root = container.firstElementChild as HTMLElement;
+        expect(root.dataset.solarTransitionActive).toBe('true');
+        expect(
+            root.style.getPropertyValue('--solar-transition-gradient')
+        ).toContain('linear-gradient');
+    });
+
+    it('provides a sunset gradient to colored weather scenes', () => {
+        const { container } = render(
+            <Background
+                current={cur(800)}
+                isNight={false}
+                sunset={sunset}
+                fakeTime="20:03"
+            />
+        );
+        const root = container.firstElementChild as HTMLElement;
+        expect(root.dataset.solarTransitionActive).toBe('true');
+        expect(
+            root.style.getPropertyValue('--solar-transition-gradient')
+        ).toContain('linear-gradient');
+    });
+
+    it('does not provide any colored gradient in monochrome mode', () => {
+        const { container } = render(
+            <Background
+                current={cur(800)}
+                isNight={false}
+                sunset={sunset}
+                fakeTime="20:03"
+                mono={true}
+            />
+        );
+        const root = container.firstElementChild as HTMLElement;
+        expect(root.dataset.solarTransitionActive).toBe('false');
+        expect(
+            root.style.getPropertyValue('--solar-transition-gradient')
+        ).toBe('none');
+    });
+
+    it('leaves the normal palette alone outside the sunset window', () => {
+        const { container } = render(
+            <Background
+                current={cur(800)}
+                isNight={false}
+                sunset={sunset}
+                fakeTime="12:00"
+            />
+        );
+        expect(
+            (container.firstElementChild as HTMLElement).dataset
+                .solarTransitionActive
+        ).toBe('false');
     });
 });

@@ -1,6 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import seedrandom from 'seedrandom';
+import moment from 'moment';
 import {
+    applyFakeTime,
+    DAY_PLAYBACK_DURATIONS_MS,
+    getDayPlaybackTime,
     getTemp,
     getPrecipitationPercent,
     roundTo,
@@ -13,9 +17,129 @@ import {
     omWeatherToForecast,
     AWNDeviceToTempSensor,
     getLocationName,
-    cloudCoverToId
+    cloudCoverToId,
+    getSunriseTintWeights,
+    getSunsetTintWeights,
+    isNightAtTime
 } from '@/lib/utils';
 import { Location } from '@/types';
+
+describe('fake time and solar transition helpers', () => {
+    const sunrise = moment('2026-07-23T05:45:00').unix();
+    const sunset = moment('2026-07-23T20:23:00').unix();
+
+    it('applies a frozen time without changing the date', () => {
+        const actual = moment('2026-07-23T14:37:42');
+        const preview = applyFakeTime(actual, '20:03');
+
+        expect(preview.format('YYYY-MM-DD HH:mm:ss')).toBe(
+            '2026-07-23 20:03:00'
+        );
+        expect(actual.format('HH:mm:ss')).toBe('14:37:42');
+    });
+
+    it('derives night from sunrise and sunset time-of-day', () => {
+        expect(isNightAtTime('05:44', sunrise, sunset)).toBe(true);
+        expect(isNightAtTime('05:45', sunrise, sunset)).toBe(false);
+        expect(isNightAtTime('12:00', sunrise, sunset)).toBe(false);
+        expect(isNightAtTime('20:23', sunrise, sunset)).toBe(false);
+        expect(isNightAtTime('20:24', sunrise, sunset)).toBe(true);
+    });
+
+    it('works with stale fixture dates and solar days that cross midnight', () => {
+        const staleSunrise = moment('2024-03-03T05:45:00').unix();
+        const staleSunset = moment('2024-03-03T20:23:00').unix();
+        expect(isNightAtTime('20:03', staleSunrise, staleSunset)).toBe(false);
+
+        const lateSunrise = moment('2026-07-23T23:00:00').unix();
+        const earlySunset = moment('2026-07-23T02:00:00').unix();
+        expect(isNightAtTime('00:30', lateSunrise, earlySunset)).toBe(false);
+        expect(isNightAtTime('12:00', lateSunrise, earlySunset)).toBe(true);
+    });
+
+    it('returns undefined for invalid or incomplete preview data', () => {
+        expect(isNightAtTime('8:03', sunrise, sunset)).toBeUndefined();
+        expect(isNightAtTime('20:03', undefined, sunset)).toBeUndefined();
+        expect(getSunsetTintWeights(undefined, '20:03')).toBeUndefined();
+        expect(getSunriseTintWeights(undefined, '05:35')).toBeUndefined();
+    });
+
+    it('maps the day playback from 2 AM through 10 PM', () => {
+        expect(getDayPlaybackTime(-100)).toBe('02:00');
+        expect(getDayPlaybackTime(0)).toBe('02:00');
+        expect(
+            getDayPlaybackTime(DAY_PLAYBACK_DURATIONS_MS.medium / 4)
+        ).toBe('07:00');
+        expect(
+            getDayPlaybackTime(DAY_PLAYBACK_DURATIONS_MS.medium / 2)
+        ).toBe('12:00');
+        expect(getDayPlaybackTime(DAY_PLAYBACK_DURATIONS_MS.medium)).toBe(
+            '22:00'
+        );
+        expect(getDayPlaybackTime(DAY_PLAYBACK_DURATIONS_MS.medium * 2)).toBe(
+            '22:00'
+        );
+    });
+
+    it('uses slow, medium, and fast playback durations', () => {
+        expect(getDayPlaybackTime(30000, 'slow')).toBe('07:00');
+        expect(getDayPlaybackTime(30000, 'medium')).toBe('12:00');
+        expect(getDayPlaybackTime(30000, 'fast')).toBe('22:00');
+    });
+
+    it('ramps predawn into a golden sunrise and then turns off', () => {
+        expect(getSunriseTintWeights(sunrise, '04:14')).toBeUndefined();
+
+        const predawn = getSunriseTintWeights(sunrise, '04:45');
+        expect(predawn?.predawn).toBeGreaterThan(0);
+        expect(predawn?.gold).toBe(0);
+
+        const peak = getSunriseTintWeights(sunrise, '05:45');
+        expect(peak?.gold).toBe(1);
+        expect(peak?.predawn).toBeGreaterThan(0);
+
+        expect(getSunriseTintWeights(sunrise, '06:50')).toBeUndefined();
+    });
+
+    it('ramps from warm sunset colors into dusk and then turns off', () => {
+        expect(getSunsetTintWeights(sunset, '18:52')).toBeUndefined();
+
+        const approaching = getSunsetTintWeights(sunset, '19:23');
+        expect(approaching?.warm).toBeGreaterThan(0);
+        expect(approaching?.warm).toBeLessThan(1);
+
+        const peak = getSunsetTintWeights(sunset, '20:03');
+        expect(peak?.warm).toBe(1);
+        expect(peak?.dusk).toBe(0);
+
+        const after = getSunsetTintWeights(sunset, '20:48');
+        expect(after?.dusk).toBe(1);
+        expect(after?.warm).toBeGreaterThan(0);
+
+        expect(getSunsetTintWeights(sunset, '21:29')).toBeUndefined();
+    });
+
+    it('keeps the post-sunset tint active across midnight', () => {
+        const lateSunset = moment('2026-07-23T23:30:00').unix();
+        const tint = getSunsetTintWeights(lateSunset, '00:10');
+        expect(tint?.dusk).toBeGreaterThan(0);
+    });
+
+    it('keeps the pre-sunrise tint active across midnight', () => {
+        const earlySunrise = moment('2026-07-23T00:30:00').unix();
+        const tint = getSunriseTintWeights(earlySunrise, '23:50');
+        expect(tint?.gold).toBeGreaterThan(0);
+    });
+
+    it('uses the real clock when no fake time is selected', () => {
+        const tint = getSunsetTintWeights(
+            sunset,
+            undefined,
+            moment('2026-07-23T20:03:00')
+        );
+        expect(tint?.warm).toBe(1);
+    });
+});
 
 describe('getTemp', () => {
     it('f -> f round-trips a value', () => {
@@ -131,7 +255,9 @@ describe('owCurrentToCurrent', () => {
     it('maps an OpenWeatherMap current payload to Current', () => {
         const ow: any = {
             coord: { lat: 39.5, lon: -105.2 },
-            weather: [{ id: 800, main: 'Clear', description: 'clear', icon: '01d' }],
+            weather: [
+                { id: 800, main: 'Clear', description: 'clear', icon: '01d' }
+            ],
             main: { temp: 300, temp_min: 295, temp_max: 305 },
             sys: { sunrise: 1700000000, sunset: 1700040000 }
         };
@@ -206,7 +332,13 @@ describe('omWeatherToCurrent', () => {
         const om: any = {
             latitude: 39.58,
             longitude: -105.25,
-            current: { temperature: 77, weather_code: 61, precipitation: 0, rain: 0, cloud_cover: 5 },
+            current: {
+                temperature: 77,
+                weather_code: 61,
+                precipitation: 0,
+                rain: 0,
+                cloud_cover: 5
+            },
             daily: baseDaily
         };
         const c = omWeatherToCurrent(om);
@@ -218,7 +350,13 @@ describe('omWeatherToCurrent', () => {
         const om: any = {
             latitude: 39.58,
             longitude: -105.25,
-            current: { temperature: 60, weather_code: 95, precipitation: 2.5, rain: 2.5, cloud_cover: 100 },
+            current: {
+                temperature: 60,
+                weather_code: 95,
+                precipitation: 2.5,
+                rain: 2.5,
+                cloud_cover: 100
+            },
             daily: baseDaily
         };
         const c = omWeatherToCurrent(om);
@@ -230,7 +368,13 @@ describe('omWeatherToCurrent', () => {
         const om: any = {
             latitude: 39.58,
             longitude: -105.25,
-            current: { temperature: 28, weather_code: 75, precipitation: 0, rain: 0, cloud_cover: 100 },
+            current: {
+                temperature: 28,
+                weather_code: 75,
+                precipitation: 0,
+                rain: 0,
+                cloud_cover: 100
+            },
             daily: baseDaily
         };
         const c = omWeatherToCurrent(om);
@@ -338,7 +482,11 @@ describe('AWNDeviceToTempSensor', () => {
 
 describe('getLocationName', () => {
     it('prefers city when present', () => {
-        const loc = { city: 'Denver', county: 'Denver County', state: 'Colorado' } as Location;
+        const loc = {
+            city: 'Denver',
+            county: 'Denver County',
+            state: 'Colorado'
+        } as Location;
         expect(getLocationName(loc)).toBe('Denver');
     });
 
@@ -378,7 +526,10 @@ describe('getLocationName', () => {
     });
 
     it('prefers zipCity over coarser county/state', () => {
-        const loc = { county: 'Jefferson County', state: 'Colorado' } as Location;
+        const loc = {
+            county: 'Jefferson County',
+            state: 'Colorado'
+        } as Location;
         expect(getLocationName(loc, 'Morrison')).toBe('Morrison');
     });
 });

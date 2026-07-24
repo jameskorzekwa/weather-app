@@ -13,9 +13,17 @@ import {
     Select,
     Spinner
 } from '@material-tailwind/react';
-import { FakeWeatherKey, LatLon, Sun2Pair, WeatherSource } from '@/types';
+import {
+    DayPlaybackSpeed,
+    FakeWeatherKey,
+    LatLon,
+    Sun2Pair,
+    WeatherSource
+} from '@/types';
 import { fakeWeather } from '@/constants/data';
 import InputWrapper from '@/components/inputwrapper';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPlay, faStop } from '@fortawesome/free-solid-svg-icons';
 
 const SettingsWrapper = styled.div`
     height: 75px;
@@ -23,6 +31,12 @@ const SettingsWrapper = styled.div`
     position: absolute;
     top: 0;
 `;
+
+const playbackDurationLabels: Record<DayPlaybackSpeed, string> = {
+    slow: '2 minutes',
+    medium: '60 seconds',
+    fast: '30 seconds'
+};
 
 interface Props {
     settingsOpen: boolean;
@@ -48,6 +62,13 @@ interface Props {
     setSpoofWeather: (state: FakeWeatherKey | undefined) => void;
     isNight?: boolean;
     setIsNight: (state: boolean) => void;
+    fakeTime?: string;
+    setFakeTime: (state: string | undefined) => void;
+    playingDay: boolean;
+    playbackSpeed: DayPlaybackSpeed;
+    setPlaybackSpeed: (speed: DayPlaybackSpeed) => void;
+    startDayPlayback: () => void;
+    stopDayPlayback: () => void;
     mono?: boolean;
     setMono: (state: boolean) => void;
     addAlert: (msg: string | unknown) => void;
@@ -64,6 +85,7 @@ type Form = {
     sun2Prefix: { value?: string; error?: string };
     spoofWeather: { value: FakeWeatherKey | 'actual'; error?: string };
     isNight: { value?: boolean; error?: string };
+    fakeTime: { value?: string; error?: string };
     mono: { value: boolean; error?: string };
 };
 
@@ -91,6 +113,13 @@ export default function Settings({
     setSpoofWeather,
     isNight,
     setIsNight,
+    fakeTime,
+    setFakeTime,
+    playingDay,
+    playbackSpeed,
+    setPlaybackSpeed,
+    startDayPlayback,
+    stopDayPlayback,
     mono,
     setMono,
     addAlert
@@ -109,6 +138,7 @@ export default function Settings({
         sun2Prefix: { value: sun2Prefix, error: undefined },
         spoofWeather: { value: spoofWeather || 'actual', error: undefined },
         isNight: { value: isNight, error: undefined },
+        fakeTime: { value: fakeTime, error: undefined },
         mono: { value: !!mono, error: undefined }
     });
     const [locationLoading, setLocationLoading] = useState<boolean>(false);
@@ -205,6 +235,7 @@ export default function Settings({
 
     const onSave = () => {
         if (validate()) {
+            stopDayPlayback();
             setLatlon(
                 form.latlon.value ? parseLatLon(form.latlon.value) : undefined
             );
@@ -221,7 +252,17 @@ export default function Settings({
                     : form.spoofWeather.value
             );
             setIsNight(!!form.isNight.value);
+            setFakeTime(form.fakeTime.value || undefined);
             setMono(!!form.mono.value);
+            setSettingsOpen(false);
+        }
+    };
+
+    const onToggleDayPlayback = () => {
+        if (playingDay) {
+            stopDayPlayback();
+        } else {
+            startDayPlayback();
             setSettingsOpen(false);
         }
     };
@@ -259,7 +300,10 @@ export default function Settings({
     useEffect(() => {
         setForm((prevState) => ({
             ...prevState,
-            awnApplicationKey: { ...form.awnApplicationKey, value: awnApplicationKey }
+            awnApplicationKey: {
+                ...form.awnApplicationKey,
+                value: awnApplicationKey
+            }
         }));
     }, [awnApplicationKey]);
     useEffect(() => {
@@ -271,7 +315,10 @@ export default function Settings({
     useEffect(() => {
         setForm((prevState) => ({
             ...prevState,
-            openWeatherMapAppId: { ...form.openWeatherMapAppId, value: openWeatherMapAppId }
+            openWeatherMapAppId: {
+                ...form.openWeatherMapAppId,
+                value: openWeatherMapAppId
+            }
         }));
     }, [openWeatherMapAppId]);
     useEffect(() => {
@@ -298,6 +345,12 @@ export default function Settings({
     useEffect(() => {
         setForm((prevState) => ({
             ...prevState,
+            fakeTime: { ...prevState.fakeTime, value: fakeTime }
+        }));
+    }, [fakeTime]);
+    useEffect(() => {
+        setForm((prevState) => ({
+            ...prevState,
             mono: { ...form.mono, value: !!mono }
         }));
     }, [mono]);
@@ -307,15 +360,19 @@ export default function Settings({
         let cancelled = false;
         const apply = () => {
             if (cancelled) return;
-            const dialog = document.querySelector<HTMLElement>('[role="dialog"]');
+            const dialog =
+                document.querySelector<HTMLElement>('[role="dialog"]');
             if (dialog) {
                 if (dialog.style.opacity !== '1') dialog.style.opacity = '1';
-                if (dialog.style.transform !== 'none') dialog.style.transform = 'none';
+                if (dialog.style.transform !== 'none')
+                    dialog.style.transform = 'none';
             }
             requestAnimationFrame(apply);
         };
         requestAnimationFrame(apply);
-        return () => { cancelled = true; };
+        return () => {
+            cancelled = true;
+        };
     }, [settingsOpen]);
 
     return (
@@ -330,7 +387,7 @@ export default function Settings({
             >
                 <DialogHeader>Settings</DialogHeader>
                 <DialogBody>
-                    <div className="flex flex-row gap-4">
+                    <div className="flex flex-col gap-4 md:flex-row">
                         <div className="flex flex-col gap-6">
                             <div className="w-72">
                                 <InputWrapper error={form.latlon.error}>
@@ -444,7 +501,9 @@ export default function Settings({
                                 </InputWrapper>
                             </div>
                             <div className="w-72">
-                                <InputWrapper error={form.awnApplicationKey.error}>
+                                <InputWrapper
+                                    error={form.awnApplicationKey.error}
+                                >
                                     <Input
                                         label="AWN Application Key"
                                         crossOrigin={undefined}
@@ -520,7 +579,9 @@ export default function Settings({
                                 <InputWrapper error={form.mono.error}>
                                     <Select
                                         label="Color Mode"
-                                        value={form.mono.value ? 'mono' : 'color'}
+                                        value={
+                                            form.mono.value ? 'mono' : 'color'
+                                        }
                                         onChange={(val) =>
                                             setForm((form) => ({
                                                 ...form,
@@ -538,11 +599,15 @@ export default function Settings({
                             </div>
                             {form.weatherSource.value === 'OpenWeatherMap' && (
                                 <div className="w-72">
-                                    <InputWrapper error={form.openWeatherMapAppId.error}>
+                                    <InputWrapper
+                                        error={form.openWeatherMapAppId.error}
+                                    >
                                         <Input
                                             label="OWM App ID"
                                             crossOrigin={undefined}
-                                            value={form.openWeatherMapAppId.value}
+                                            value={
+                                                form.openWeatherMapAppId.value
+                                            }
                                             onChange={({ target }) =>
                                                 setForm((form) => ({
                                                     ...form,
@@ -557,67 +622,133 @@ export default function Settings({
                                 </div>
                             )}
                         </div>
-                        <div className="w-72">
-                            <InputWrapper error={form.spoofWeather.error}>
-                                <Select
-                                    label="Select Current Weather"
-                                    value={form.spoofWeather.value}
-                                    error={!!form.spoofWeather.error}
-                                    onChange={(val) =>
-                                        setForm((form) => ({
-                                            ...form,
-                                            spoofWeather: {
-                                                ...form.spoofWeather,
-                                                value: val as
-                                                    | FakeWeatherKey
-                                                    | 'actual'
-                                            }
-                                        }))
-                                    }
-                                >
-                                    {[
-                                        <Option key="actual" value="actual">
-                                            Actual Weather
-                                        </Option>,
-                                        ...Object.keys(fakeWeather).map(
-                                            (key) => {
-                                                return (
-                                                    <Option
-                                                        key={key}
-                                                        value={key}
-                                                    >
-                                                        {fakeWeather[
-                                                            key as FakeWeatherKey
-                                                        ]?.description ||
-                                                            'Actual Weather'}
-                                                    </Option>
-                                                );
-                                            }
-                                        )
-                                    ]}
-                                </Select>
-                            </InputWrapper>
-                            {form.spoofWeather.value !== 'actual' && (
-                                <InputWrapper error={form.spoofWeather.error}>
-                                    <div style={{ marginTop: 20 }}>
-                                        <Checkbox
-                                            crossOrigin={undefined}
-                                            label="Is Night"
-                                            checked={form.isNight.value}
-                                            onChange={() => {
-                                                setForm((form) => ({
-                                                    ...form,
-                                                    isNight: {
-                                                        ...form.isNight,
-                                                        value: !form.isNight
-                                                            .value
-                                                    }
-                                                }));
-                                            }}
-                                        />
-                                    </div>
+                        <div className="flex w-72 flex-col gap-6">
+                            <div className="w-72">
+                                <InputWrapper error={form.fakeTime.error}>
+                                    <Input
+                                        type="time"
+                                        label="Fake Time"
+                                        crossOrigin={undefined}
+                                        value={form.fakeTime.value || ''}
+                                        onChange={({ target }) =>
+                                            setForm((form) => ({
+                                                ...form,
+                                                fakeTime: {
+                                                    ...form.fakeTime,
+                                                    value:
+                                                        target.value ||
+                                                        undefined
+                                                }
+                                            }))
+                                        }
+                                    />
                                 </InputWrapper>
-                            )}
+                                <div className="mb-4">
+                                    <Select
+                                        label="Playback Speed"
+                                        value={playbackSpeed}
+                                        disabled={playingDay}
+                                        onChange={(value) =>
+                                            setPlaybackSpeed(
+                                                (value ||
+                                                    'medium') as DayPlaybackSpeed
+                                            )
+                                        }
+                                    >
+                                        <Option value="slow">
+                                            Slow (2 minutes)
+                                        </Option>
+                                        <Option value="medium">
+                                            Medium (60 seconds)
+                                        </Option>
+                                        <Option value="fast">
+                                            Fast (30 seconds)
+                                        </Option>
+                                    </Select>
+                                </div>
+                                <Button
+                                    variant="outlined"
+                                    color="blue"
+                                    onClick={onToggleDayPlayback}
+                                    className="flex w-full items-center justify-center gap-2"
+                                >
+                                    <FontAwesomeIcon
+                                        icon={playingDay ? faStop : faPlay}
+                                    />
+                                    <span>
+                                        {playingDay ? 'Stop Day' : 'Play Day'}
+                                    </span>
+                                </Button>
+                                <div className="pt-2 text-center text-xs text-blue-gray-500">
+                                    2:00 AM to 10:00 PM in{' '}
+                                    {playbackDurationLabels[playbackSpeed]}
+                                </div>
+                            </div>
+                            <div className="w-72">
+                                <InputWrapper error={form.spoofWeather.error}>
+                                    <Select
+                                        label="Select Current Weather"
+                                        value={form.spoofWeather.value}
+                                        error={!!form.spoofWeather.error}
+                                        onChange={(val) =>
+                                            setForm((form) => ({
+                                                ...form,
+                                                spoofWeather: {
+                                                    ...form.spoofWeather,
+                                                    value: val as
+                                                        | FakeWeatherKey
+                                                        | 'actual'
+                                                }
+                                            }))
+                                        }
+                                    >
+                                        {[
+                                            <Option key="actual" value="actual">
+                                                Actual Weather
+                                            </Option>,
+                                            ...Object.keys(fakeWeather).map(
+                                                (key) => {
+                                                    return (
+                                                        <Option
+                                                            key={key}
+                                                            value={key}
+                                                        >
+                                                            {fakeWeather[
+                                                                key as FakeWeatherKey
+                                                            ]?.description ||
+                                                                'Actual Weather'}
+                                                        </Option>
+                                                    );
+                                                }
+                                            )
+                                        ]}
+                                    </Select>
+                                </InputWrapper>
+                            </div>
+                            {form.spoofWeather.value !== 'actual' &&
+                                !form.fakeTime.value && (
+                                    <InputWrapper
+                                        error={form.spoofWeather.error}
+                                    >
+                                        <div>
+                                            <Checkbox
+                                                crossOrigin={undefined}
+                                                label="Is Night"
+                                                checked={form.isNight.value}
+                                                onChange={() => {
+                                                    setForm((form) => ({
+                                                        ...form,
+                                                        isNight: {
+                                                            ...form.isNight,
+                                                            value: !form.isNight
+                                                                .value
+                                                        }
+                                                    }));
+                                                }}
+                                            />
+                                        </div>
+                                    </InputWrapper>
+                                )}
                         </div>
                         {/*<div className="flex flex-col gap-6"></div>*/}
                     </div>

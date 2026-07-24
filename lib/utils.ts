@@ -1,6 +1,7 @@
 import seedrandom from 'seedrandom';
 import {
     Current,
+    DayPlaybackSpeed,
     Forecast,
     Location,
     OMWeather,
@@ -12,6 +13,139 @@ import {
 } from '@/types';
 import moment from 'moment';
 import { Device } from 'ambient-weather-api';
+
+const MINUTES_PER_DAY = 24 * 60;
+
+const parseTimeOfDay = (time: string): number | undefined => {
+    if (!/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(time)) return undefined;
+    const [hours, minutes] = time.split(':').map(Number);
+    return hours * 60 + minutes;
+};
+
+const momentToMinutes = (value: moment.Moment): number =>
+    value.hours() * 60 + value.minutes() + value.seconds() / 60;
+
+const unixToMinutes = (value?: number): number | undefined => {
+    if (value === undefined || !Number.isFinite(value)) return undefined;
+    const datetime = moment.unix(value);
+    return datetime.isValid() ? momentToMinutes(datetime) : undefined;
+};
+
+const smoothstep = (start: number, end: number, value: number): number => {
+    const progress = Math.min(1, Math.max(0, (value - start) / (end - start)));
+    return progress * progress * (3 - 2 * progress);
+};
+
+const wrappedMinuteDifference = (value: number, reference: number): number =>
+    ((value - reference + MINUTES_PER_DAY / 2 + MINUTES_PER_DAY) %
+        MINUTES_PER_DAY) -
+    MINUTES_PER_DAY / 2;
+
+export type SunsetTintWeights = {
+    warm: number;
+    dusk: number;
+};
+
+export type SunriseTintWeights = {
+    predawn: number;
+    gold: number;
+};
+
+export const DAY_PLAYBACK_DURATIONS_MS: Record<DayPlaybackSpeed, number> = {
+    slow: 120000,
+    medium: 60000,
+    fast: 30000
+};
+
+export const getDayPlaybackTime = (
+    elapsedMs: number,
+    speed: DayPlaybackSpeed = 'medium'
+): string => {
+    const progress = Math.min(
+        1,
+        Math.max(0, elapsedMs / DAY_PLAYBACK_DURATIONS_MS[speed])
+    );
+    const minutes = Math.round((120 + progress * 1200) / 5) * 5;
+    return `${Math.floor(minutes / 60)
+        .toString()
+        .padStart(2, '0')}:${(minutes % 60).toString().padStart(2, '0')}`;
+};
+
+export const applyFakeTime = (
+    datetime: moment.Moment,
+    fakeTime?: string
+): moment.Moment => {
+    if (!fakeTime) return datetime;
+    const minutes = parseTimeOfDay(fakeTime);
+    if (minutes === undefined) return datetime;
+    return datetime
+        .clone()
+        .hours(Math.floor(minutes / 60))
+        .minutes(minutes % 60)
+        .seconds(0)
+        .milliseconds(0);
+};
+
+export const isNightAtTime = (
+    fakeTime: string,
+    sunriseUnix?: number,
+    sunsetUnix?: number
+): boolean | undefined => {
+    const time = parseTimeOfDay(fakeTime);
+    const sunrise = unixToMinutes(sunriseUnix);
+    const sunset = unixToMinutes(sunsetUnix);
+    if (time === undefined || sunrise === undefined || sunset === undefined) {
+        return undefined;
+    }
+
+    if (sunrise <= sunset) return time < sunrise || time > sunset;
+    return time > sunset && time < sunrise;
+};
+
+const getSolarOffset = (
+    eventUnix?: number,
+    fakeTime?: string,
+    now: moment.Moment = moment()
+): number | undefined => {
+    const event = unixToMinutes(eventUnix);
+    const time = fakeTime ? parseTimeOfDay(fakeTime) : momentToMinutes(now);
+    if (event === undefined || time === undefined) return undefined;
+    return wrappedMinuteDifference(time, event);
+};
+
+export const getSunriseTintWeights = (
+    sunriseUnix?: number,
+    fakeTime?: string,
+    now: moment.Moment = moment()
+): SunriseTintWeights | undefined => {
+    const offset = getSolarOffset(sunriseUnix, fakeTime, now);
+    if (offset === undefined || offset < -90 || offset > 65) return undefined;
+
+    const predawn =
+        smoothstep(-90, -40, offset) *
+        (1 - smoothstep(-10, 30, offset));
+    const gold =
+        smoothstep(-55, -10, offset) *
+        (1 - smoothstep(10, 65, offset));
+
+    if (predawn < 0.001 && gold < 0.001) return undefined;
+    return { predawn, gold };
+};
+
+export const getSunsetTintWeights = (
+    sunsetUnix?: number,
+    fakeTime?: string,
+    now: moment.Moment = moment()
+): SunsetTintWeights | undefined => {
+    const offset = getSolarOffset(sunsetUnix, fakeTime, now);
+    if (offset === undefined || offset < -90 || offset > 65) return undefined;
+
+    const warm = smoothstep(-90, -30, offset) * (1 - smoothstep(5, 40, offset));
+    const dusk = smoothstep(-10, 25, offset) * (1 - smoothstep(25, 65, offset));
+
+    if (warm < 0.001 && dusk < 0.001) return undefined;
+    return { warm, dusk };
+};
 
 export const getTemp = (temp: number, from: string, to: string): number => {
     if (from === 'f') {
@@ -208,11 +342,7 @@ export const omWeatherToCurrent = (current: OMWeather): Current => {
     // is absent we leave the provider's code untouched.
     const precip = current.current.precipitation;
     const rain = current.current.rain;
-    if (
-        OM_WET_CODES.has(code) &&
-        precip === 0 &&
-        (rain ?? 0) === 0
-    ) {
+    if (OM_WET_CODES.has(code) && precip === 0 && (rain ?? 0) === 0) {
         id = cloudCoverToId(current.current.cloud_cover);
         description = id === 800 ? 'Clear' : 'Clouds';
     }

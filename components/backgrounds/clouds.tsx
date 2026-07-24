@@ -66,6 +66,7 @@ export default function Clouds({ id, isNight }: Props) {
                     backgroundColor: isNight
                         ? 'rgba(0,0,0,0.74)'
                         : cloudSettings[id].color,
+                    backgroundImage: 'var(--solar-transition-gradient, none)',
                     height: '100vh',
                     width: '100vw',
                     overflow: 'hidden'

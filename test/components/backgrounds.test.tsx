@@ -83,10 +83,23 @@ describe('weather backgrounds render without throwing', () => {
             render(<Thunderstorm id={201 as any} isNight={true} />)
         ).not.toThrow();
     });
-    it('Atmosphere', () => {
-        expect(() =>
-            render(<Atmosphere id={741 as any} isNight={true} />)
-        ).not.toThrow();
+    it('Atmosphere uses a yellow moon in color and gray when inverted', () => {
+        const { container: color } = render(
+            <Atmosphere id={741 as any} isNight={true} />
+        );
+        expect(color.querySelectorAll('ellipse')[0].getAttribute('fill')).toBe(
+            'rgba(244,211,94,0.35)'
+        );
+        expect(color.querySelectorAll('ellipse')[1].getAttribute('fill')).toBe(
+            '#f4d35e'
+        );
+
+        const { container: inverted } = render(
+            <Atmosphere id={741 as any} isNight={true} inverted />
+        );
+        expect(
+            inverted.querySelectorAll('ellipse')[1].getAttribute('fill')
+        ).toBe('#5a5a5a');
     });
 });
 

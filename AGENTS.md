@@ -6,8 +6,8 @@ Guidance for AI agents working in this repo. Read this first.
 
 A single-page weather app (Next.js App Router). It shows current conditions +
 a 5-day forecast over an animated, weather-specific background (clear, clouds,
-rain, drizzle, snow, thunderstorm, fog/atmosphere), with day/night variants and
-a monochrome mode.
+rain, drizzle, snow, thunderstorm, fog/atmosphere), with day/night variants,
+sunrise/sunset colors, and a monochrome mode.
 
 There is no backend. All config comes from URL query params; weather data is
 fetched client-side.
@@ -29,8 +29,8 @@ gotchas — consult the child file when working in that directory:
 - `app/` → [`app/AGENTS.md`](./app/AGENTS.md) — `page.tsx` (the whole app),
   `layout.tsx`, `globals.css`.
 - `components/` → [`components/AGENTS.md`](./components/AGENTS.md) —
-  `background.tsx` router, `backgrounds/*` families, animated SVG primitives,
-  foreground UI, `settings.tsx`.
+  `background.tsx` router + solar palettes, `backgrounds/*` families, animated
+  SVG primitives, foreground UI, `settings.tsx`.
 - `pages/api/` → [`pages/api/AGENTS.md`](./pages/api/AGENTS.md) — the
   server-side proxy routes (the only backend).
 - `homeassistant/` → [`homeassistant/AGENTS.md`](./homeassistant/AGENTS.md) —
@@ -64,7 +64,7 @@ Vitest + React Testing Library (jsdom). Config: `vitest.config.ts`
 (jest-dom + matchMedia/ResizeObserver polyfills). Tests live in `test/**`.
 
 ```bash
-npm test          # vitest run  (~83 tests, 12 files)
+npm test          # vitest run  (112 tests, 12 files)
 npm run test:watch
 npm run lint      # next lint
 ```
@@ -125,20 +125,38 @@ Key interactions:
   spoofing, `isNight` auto-detects from `current.sunrise/sunset` and overrides
   the manual toggle (the fixture sunrise/sunset are stale 2024 timestamps, so
   spoofed weather can read as night — set Is Night explicitly to control it).
+- **Fake Time:** a frozen, session-only `HH:mm` preview. It drives the clock,
+  day/night art, weather icon, and solar colors without changing API/cache
+  time. Clear it to return to live time. While set, it replaces the spoofed
+  weather `Is Night` control.
+- **Play Day:** runs fake time from 2:00 AM to 10:00 PM in five-minute visual
+  steps. Playback Speed offers Slow (2 minutes), Medium (60 seconds, default),
+  and Fast (30 seconds). The modal closes while it plays; reopen Settings to
+  stop it. Playback ends frozen at 10:00 PM and remains session-only.
 - **Color Mode:** Settings → "Color Mode" → Color / Monochrome.
 - The MT Select triggers are `<button role="combobox">`; options are `<li>`.
+
+## Solar transition colors
+
+- The colored dashboard blends indigo/violet through rose/gold around sunrise,
+  and rose/coral/peach into violet around sunset. It uses effective Sun2 times,
+  then provider fallback.
+- Each ramp starts 90 minutes before its event, peaks around the event, and
+  fades out 65 minutes afterward. Live mode updates every 30 seconds.
+- Each weather family inherits `--solar-transition-gradient`, so the gradient
+  sits behind clouds/precipitation instead of washing out foreground art.
+- Monochrome sets the gradient to `none` at the source; the root
+  `grayscale(1)` filter remains a second no-hue guarantee.
 
 ## Monochrome mode (how it works)
 
 - `mono=1` URL param → `mono` state. `Background` always renders the **night**
   variant when mono is on (night art is already grayscale).
-- Day vs night in mono is just the invert filter:
-  - **mono day** = night render + `html.invert { filter: invert(1) }`
-    (managed by a `useEffect` in `page.tsx`, set when `mono && !isNight`).
-    Visually: white bg, dark elements.
-  - **mono night** = night render, no filter. Black bg, light elements.
-- `Background` passes `inverted = mono && !isNight` to Sun/Moon/Atmosphere so
-  their source color is chosen to survive (or counter) the invert.
+- Mono always applies `html.invert { filter: invert(1) grayscale(1) }`, producing
+  the eink-friendly white background with dark elements for both day and night.
+- Day/night still changes the clear-weather Sun/Moon and foreground weather
+  icon. `Background` passes `inverted = mono` to Sun/Moon/Atmosphere so their
+  source gray survives the root inversion.
 - Splash (`loading.tsx`) uses CSS classes; the inline script in `layout.tsx`
   sets `mono-init`/`invert` on `<html>` before first paint to avoid a flash.
 - The filter is on `<html>`, NOT `<body>` — filtering body makes it a

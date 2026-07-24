@@ -497,6 +497,8 @@ export type OMWeatherCode =
 
 export type WeatherSource = 'OpenMeteo' | 'OpenWeatherMap';
 
+export type DayPlaybackSpeed = 'slow' | 'medium' | 'fast';
+
 export type Sun2Pair = {
     prefix: string;
     friendlyName: string;

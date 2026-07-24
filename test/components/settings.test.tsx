@@ -7,17 +7,19 @@ vi.mock('@material-tailwind/react', () => ({
     DialogHeader: ({ children }: any) => <div>{children}</div>,
     DialogBody: ({ children }: any) => <div>{children}</div>,
     DialogFooter: ({ children }: any) => <div>{children}</div>,
-    Input: ({ label, value, onChange }: any) => (
+    Input: ({ label, value, onChange, type = 'text' }: any) => (
         <input
             aria-label={label}
+            type={type}
             value={value || ''}
             onChange={onChange}
         />
     ),
-    Select: ({ label, value, onChange, children }: any) => (
+    Select: ({ label, value, onChange, children, disabled }: any) => (
         <select
             aria-label={label}
             value={value}
+            disabled={disabled}
             onChange={(e) => onChange(e.target.value)}
         >
             {children}
@@ -33,11 +35,7 @@ vi.mock('@material-tailwind/react', () => ({
     ),
     Checkbox: ({ label, checked, onChange }: any) => (
         <label>
-            <input
-                type="checkbox"
-                checked={!!checked}
-                onChange={onChange}
-            />
+            <input type="checkbox" checked={!!checked} onChange={onChange} />
             {label}
         </label>
     ),
@@ -71,6 +69,13 @@ const baseProps = () => ({
     setSpoofWeather: vi.fn(),
     isNight: false,
     setIsNight: vi.fn(),
+    fakeTime: undefined,
+    setFakeTime: vi.fn(),
+    playingDay: false,
+    playbackSpeed: 'medium' as const,
+    setPlaybackSpeed: vi.fn(),
+    startDayPlayback: vi.fn(),
+    stopDayPlayback: vi.fn(),
     mono: false,
     setMono: vi.fn(),
     addAlert: vi.fn()
@@ -93,9 +98,7 @@ describe('Settings', () => {
     it('Save with valid props closes the dialog and persists mono', () => {
         const props = baseProps();
         render(<Settings {...props} />);
-        fireEvent.click(
-            screen.getByRole('button', { name: /save/i })
-        );
+        fireEvent.click(screen.getByRole('button', { name: /save/i }));
         expect(props.setSettingsOpen).toHaveBeenCalledWith(false);
         expect(props.setMono).toHaveBeenCalled();
         expect(props.setLatlon).toHaveBeenCalled();
@@ -111,9 +114,7 @@ describe('Settings', () => {
                 geoapifyApiKey=""
             />
         );
-        fireEvent.click(
-            screen.getByRole('button', { name: /save/i })
-        );
+        fireEvent.click(screen.getByRole('button', { name: /save/i }));
         // Known limitation in components/settings.tsx: validate() can't block.
         expect(props.setSettingsOpen).toHaveBeenCalledWith(false);
     });
@@ -121,13 +122,66 @@ describe('Settings', () => {
     it('changing Color Mode to Monochrome is reflected on Save', () => {
         const props = baseProps();
         render(<Settings {...props} />);
-        fireEvent.change(
-            screen.getByRole('combobox', { name: 'Color Mode' }),
-            { target: { value: 'mono' } }
-        );
-        fireEvent.click(
-            screen.getByRole('button', { name: /save/i })
-        );
+        fireEvent.change(screen.getByRole('combobox', { name: 'Color Mode' }), {
+            target: { value: 'mono' }
+        });
+        fireEvent.click(screen.getByRole('button', { name: /save/i }));
         expect(props.setMono).toHaveBeenCalledWith(true);
+    });
+
+    it('saves a frozen fake time', () => {
+        const props = baseProps();
+        render(<Settings {...props} />);
+        fireEvent.change(screen.getByLabelText('Fake Time'), {
+            target: { value: '20:03' }
+        });
+        fireEvent.click(screen.getByRole('button', { name: /save/i }));
+        expect(props.setFakeTime).toHaveBeenCalledWith('20:03');
+    });
+
+    it('clears fake time to restore the live clock', () => {
+        const props = baseProps();
+        render(<Settings {...props} fakeTime="20:03" />);
+        fireEvent.change(screen.getByLabelText('Fake Time'), {
+            target: { value: '' }
+        });
+        fireEvent.click(screen.getByRole('button', { name: /save/i }));
+        expect(props.setFakeTime).toHaveBeenCalledWith(undefined);
+    });
+
+    it('hides the manual night override while fake time controls the scene', () => {
+        render(
+            <Settings {...baseProps()} spoofWeather="clear" fakeTime="20:03" />
+        );
+        expect(screen.queryByText('Is Night')).not.toBeInTheDocument();
+    });
+
+    it('starts the day playback and closes the dialog', () => {
+        const props = baseProps();
+        render(<Settings {...props} />);
+        fireEvent.click(screen.getByRole('button', { name: /play day/i }));
+        expect(props.startDayPlayback).toHaveBeenCalledOnce();
+        expect(props.setSettingsOpen).toHaveBeenCalledWith(false);
+    });
+
+    it('changes the playback speed for the next run', () => {
+        const props = baseProps();
+        render(<Settings {...props} />);
+        fireEvent.change(
+            screen.getByRole('combobox', { name: 'Playback Speed' }),
+            { target: { value: 'fast' } }
+        );
+        expect(props.setPlaybackSpeed).toHaveBeenCalledWith('fast');
+    });
+
+    it('stops an active day playback without closing the dialog', () => {
+        const props = baseProps();
+        render(<Settings {...props} playingDay />);
+        fireEvent.click(screen.getByRole('button', { name: /stop day/i }));
+        expect(props.stopDayPlayback).toHaveBeenCalledOnce();
+        expect(props.setSettingsOpen).not.toHaveBeenCalled();
+        expect(
+            screen.getByRole('combobox', { name: 'Playback Speed' })
+        ).toBeDisabled();
     });
 });

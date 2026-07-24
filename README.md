@@ -1,13 +1,14 @@
 # Weather App
 
 A single-page weather dashboard with animated, weather-specific backgrounds
-(clear, clouds, rain, drizzle, snow, thunderstorm, fog), day/night
-variants, and an optional monochrome mode. Built on Next.js (App Router)
-and React 19.
+(clear, clouds, rain, drizzle, snow, thunderstorm, fog), day/night variants,
+sunrise/sunset color palettes, and an optional monochrome mode. Built on Next.js
+(App Router) and React 19.
 
-There is **no backend** — every config knob lives in the URL query string,
-and weather data is fetched client-side. The same build runs in two
-places:
+There is **no backend** — durable config lives in the URL query string, and
+weather data is fetched client-side. The Settings modal also has transient
+preview controls for spoofing weather and freezing the displayed time; those
+reset on reload. The same build runs in two places:
 
 1. As a [Vercel deploy](#run-on-vercel) you open in a browser.
 2. As a [Home Assistant add-on](#run-as-a-home-assistant-add-on) that
@@ -46,7 +47,11 @@ https://<your-vercel-domain>.vercel.app/?lat=39.58&lon=-105.25&geoapifyApiKey=<g
 
 Append `&mono=1` for monochrome mode. The Settings modal (invisible click
 target in the top-left corner) lets you tweak things live and save back
-into the URL.
+into the URL. Its **Fake Time** field freezes the clock and previews the
+matching day, night, sunrise, and sunset appearance; clear the field to resume
+live time. **Play Day** runs from 2:00 AM to 10:00 PM at a selectable Slow
+(2-minute), Medium (60-second), or Fast (30-second) speed. Fake time and
+playback are session-only and are never written to the URL.
 
 ## Run as a Home Assistant add-on
 
@@ -108,7 +113,7 @@ default dashboard. No HACS card to install by hand, no YAML to paste.
 nvm use            # picks up .nvmrc (Node 24.x)
 npm install
 npm run dev        # http://localhost:3000
-npm test           # Vitest + RTL (74 tests)
+npm test           # Vitest + RTL (112 tests)
 npm run build      # production build
 ```
 
