@@ -28,43 +28,49 @@ export default function CurrentWeather({
         temp = tempSensor?.temperature || current.temp;
     }
     return (
-        <div style={{ height: '100%' }} className="flex">
-            <div className="flex flex-row items-center gap-8 py-12">
-                <div className="flex flex-col items-center gap-8">
+        <div className="flex sm:h-full">
+            <div className="flex flex-col items-center gap-4 py-4 sm:flex-row sm:gap-8 sm:py-12">
+                <div className="flex flex-col items-center gap-2 sm:gap-8">
                     <i
-                        className={`text wi wi-owm-${isNight ? 'night' : 'day'}-${current.id} text-9xl`}
+                        className={`text wi wi-owm-${isNight ? 'night' : 'day'}-${current.id} text-7xl sm:text-9xl`}
                     />
-                    <div className="text text-4xl">{current.description}</div>
+                    <div className="text text-2xl sm:text-4xl">
+                        {current.description}
+                    </div>
                 </div>
-                <div className="flex flex-col items-center gap-6">
+                <div className="flex flex-col items-center gap-3 sm:gap-6">
                     <div className="flex flex-row">
-                        <div className="text text-9xl">
+                        <div className="text text-6xl sm:text-9xl">
                             {temp}
                             °F
                         </div>
                     </div>
                     <div
                         style={{ width: '100%' }}
-                        className="text flex flex-row grow items-center justify-around text-5xl gap-2"
+                        className="text flex grow flex-row items-center justify-around gap-2 text-3xl sm:text-5xl"
                     >
                         <div>H {Math.max(current.max_temp, temp)}°</div>
                         <div>L {Math.min(current.min_temp, temp)}°</div>
                     </div>
                     <div
                         style={{ width: '100%' }}
-                        className="text flex flex-row grow items-center justify-between text-5xl gap-4"
+                        className="text flex grow flex-row items-center justify-between gap-3 text-3xl sm:gap-4 sm:text-5xl"
                     >
                         <div className="flex flex-row gap-2">
-                            <i className={`text wi wi-sunrise text-4xl`} />
-                            <div className={`text text-3xl`}>
+                            <i
+                                className={`text wi wi-sunrise text-2xl sm:text-4xl`}
+                            />
+                            <div className={`text text-xl sm:text-3xl`}>
                                 {moment
                                     .unix(haSunrise ?? current.sunrise)
                                     .format('LT')}
                             </div>
                         </div>
                         <div className="flex flex-row gap-2">
-                            <i className={`text wi wi-sunset text-4xl`} />
-                            <div className={`text text-3xl`}>
+                            <i
+                                className={`text wi wi-sunset text-2xl sm:text-4xl`}
+                            />
+                            <div className={`text text-xl sm:text-3xl`}>
                                 {moment
                                     .unix(haSunset ?? current.sunset)
                                     .format('LT')}

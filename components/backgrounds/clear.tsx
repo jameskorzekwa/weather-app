@@ -15,6 +15,7 @@ export default function Clear({ isNight, mono, inverted }: Props) {
         <div
             style={{
                 backgroundColor: useNightBg ? 'black' : 'rgb(55,114,180)',
+                backgroundImage: 'var(--solar-transition-gradient, none)',
                 height: '100vh',
                 width: '100vw',
                 overflow: 'hidden'
@@ -22,7 +23,11 @@ export default function Clear({ isNight, mono, inverted }: Props) {
         >
             <svg viewBox="0 0 470 1536">
                 <g transform={'translate(470, 0)'}>
-                    {isNight ? <Moon inverted={inverted} /> : <Sun inverted={inverted} />}
+                    {isNight ? (
+                        <Moon inverted={inverted} />
+                    ) : (
+                        <Sun inverted={inverted} />
+                    )}
                 </g>
             </svg>
         </div>

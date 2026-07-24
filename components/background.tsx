@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { ReactNode, useState } from 'react';
+import { useInterval } from 'usehooks-ts';
 import Thunderstorm from '@/components/backgrounds/thunderstom';
 import Drizzle from '@/components/backgrounds/drizzle';
 import Rain from '@/components/backgrounds/rain';
@@ -15,14 +16,113 @@ import {
     SnowId,
     ThunderstormId
 } from '@/types';
+import {
+    getSunriseTintWeights,
+    getSunsetTintWeights,
+    SunriseTintWeights,
+    SunsetTintWeights
+} from '@/lib/utils';
 
 interface Props {
     current: Current;
     isNight: boolean;
     mono?: boolean;
+    sunrise?: number;
+    sunset?: number;
+    fakeTime?: string;
 }
 
-export default function Background({ current, isNight, mono }: Props) {
+const rgba = (red: number, green: number, blue: number, opacity: number) =>
+    `rgba(${red}, ${green}, ${blue}, ${Math.min(1, opacity).toFixed(3)})`;
+
+const getSunsetGradient = (tint?: SunsetTintWeights): string => {
+    if (!tint) return 'none';
+
+    const warm = tint.warm;
+    const dusk = tint.dusk;
+    return [
+        `linear-gradient(180deg, ${rgba(42, 37, 79, dusk * 0.94)} 0%, ${rgba(112, 63, 125, dusk * 0.92)} 52%, ${rgba(207, 87, 121, dusk * 0.9)} 100%)`,
+        `radial-gradient(ellipse at 50% 82%, ${rgba(255, 194, 124, warm * 0.48)} 0%, ${rgba(242, 110, 115, warm * 0.3)} 45%, ${rgba(233, 54, 120, 0)} 72%)`,
+        `linear-gradient(180deg, ${rgba(233, 54, 120, warm * 0.9)} 0%, ${rgba(239, 100, 120, warm * 0.92)} 52%, ${rgba(246, 161, 124, warm * 0.95)} 100%)`
+    ].join(', ');
+};
+
+const getSunriseGradient = (tint?: SunriseTintWeights): string => {
+    if (!tint) return 'none';
+
+    const predawn = tint.predawn;
+    const gold = tint.gold;
+    return [
+        `radial-gradient(ellipse at 50% 82%, ${rgba(255, 211, 112, gold * 0.55)} 0%, ${rgba(240, 128, 108, gold * 0.32)} 45%, ${rgba(126, 82, 139, 0)} 72%)`,
+        `linear-gradient(180deg, ${rgba(126, 82, 139, gold * 0.88)} 0%, ${rgba(229, 105, 111, gold * 0.92)} 55%, ${rgba(248, 190, 112, gold * 0.96)} 100%)`,
+        `linear-gradient(180deg, ${rgba(31, 38, 76, predawn * 0.96)} 0%, ${rgba(91, 65, 116, predawn * 0.93)} 55%, ${rgba(203, 91, 116, predawn * 0.88)} 100%)`
+    ].join(', ');
+};
+
+const getSkyTransitionGradient = (
+    sunriseTint?: SunriseTintWeights,
+    sunsetTint?: SunsetTintWeights
+): string => {
+    const gradients = [
+        getSunriseGradient(sunriseTint),
+        getSunsetGradient(sunsetTint)
+    ].filter((gradient) => gradient !== 'none');
+    return gradients.length ? gradients.join(', ') : 'none';
+};
+
+interface SkyTransitionProps {
+    children: ReactNode;
+    sunrise?: number;
+    sunset?: number;
+    fakeTime?: string;
+    mono?: boolean;
+}
+
+function SkyTransition({
+    children,
+    sunrise,
+    sunset,
+    fakeTime,
+    mono
+}: SkyTransitionProps) {
+    const [, setClockTick] = useState(0);
+    useInterval(
+        () => setClockTick((tick) => tick + 1),
+        fakeTime || mono ? null : 30000
+    );
+    const sunriseTint = mono
+        ? undefined
+        : getSunriseTintWeights(sunrise, fakeTime);
+    const sunsetTint = mono
+        ? undefined
+        : getSunsetTintWeights(sunset, fakeTime);
+    const gradient = getSkyTransitionGradient(sunriseTint, sunsetTint);
+
+    return (
+        <div
+            data-solar-transition-active={String(gradient !== 'none')}
+            style={
+                {
+                    position: 'absolute',
+                    height: '100vh',
+                    width: '100vw',
+                    '--solar-transition-gradient': gradient
+                } as React.CSSProperties
+            }
+        >
+            {children}
+        </div>
+    );
+}
+
+export default function Background({
+    current,
+    isNight,
+    mono,
+    sunrise,
+    sunset,
+    fakeTime
+}: Props) {
     const id = current.id;
     const night = isNight || !!mono;
     // Mono is ALWAYS inverted (white bg, dark elements) — eink-friendly.
@@ -45,9 +145,22 @@ export default function Background({ current, isNight, mono }: Props) {
         } else if (
             [701, 711, 721, 731, 741, 751, 761, 762, 771, 781].includes(id)
         ) {
-            return <Atmosphere id={id as AtmosphereId} isNight={night} inverted={inverted} />;
+            return (
+                <Atmosphere
+                    id={id as AtmosphereId}
+                    isNight={night}
+                    inverted={inverted}
+                />
+            );
         } else if (id == 800) {
-            return <Clear id={id} isNight={isNight} mono={!!mono} inverted={inverted} />;
+            return (
+                <Clear
+                    id={id}
+                    isNight={isNight}
+                    mono={!!mono}
+                    inverted={inverted}
+                />
+            );
         } else if ([801, 802, 803, 804].includes(id)) {
             // @ts-ignore
             return <Clouds id={id as CloudId} isNight={night} />;
@@ -55,14 +168,13 @@ export default function Background({ current, isNight, mono }: Props) {
     };
 
     return (
-        <div
-            style={{
-                position: 'absolute',
-                height: '100vh',
-                width: '100vw'
-            }}
+        <SkyTransition
+            sunrise={sunrise}
+            sunset={sunset}
+            fakeTime={fakeTime}
+            mono={mono}
         >
             {getWeatherType(id)}
-        </div>
+        </SkyTransition>
     );
 }

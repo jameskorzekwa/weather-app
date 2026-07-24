@@ -26,10 +26,10 @@ describe('Sun', () => {
 });
 
 describe('Moon', () => {
-    it('renders one ellipse rx/ry 58, #707070 by default', () => {
+    it('renders one ellipse rx/ry 58, golden yellow by default', () => {
         const { container } = render(<Moon />);
         const e = container.querySelector('ellipse')!;
-        expect(e.getAttribute('fill')).toBe('#707070');
+        expect(e.getAttribute('fill')).toBe('#f4d35e');
         expect(e.getAttribute('rx')).toBe('58');
         expect(e.getAttribute('ry')).toBe('58');
     });

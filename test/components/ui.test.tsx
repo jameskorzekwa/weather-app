@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import moment from 'moment';
 import Loading from '@/components/loading';
 import DateTime from '@/components/dateTime';
 import CurrentWeather from '@/components/currentWeather';
@@ -11,9 +12,7 @@ describe('Loading', () => {
         const { container } = render(<Loading />);
         expect(container.querySelector('.splash-loading')).toBeTruthy();
         expect(container.querySelector('.splash-sun')).toBeTruthy();
-        expect(container.querySelector('title')?.textContent).toBe(
-            'sun-color'
-        );
+        expect(container.querySelector('title')?.textContent).toBe('sun-color');
     });
 });
 
@@ -21,10 +20,15 @@ describe('DateTime', () => {
     it('renders a formatted date and a 12h time', () => {
         const { container } = render(<DateTime />);
         const text = container.textContent || '';
-        expect(text).toMatch(
-            /\w+, \w+ \d{1,2}(st|nd|rd|th) \d{4}/
-        );
+        expect(text).toMatch(/\w+, \w+ \d{1,2}(st|nd|rd|th) \d{4}/);
         expect(text).toMatch(/\d{1,2}:\d{2} (AM|PM)/);
+    });
+
+    it("shows a frozen fake time while keeping today's date", () => {
+        const today = moment().format('dddd, MMMM Do YYYY');
+        render(<DateTime fakeTime="20:03" />);
+        expect(screen.getByText(today)).toBeInTheDocument();
+        expect(screen.getByText('8:03 PM')).toBeInTheDocument();
     });
 });
 
@@ -87,9 +91,7 @@ describe('CurrentWeather', () => {
                 isNight={false}
             />
         );
-        expect(
-            container.querySelector('.wi-owm-day-800')
-        ).toBeTruthy();
+        expect(container.querySelector('.wi-owm-day-800')).toBeTruthy();
         rerender(
             <CurrentWeather
                 location={location}
@@ -97,9 +99,7 @@ describe('CurrentWeather', () => {
                 isNight={true}
             />
         );
-        expect(
-            container.querySelector('.wi-owm-night-800')
-        ).toBeTruthy();
+        expect(container.querySelector('.wi-owm-night-800')).toBeTruthy();
     });
 });
 
@@ -121,12 +121,8 @@ describe('WeeklyWeather', () => {
     };
 
     it('renders 5 forecast cards with pop% and H/L', () => {
-        const { container } = render(
-            <WeeklyWeather forecast={forecast} />
-        );
-        expect(
-            container.querySelectorAll('.forecast-card')
-        ).toHaveLength(5);
+        const { container } = render(<WeeklyWeather forecast={forecast} />);
+        expect(container.querySelectorAll('.forecast-card')).toHaveLength(5);
         expect(screen.getByText('0%')).toBeInTheDocument();
         expect(screen.getByText('40%')).toBeInTheDocument();
         expect(screen.getByText(/H 60/)).toBeInTheDocument();

@@ -36,6 +36,7 @@ export default function Atmosphere({ id, isNight, inverted }: Props) {
         <div
             style={{
                 backgroundColor: isNight ? 'rgb(23,23,23)' : 'rgb(115,129,129)',
+                backgroundImage: 'var(--solar-transition-gradient, none)',
                 height: '100vh',
                 width: '100vw',
                 overflow: 'hidden'
@@ -70,7 +71,7 @@ export default function Atmosphere({ id, isNight, inverted }: Props) {
                         isNight
                             ? inverted
                                 ? 'rgba(90,90,90,0.4)'
-                                : 'rgba(140,140,140,0.4)'
+                                : 'rgba(244,211,94,0.35)'
                             : 'rgba(241,196,15,0.5)'
                     }
                     cx="0"
@@ -84,7 +85,7 @@ export default function Atmosphere({ id, isNight, inverted }: Props) {
                         isNight
                             ? inverted
                                 ? '#5a5a5a'
-                                : '#707070'
+                                : '#f4d35e'
                             : 'rgba(241,196,15,0.67)'
                     }
                     cx="0"

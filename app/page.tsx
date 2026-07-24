@@ -3,10 +3,17 @@ import '@/css/weather-icons.css';
 import { useInterval } from 'usehooks-ts';
 import moment from 'moment-timezone';
 import { v4 as uuidv4 } from 'uuid';
-import { Fragment, Suspense, useEffect, useState } from 'react';
+import {
+    Fragment,
+    startTransition,
+    Suspense,
+    useEffect,
+    useState
+} from 'react';
 import Background from '@/components/background';
 import {
     Current,
+    DayPlaybackSpeed,
     FakeWeatherKey,
     Forecast,
     LatLon,
@@ -31,7 +38,10 @@ import DateTime from '@/components/dateTime';
 import Loading from '@/components/loading';
 import {
     AWNDeviceToTempSensor,
+    DAY_PLAYBACK_DURATIONS_MS,
+    getDayPlaybackTime,
     getLocationName,
+    isNightAtTime,
     omWeatherToCurrent,
     omWeatherToForecast,
     owCurrentToCurrent,
@@ -71,9 +81,13 @@ function HomeContent() {
     const [settingsOpen, setSettingsOpen] = useState<boolean>(false);
     const [isNight, setIsNight] = useState<boolean | undefined>();
     const [geoapifyApiKey, setGeoapifyApiKey] = useState<string | undefined>();
-    const [openWeatherMapAppId, setOpenWeatherMapAppId] = useState<string | undefined>();
+    const [openWeatherMapAppId, setOpenWeatherMapAppId] = useState<
+        string | undefined
+    >();
     const [awnApiKey, setAwnApiKey] = useState<string | undefined>();
-    const [awnApplicationKey, setAwnApplicationKey] = useState<string | undefined>();
+    const [awnApplicationKey, setAwnApplicationKey] = useState<
+        string | undefined
+    >();
     const [latLon, setLatLon] = useState<LatLon | undefined>();
     const [forecast, setForecast] = useState<Forecast | undefined>();
     const [current, setCurrent] = useState<Current | undefined>();
@@ -93,6 +107,37 @@ function HomeContent() {
     const [spoofWeather, setSpoofWeather] = useState<
         FakeWeatherKey | undefined
     >();
+    const [fakeTime, setFakeTime] = useState<string | undefined>();
+    const [playingDay, setPlayingDay] = useState<boolean>(false);
+    const [playbackSpeed, setPlaybackSpeed] =
+        useState<DayPlaybackSpeed>('medium');
+
+    useEffect(() => {
+        if (!playingDay) return;
+
+        const startedAt = performance.now();
+        let animationFrame: number;
+        let lastTime = '02:00';
+        const duration = DAY_PLAYBACK_DURATIONS_MS[playbackSpeed];
+        const animate = (now: number) => {
+            const elapsed = now - startedAt;
+            const nextTime = getDayPlaybackTime(elapsed, playbackSpeed);
+            if (nextTime !== lastTime) {
+                lastTime = nextTime;
+                startTransition(() => setFakeTime(nextTime));
+            }
+            if (elapsed < duration) {
+                animationFrame = requestAnimationFrame(animate);
+            } else {
+                setFakeTime('22:00');
+                setPlayingDay(false);
+            }
+        };
+
+        setFakeTime('02:00');
+        animationFrame = requestAnimationFrame(animate);
+        return () => cancelAnimationFrame(animationFrame);
+    }, [playingDay, playbackSpeed]);
 
     const checkIsNight = () => {
         if (!spoofWeather) {
@@ -155,7 +200,10 @@ function HomeContent() {
         }
     };
 
-    const getTempSensor = async (awnApiKey: string, awnApplicationKey: string) => {
+    const getTempSensor = async (
+        awnApiKey: string,
+        awnApplicationKey: string
+    ) => {
         const localStorageTempSensor = localStorage.getItem('tempSensor');
         if (localStorageTempSensor) {
             try {
@@ -520,10 +568,14 @@ function HomeContent() {
 
     useEffect(() => {
         if (searchParams) {
-            setOpenWeatherMapAppId(searchParams.get('openWeatherMapAppId') || undefined);
+            setOpenWeatherMapAppId(
+                searchParams.get('openWeatherMapAppId') || undefined
+            );
             setGeoapifyApiKey(searchParams.get('geoapifyApiKey') || undefined);
             setAwnApiKey(searchParams.get('awnApiKey') || undefined);
-            setAwnApplicationKey(searchParams.get('awnApplicationKey') || undefined);
+            setAwnApplicationKey(
+                searchParams.get('awnApplicationKey') || undefined
+            );
             setWeatherSource(
                 (searchParams.get('weatherSource') as WeatherSource) ||
                     'OpenMeteo'
@@ -558,7 +610,11 @@ function HomeContent() {
     }, [latLon]);
 
     useEffect(() => {
-        if (geoapifyApiKey && zipcode && (!location || location.postcode !== zipcode)) {
+        if (
+            geoapifyApiKey &&
+            zipcode &&
+            (!location || location.postcode !== zipcode)
+        ) {
             void getZipcodeLocation(zipcode);
         }
     }, [zipcode]);
@@ -579,14 +635,18 @@ function HomeContent() {
             zipcode ||
             (zipcode === '' && zipcode !== searchParams?.get('zipcode')) ||
             geoapifyApiKey ||
-            (geoapifyApiKey === '' && geoapifyApiKey !== searchParams?.get('geoapifyApiKey')) ||
+            (geoapifyApiKey === '' &&
+                geoapifyApiKey !== searchParams?.get('geoapifyApiKey')) ||
             awnApiKey ||
-            (awnApiKey === '' && awnApiKey !== searchParams?.get('awnApiKey')) ||
+            (awnApiKey === '' &&
+                awnApiKey !== searchParams?.get('awnApiKey')) ||
             awnApplicationKey ||
             (awnApplicationKey === '' &&
                 awnApplicationKey !== searchParams?.get('awnApplicationKey')) ||
             openWeatherMapAppId ||
-            (openWeatherMapAppId === '' && openWeatherMapAppId !== searchParams?.get('openWeatherMapAppId'))
+            (openWeatherMapAppId === '' &&
+                openWeatherMapAppId !==
+                    searchParams?.get('openWeatherMapAppId'))
         ) {
             const queryObj = {
                 ...(latLon
@@ -614,7 +674,18 @@ function HomeContent() {
                 window.history.pushState({ path: newUrl }, '', newUrl);
             }
         }
-    }, [zipcode, geoapifyApiKey, awnApiKey, awnApplicationKey, openWeatherMapAppId, latLon, weatherSource, useSun2, sun2Prefix, mono]);
+    }, [
+        zipcode,
+        geoapifyApiKey,
+        awnApiKey,
+        awnApplicationKey,
+        openWeatherMapAppId,
+        latLon,
+        weatherSource,
+        useSun2,
+        sun2Prefix,
+        mono
+    ]);
 
     useEffect(() => {
         if (awnApiKey && awnApplicationKey) {
@@ -706,7 +777,11 @@ function HomeContent() {
 
     useEffect(() => {
         if (spoofWeather) {
-            setCurrent(fakeWeather[spoofWeather]);
+            setCurrent((previous) => ({
+                ...fakeWeather[spoofWeather],
+                sunrise: previous?.sunrise ?? fakeWeather[spoofWeather].sunrise,
+                sunset: previous?.sunset ?? fakeWeather[spoofWeather].sunset
+            }));
         } else if (location) {
             getAppWeather(location);
         }
@@ -729,22 +804,36 @@ function HomeContent() {
         localTemp = !!tempSensor?.temperature;
     }
 
+    const effectiveSunrise = haSunrise ?? current?.sunrise;
+    const effectiveSunset = haSunset ?? current?.sunset;
+    const fakeIsNight = fakeTime
+        ? isNightAtTime(fakeTime, effectiveSunrise, effectiveSunset)
+        : undefined;
+    const displayIsNight = fakeIsNight ?? isNight;
+
     return (
         <main className="flex min-h-screen flex-col ">
-            {current && forecast && location && isNight !== undefined ? (
+            {current && forecast && location && displayIsNight !== undefined ? (
                 <Fragment>
-                    <Background current={current} isNight={isNight} mono={mono} />
+                    <Background
+                        current={current}
+                        isNight={displayIsNight}
+                        mono={mono}
+                        sunrise={effectiveSunrise}
+                        sunset={effectiveSunset}
+                        fakeTime={fakeTime}
+                    />
                     <div
                         style={{
                             position: 'absolute',
                             height: '100vh',
                             width: '100vw'
                         }}
-                        className="flex flex-col justify-between grow p-8"
+                        className="flex grow flex-col justify-between overflow-y-auto p-4 sm:p-8"
                     >
-                        <div className="flex flex-row justify-between">
-                            <div className="flex flex-row gap-5 content-center shrink">
-                                <div className="text text-7xl">
+                        <div className="flex flex-col gap-2 sm:flex-row sm:justify-between">
+                            <div className="flex shrink flex-row content-center gap-3 sm:gap-5">
+                                <div className="text text-5xl sm:text-7xl">
                                     {getLocationName(location, zipCity)}
                                 </div>
                                 <div>
@@ -758,12 +847,12 @@ function HomeContent() {
                                     )}
                                 </div>
                             </div>
-                            <DateTime />
+                            <DateTime fakeTime={fakeTime} />
                         </div>
                         <CurrentWeather
                             location={location}
                             current={current}
-                            isNight={isNight}
+                            isNight={displayIsNight}
                             tempSensor={tempSensor}
                             haSunrise={haSunrise}
                             haSunset={haSunset}
@@ -798,6 +887,13 @@ function HomeContent() {
                 setSpoofWeather={setSpoofWeather}
                 isNight={isNight}
                 setIsNight={setIsNight}
+                fakeTime={fakeTime}
+                setFakeTime={setFakeTime}
+                playingDay={playingDay}
+                playbackSpeed={playbackSpeed}
+                setPlaybackSpeed={setPlaybackSpeed}
+                startDayPlayback={() => setPlayingDay(true)}
+                stopDayPlayback={() => setPlayingDay(false)}
                 mono={mono}
                 setMono={setMono}
                 addAlert={addAlert}
