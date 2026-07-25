@@ -97,6 +97,13 @@ function SkyTransition({
         ? undefined
         : getSunsetTintWeights(sunset, fakeTime);
     const gradient = getSkyTransitionGradient(sunriseTint, sunsetTint);
+    const solarTransitionStrength = Math.max(
+        sunriseTint?.predawn ?? 0,
+        sunriseTint?.gold ?? 0,
+        sunsetTint?.warm ?? 0,
+        sunsetTint?.dusk ?? 0
+    );
+    const cloudOpacity = 1 - solarTransitionStrength * 0.55;
 
     return (
         <div
@@ -106,7 +113,8 @@ function SkyTransition({
                     position: 'absolute',
                     height: '100vh',
                     width: '100vw',
-                    '--solar-transition-gradient': gradient
+                    '--solar-transition-gradient': gradient,
+                    '--solar-cloud-opacity': cloudOpacity.toFixed(3)
                 } as React.CSSProperties
             }
         >

@@ -124,6 +124,9 @@ describe('Background solar transition colors', () => {
         expect(
             root.style.getPropertyValue('--solar-transition-gradient')
         ).toContain('linear-gradient');
+        expect(root.style.getPropertyValue('--solar-cloud-opacity')).toBe(
+            '0.450'
+        );
     });
 
     it('provides a sunset gradient to colored weather scenes', () => {
@@ -140,6 +143,9 @@ describe('Background solar transition colors', () => {
         expect(
             root.style.getPropertyValue('--solar-transition-gradient')
         ).toContain('linear-gradient');
+        expect(root.style.getPropertyValue('--solar-cloud-opacity')).toBe(
+            '0.450'
+        );
     });
 
     it('does not provide any colored gradient in monochrome mode', () => {
@@ -157,6 +163,9 @@ describe('Background solar transition colors', () => {
         expect(
             root.style.getPropertyValue('--solar-transition-gradient')
         ).toBe('none');
+        expect(root.style.getPropertyValue('--solar-cloud-opacity')).toBe(
+            '1.000'
+        );
     });
 
     it('leaves the normal palette alone outside the sunset window', () => {
@@ -168,9 +177,10 @@ describe('Background solar transition colors', () => {
                 fakeTime="12:00"
             />
         );
-        expect(
-            (container.firstElementChild as HTMLElement).dataset
-                .solarTransitionActive
-        ).toBe('false');
+        const root = container.firstElementChild as HTMLElement;
+        expect(root.dataset.solarTransitionActive).toBe('false');
+        expect(root.style.getPropertyValue('--solar-cloud-opacity')).toBe(
+            '1.000'
+        );
     });
 });
