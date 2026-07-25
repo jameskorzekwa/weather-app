@@ -3,6 +3,7 @@ import { AtmosphereId } from '@/types';
 import Cloud from '@/components/cloud';
 import seedrandom from 'seedrandom';
 import { seededRandomNumber } from '@/lib/utils';
+import { getDayNightBackground } from '@/components/backgrounds/dayNightBackground';
 
 interface Props {
     id: AtmosphereId;
@@ -10,7 +11,11 @@ interface Props {
     inverted?: boolean;
 }
 
-export default function Atmosphere({ id, isNight, inverted }: Props) {
+export default function Atmosphere({
+    id,
+    isNight,
+    inverted
+}: Props) {
     const colors = [
         '#8d8d8d',
         '#b5b5b5',
@@ -35,8 +40,12 @@ export default function Atmosphere({ id, isNight, inverted }: Props) {
     return (
         <div
             style={{
-                backgroundColor: isNight ? 'rgb(23,23,23)' : 'rgb(115,129,129)',
-                backgroundImage: 'var(--solar-transition-gradient, none)',
+                backgroundColor: 'rgb(115,129,129)',
+                backgroundImage: getDayNightBackground(
+                    '23,23,23',
+                    isNight,
+                    'var(--solar-transition-gradient, none)'
+                ),
                 height: '100vh',
                 width: '100vw',
                 overflow: 'hidden'

@@ -5,6 +5,7 @@ import { useRandomInterval } from '@/hooks/useRandomInterval';
 import styled from 'styled-components';
 import ThunderCloud from '@/components/thunderCloud';
 import { ThunderstormId } from '@/types';
+import { getDayNightBackground } from '@/components/backgrounds/dayNightBackground';
 
 interface Props {
     id: ThunderstormId;
@@ -85,9 +86,12 @@ export default function Thunderstorm({ id, isNight }: Props) {
     return (
         <div
             style={{
-                backgroundColor: isNight ? 'black' : '#373b42',
-                backgroundImage:
-                    'var(--precipitation-solar-transition-gradient, none)',
+                backgroundColor: '#373b42',
+                backgroundImage: getDayNightBackground(
+                    '0,0,0',
+                    isNight,
+                    'var(--precipitation-solar-transition-gradient, none)'
+                ),
                 height: '100vh',
                 width: '100vw',
                 overflow: 'hidden'

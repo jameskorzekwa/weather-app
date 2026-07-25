@@ -24,7 +24,7 @@ describe('Clear background', () => {
         expect(night.querySelectorAll('ellipse').length).toBe(1);
     });
 
-    it('uses a black bg at night/mono and blue bg for color day', () => {
+    it('uses a blue base with continuous night-strength blending', () => {
         const { container: c1 } = render(
             <Clear id={800} isNight={false} />
         );
@@ -37,14 +37,20 @@ describe('Clear background', () => {
         );
         expect(
             (c2.firstChild as HTMLElement).style.backgroundColor
-        ).toBe('black');
+        ).toBe('rgb(55, 114, 180)');
+        expect((c2.firstChild as HTMLElement).style.backgroundImage).toContain(
+            'var(--scene-night-strength, 1)'
+        );
 
         const { container: c3 } = render(
             <Clear id={800} isNight={false} mono={true} />
         );
         expect(
             (c3.firstChild as HTMLElement).style.backgroundColor
-        ).toBe('black');
+        ).toBe('rgb(55, 114, 180)');
+        expect((c3.firstChild as HTMLElement).style.backgroundImage).toContain(
+            'var(--scene-night-strength, 1)'
+        );
     });
 
     it('passes inverted to the Sun (grey when inverted)', () => {
@@ -104,19 +110,25 @@ describe('weather backgrounds render without throwing', () => {
 });
 
 describe('Rain background bg color', () => {
-    it('is black at night, grey #5f646c by day', () => {
+    it('uses a grey base with continuous night-strength blending', () => {
         const { container: n } = render(
             <Rain id={501 as any} isNight={true} />
         );
         expect(
             (n.firstChild as HTMLElement).style.backgroundColor
-        ).toBe('black');
+        ).toBe('rgb(95, 100, 108)');
+        expect((n.firstChild as HTMLElement).style.backgroundImage).toContain(
+            'var(--scene-night-strength, 1)'
+        );
         const { container: d } = render(
             <Rain id={501 as any} isNight={false} />
         );
         expect(
             (d.firstChild as HTMLElement).style.backgroundColor
         ).toBe('rgb(95, 100, 108)');
+        expect((d.firstChild as HTMLElement).style.backgroundImage).toContain(
+            'var(--scene-night-strength, 0)'
+        );
     });
 });
 
@@ -131,8 +143,11 @@ describe('precipitation solar tint', () => {
         ]
     ])('%s uses the muted solar gradient', (_name, background) => {
         const { container } = render(background);
-        expect(
-            (container.firstChild as HTMLElement).style.backgroundImage
-        ).toBe('var(--precipitation-solar-transition-gradient, none)');
+        const backgroundImage = (container.firstChild as HTMLElement).style
+            .backgroundImage;
+        expect(backgroundImage).toContain('--scene-night-strength');
+        expect(backgroundImage).toContain(
+            'var(--precipitation-solar-transition-gradient, none)'
+        );
     });
 });

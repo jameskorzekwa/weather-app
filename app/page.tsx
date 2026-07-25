@@ -38,7 +38,6 @@ import DateTime from '@/components/dateTime';
 import Loading from '@/components/loading';
 import {
     AWNDeviceToTempSensor,
-    DAY_PLAYBACK_DURATIONS_MS,
     getDayPlaybackTime,
     getLocationName,
     isNightAtTime,
@@ -109,6 +108,7 @@ function HomeContent() {
     >();
     const [fakeTime, setFakeTime] = useState<string | undefined>();
     const [playingDay, setPlayingDay] = useState<boolean>(false);
+    const [playbackStartTime, setPlaybackStartTime] = useState('02:00');
     const [playbackSpeed, setPlaybackSpeed] =
         useState<DayPlaybackSpeed>('medium');
 
@@ -117,16 +117,19 @@ function HomeContent() {
 
         const startedAt = performance.now();
         let animationFrame: number;
-        let lastTime = '02:00';
-        const duration = DAY_PLAYBACK_DURATIONS_MS[playbackSpeed];
+        let lastTime = playbackStartTime;
         const animate = (now: number) => {
             const elapsed = now - startedAt;
-            const nextTime = getDayPlaybackTime(elapsed, playbackSpeed);
+            const nextTime = getDayPlaybackTime(
+                elapsed,
+                playbackSpeed,
+                playbackStartTime
+            );
             if (nextTime !== lastTime) {
                 lastTime = nextTime;
                 startTransition(() => setFakeTime(nextTime));
             }
-            if (elapsed < duration) {
+            if (nextTime !== '22:00') {
                 animationFrame = requestAnimationFrame(animate);
             } else {
                 setFakeTime('22:00');
@@ -134,10 +137,21 @@ function HomeContent() {
             }
         };
 
-        setFakeTime('02:00');
+        setFakeTime(playbackStartTime);
         animationFrame = requestAnimationFrame(animate);
         return () => cancelAnimationFrame(animationFrame);
-    }, [playingDay, playbackSpeed]);
+    }, [playingDay, playbackSpeed, playbackStartTime]);
+
+    const startDayPlayback = (startTime?: string) => {
+        setPlaybackStartTime(startTime || fakeTime || '02:00');
+        setPlayingDay(true);
+    };
+
+    const resetPreview = () => {
+        setPlayingDay(false);
+        setFakeTime(undefined);
+        setSpoofWeather(undefined);
+    };
 
     const checkIsNight = () => {
         if (!spoofWeather) {
@@ -892,8 +906,9 @@ function HomeContent() {
                 playingDay={playingDay}
                 playbackSpeed={playbackSpeed}
                 setPlaybackSpeed={setPlaybackSpeed}
-                startDayPlayback={() => setPlayingDay(true)}
+                startDayPlayback={startDayPlayback}
                 stopDayPlayback={() => setPlayingDay(false)}
+                resetPreview={resetPreview}
                 mono={mono}
                 setMono={setMono}
                 addAlert={addAlert}

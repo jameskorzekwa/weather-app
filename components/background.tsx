@@ -17,6 +17,7 @@ import {
     ThunderstormId
 } from '@/types';
 import {
+    getSceneNightStrength,
     getSunriseTintWeights,
     getSunsetTintWeights,
     SunriseTintWeights,
@@ -79,6 +80,7 @@ const getSkyTransitionGradient = (
 
 interface SkyTransitionProps {
     children: ReactNode;
+    isNight: boolean;
     sunrise?: number;
     sunset?: number;
     fakeTime?: string;
@@ -87,6 +89,7 @@ interface SkyTransitionProps {
 
 function SkyTransition({
     children,
+    isNight,
     sunrise,
     sunset,
     fakeTime,
@@ -109,13 +112,19 @@ function SkyTransition({
         sunsetTint,
         0.12
     );
-    const solarTransitionStrength = Math.max(
-        sunriseTint?.predawn ?? 0,
-        sunriseTint?.gold ?? 0,
+    const sunsetTransitionStrength = Math.max(
         sunsetTint?.warm ?? 0,
         sunsetTint?.dusk ?? 0
     );
-    const cloudOpacity = 1 - solarTransitionStrength * 0.55;
+    const cloudOpacity = 1 - sunsetTransitionStrength * 0.55;
+    const nightStrength = mono
+        ? 1
+        : getSceneNightStrength(
+              sunrise,
+              sunset,
+              isNight,
+              fakeTime
+          );
 
     return (
         <div
@@ -128,7 +137,8 @@ function SkyTransition({
                     '--solar-transition-gradient': gradient,
                     '--precipitation-solar-transition-gradient':
                         precipitationGradient,
-                    '--solar-cloud-opacity': cloudOpacity.toFixed(3)
+                    '--solar-cloud-opacity': cloudOpacity.toFixed(3),
+                    '--scene-night-strength': nightStrength.toFixed(4)
                 } as React.CSSProperties
             }
         >
@@ -191,6 +201,7 @@ export default function Background({
 
     return (
         <SkyTransition
+            isNight={night}
             sunrise={sunrise}
             sunset={sunset}
             fakeTime={fakeTime}

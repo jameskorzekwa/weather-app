@@ -59,13 +59,14 @@ export const DAY_PLAYBACK_DURATIONS_MS: Record<DayPlaybackSpeed, number> = {
 
 export const getDayPlaybackTime = (
     elapsedMs: number,
-    speed: DayPlaybackSpeed = 'medium'
+    speed: DayPlaybackSpeed = 'medium',
+    startTime = '02:00'
 ): string => {
-    const progress = Math.min(
-        1,
-        Math.max(0, elapsedMs / DAY_PLAYBACK_DURATIONS_MS[speed])
-    );
-    const minutes = Math.round((120 + progress * 1200) / 5) * 5;
+    const startMinutes = Math.min(1320, parseTimeOfDay(startTime) ?? 120);
+    const elapsedMinutes =
+        (Math.max(0, elapsedMs) / DAY_PLAYBACK_DURATIONS_MS[speed]) * 1200;
+    const minutes =
+        Math.min(1320, Math.round((startMinutes + elapsedMinutes) / 5) * 5);
     return `${Math.floor(minutes / 60)
         .toString()
         .padStart(2, '0')}:${(minutes % 60).toString().padStart(2, '0')}`;
@@ -130,6 +131,34 @@ export const getSunriseTintWeights = (
 
     if (predawn < 0.001 && gold < 0.001) return undefined;
     return { predawn, gold };
+};
+
+export const getSceneNightStrength = (
+    sunriseUnix?: number,
+    sunsetUnix?: number,
+    isNight = false,
+    fakeTime?: string,
+    now: moment.Moment = moment()
+): number => {
+    const sunriseOffset = getSolarOffset(sunriseUnix, fakeTime, now);
+    if (
+        sunriseOffset !== undefined &&
+        sunriseOffset >= -60 &&
+        sunriseOffset <= 45
+    ) {
+        return 1 - smoothstep(-60, 45, sunriseOffset);
+    }
+
+    const sunsetOffset = getSolarOffset(sunsetUnix, fakeTime, now);
+    if (
+        sunsetOffset !== undefined &&
+        sunsetOffset >= -30 &&
+        sunsetOffset <= 65
+    ) {
+        return smoothstep(-30, 65, sunsetOffset);
+    }
+
+    return isNight ? 1 : 0;
 };
 
 export const getSunsetTintWeights = (

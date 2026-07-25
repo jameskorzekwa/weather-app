@@ -32,12 +32,6 @@ const SettingsWrapper = styled.div`
     top: 0;
 `;
 
-const playbackDurationLabels: Record<DayPlaybackSpeed, string> = {
-    slow: '2 minutes',
-    medium: '60 seconds',
-    fast: '30 seconds'
-};
-
 interface Props {
     settingsOpen: boolean;
     setSettingsOpen: (state: boolean) => void;
@@ -67,8 +61,9 @@ interface Props {
     playingDay: boolean;
     playbackSpeed: DayPlaybackSpeed;
     setPlaybackSpeed: (speed: DayPlaybackSpeed) => void;
-    startDayPlayback: () => void;
+    startDayPlayback: (startTime?: string) => void;
     stopDayPlayback: () => void;
+    resetPreview: () => void;
     mono?: boolean;
     setMono: (state: boolean) => void;
     addAlert: (msg: string | unknown) => void;
@@ -120,6 +115,7 @@ export default function Settings({
     setPlaybackSpeed,
     startDayPlayback,
     stopDayPlayback,
+    resetPreview,
     mono,
     setMono,
     addAlert
@@ -262,9 +258,19 @@ export default function Settings({
         if (playingDay) {
             stopDayPlayback();
         } else {
-            startDayPlayback();
+            startDayPlayback(form.fakeTime.value);
             setSettingsOpen(false);
         }
+    };
+
+    const onResetToLive = () => {
+        setForm((form) => ({
+            ...form,
+            fakeTime: { ...form.fakeTime, value: undefined },
+            spoofWeather: { ...form.spoofWeather, value: 'actual' }
+        }));
+        resetPreview();
+        setSettingsOpen(false);
     };
 
     useEffect(() => {
@@ -680,9 +686,17 @@ export default function Settings({
                                     </span>
                                 </Button>
                                 <div className="pt-2 text-center text-xs text-blue-gray-500">
-                                    2:00 AM to 10:00 PM in{' '}
-                                    {playbackDurationLabels[playbackSpeed]}
+                                    {form.fakeTime.value || '02:00'} to 22:00 at
+                                    the selected playback rate
                                 </div>
+                                <Button
+                                    variant="text"
+                                    color="blue"
+                                    onClick={onResetToLive}
+                                    className="mt-2 w-full"
+                                >
+                                    Reset to Live
+                                </Button>
                             </div>
                             <div className="w-72">
                                 <InputWrapper error={form.spoofWeather.error}>

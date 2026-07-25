@@ -18,6 +18,7 @@ import {
     AWNDeviceToTempSensor,
     getLocationName,
     cloudCoverToId,
+    getSceneNightStrength,
     getSunriseTintWeights,
     getSunsetTintWeights,
     isNightAtTime
@@ -87,6 +88,12 @@ describe('fake time and solar transition helpers', () => {
         expect(getDayPlaybackTime(30000, 'fast')).toBe('22:00');
     });
 
+    it('starts playback from a selected fake time at the same rate', () => {
+        expect(getDayPlaybackTime(0, 'medium', '05:30')).toBe('05:30');
+        expect(getDayPlaybackTime(30000, 'medium', '05:30')).toBe('15:30');
+        expect(getDayPlaybackTime(60000, 'medium', '05:30')).toBe('22:00');
+    });
+
     it('ramps predawn into a golden sunrise and then turns off', () => {
         expect(getSunriseTintWeights(sunrise, '04:14')).toBeUndefined();
 
@@ -99,6 +106,28 @@ describe('fake time and solar transition helpers', () => {
         expect(peak?.predawn).toBeGreaterThan(0);
 
         expect(getSunriseTintWeights(sunrise, '06:50')).toBeUndefined();
+    });
+
+    it('smoothly removes the night overlay around sunrise', () => {
+        const strengths = ['05:15', '05:30', '05:45', '06:00'].map((time) =>
+            getSceneNightStrength(sunrise, sunset, true, time)
+        );
+        expect(getSceneNightStrength(sunrise, sunset, true, '04:44')).toBe(1);
+        expect(strengths[0]).toBeGreaterThan(strengths[1]);
+        expect(strengths[1]).toBeGreaterThan(strengths[2]);
+        expect(strengths[2]).toBeGreaterThan(strengths[3]);
+        expect(getSceneNightStrength(sunrise, sunset, false, '06:30')).toBe(0);
+    });
+
+    it('smoothly adds night strength through sunset', () => {
+        const strengths = ['20:03', '20:23', '20:48', '21:08'].map((time) =>
+            getSceneNightStrength(sunrise, sunset, time > '20:23', time)
+        );
+        expect(getSceneNightStrength(sunrise, sunset, false, '19:52')).toBe(0);
+        expect(strengths[0]).toBeLessThan(strengths[1]);
+        expect(strengths[1]).toBeLessThan(strengths[2]);
+        expect(strengths[2]).toBeLessThan(strengths[3]);
+        expect(getSceneNightStrength(sunrise, sunset, true, '21:28')).toBe(1);
     });
 
     it('ramps from warm sunset colors into dusk and then turns off', () => {
