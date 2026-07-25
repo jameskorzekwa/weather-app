@@ -31,7 +31,9 @@ const StyledPath = styled.path<{ $scale: number; $opacity: number }>`
     animation: fadeInAnimation ease 3s;
     animation-iteration-count: 1;
     animation-fill-mode: forwards;
-    opacity: ${({ $opacity }) => `${$opacity}`} !important;
+    opacity: calc(
+        ${({ $opacity }) => `${$opacity}`} * var(--solar-cloud-opacity, 1)
+    ) !important;
 
     @keyframes fadeInAnimation {
         0% {
