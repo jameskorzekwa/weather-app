@@ -1,6 +1,7 @@
 import React from 'react';
 import Raining from '../raining';
 import { RainId } from '@/types';
+import { getDayNightBackground } from '@/components/backgrounds/dayNightBackground';
 
 interface Props {
     id: RainId;
@@ -24,9 +25,12 @@ export default function Rain({ id, isNight }: Props) {
     return (
         <div
             style={{
-                backgroundColor: isNight ? 'black' : '#5f646c',
-                backgroundImage:
-                    'var(--precipitation-solar-transition-gradient, none)',
+                backgroundColor: '#5f646c',
+                backgroundImage: getDayNightBackground(
+                    '0,0,0',
+                    isNight,
+                    'var(--precipitation-solar-transition-gradient, none)'
+                ),
                 height: '100vh',
                 width: '100vw'
             }}

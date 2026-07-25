@@ -3,6 +3,7 @@ import Cloud from '@/components/cloud';
 import seedrandom from 'seedrandom';
 import { seededRandomNumber } from '@/lib/utils';
 import { CloudId } from '@/types';
+import { getDayNightBackground } from '@/components/backgrounds/dayNightBackground';
 
 interface Props {
     id: CloudId;
@@ -50,23 +51,15 @@ export default function Clouds({ id, isNight }: Props) {
                 overflow: 'hidden'
             }}
         >
-            {isNight && (
-                <div
-                    style={{
-                        position: 'absolute',
-                        height: '100vh',
-                        width: '100vw',
-                        overflow: 'hidden',
-                        backgroundColor: 'rgba(0,0,0,0.74)'
-                    }}
-                />
-            )}
             <div
                 style={{
-                    backgroundColor: isNight
-                        ? 'rgba(0,0,0,0.74)'
-                        : cloudSettings[id].color,
-                    backgroundImage: 'var(--solar-transition-gradient, none)',
+                    position: 'relative',
+                    backgroundColor: cloudSettings[id].color,
+                    backgroundImage: getDayNightBackground(
+                        '0,0,0',
+                        isNight,
+                        'var(--solar-transition-gradient, none)'
+                    ),
                     height: '100vh',
                     width: '100vw',
                     overflow: 'hidden'
@@ -84,6 +77,15 @@ export default function Clouds({ id, isNight }: Props) {
                         />
                     ))}
                 </svg>
+                <div
+                    style={{
+                        position: 'absolute',
+                        inset: 0,
+                        backgroundColor: 'black',
+                        opacity: `calc(var(--scene-night-strength, ${isNight ? 1 : 0}) * 0.74)`,
+                        pointerEvents: 'none'
+                    }}
+                />
             </div>
         </div>
     );

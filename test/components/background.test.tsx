@@ -125,7 +125,7 @@ describe('Background solar transition colors', () => {
             root.style.getPropertyValue('--solar-transition-gradient')
         ).toContain('linear-gradient');
         expect(root.style.getPropertyValue('--solar-cloud-opacity')).toBe(
-            '0.450'
+            '1.000'
         );
     });
 
@@ -197,5 +197,129 @@ describe('Background solar transition colors', () => {
         expect(root.style.getPropertyValue('--solar-cloud-opacity')).toBe(
             '1.000'
         );
+    });
+});
+
+describe('Background day/night brightness transitions', () => {
+    const sunrise = new Date('2026-07-23T05:45:00').getTime() / 1000;
+    const sunset = new Date('2026-07-23T20:23:00').getTime() / 1000;
+
+    it('smoothly reduces night strength without swapping scenes', () => {
+        const { container, getByTestId, rerender } = render(
+            <Background
+                current={cur(803)}
+                isNight={true}
+                sunrise={sunrise}
+                fakeTime="05:30"
+            />
+        );
+        expect(getByTestId('clouds').dataset.isnight).toBe('true');
+        const beforeStrength = Number(
+            (container.firstElementChild as HTMLElement).style.getPropertyValue(
+                '--scene-night-strength'
+            )
+        );
+
+        rerender(
+            <Background
+                current={cur(803)}
+                isNight={false}
+                sunrise={sunrise}
+                fakeTime="06:00"
+            />
+        );
+        expect(getByTestId('clouds').dataset.isnight).toBe('false');
+        const afterStrength = Number(
+            (container.firstElementChild as HTMLElement).style.getPropertyValue(
+                '--scene-night-strength'
+            )
+        );
+        expect(beforeStrength).toBeGreaterThan(afterStrength);
+    });
+
+    it('keeps night artwork while the background strength crossfades', () => {
+        const { container, getByTestId } = render(
+            <Background
+                current={cur(800)}
+                isNight={true}
+                sunrise={sunrise}
+                fakeTime="05:30"
+            />
+        );
+        expect(getByTestId('clear').dataset.isnight).toBe('true');
+        expect(
+            Number(
+                (
+                    container.firstElementChild as HTMLElement
+                ).style.getPropertyValue('--scene-night-strength')
+            )
+        ).toBeLessThan(1);
+    });
+
+    it('keeps full night strength before the crossfade window', () => {
+        const { container } = render(
+            <Background
+                current={cur(803)}
+                isNight={true}
+                sunrise={sunrise}
+                fakeTime="04:44"
+            />
+        );
+        expect(
+            (container.firstElementChild as HTMLElement).style.getPropertyValue(
+                '--scene-night-strength'
+            )
+        ).toBe('1.0000');
+    });
+
+    it('smoothly increases night strength without hiding dusk', () => {
+        const { container, rerender } = render(
+            <Background
+                current={cur(800)}
+                isNight={false}
+                sunset={sunset}
+                fakeTime="20:03"
+            />
+        );
+        const beforeStrength = Number(
+            (container.firstElementChild as HTMLElement).style.getPropertyValue(
+                '--scene-night-strength'
+            )
+        );
+
+        rerender(
+            <Background
+                current={cur(800)}
+                isNight={true}
+                sunset={sunset}
+                fakeTime="20:48"
+            />
+        );
+        const afterStrength = Number(
+            (container.firstElementChild as HTMLElement).style.getPropertyValue(
+                '--scene-night-strength'
+            )
+        );
+        expect(beforeStrength).toBeLessThan(afterStrength);
+        expect(beforeStrength).toBeLessThan(0.1);
+        expect(afterStrength).toBeLessThan(1);
+    });
+
+    it('does not alter monochrome scene brightness', () => {
+        const { container, getByTestId } = render(
+            <Background
+                current={cur(803)}
+                isNight={true}
+                sunrise={sunrise}
+                fakeTime="05:45"
+                mono
+            />
+        );
+        expect(getByTestId('clouds').dataset.isnight).toBe('true');
+        expect(
+            (container.firstElementChild as HTMLElement).style.getPropertyValue(
+                '--scene-night-strength'
+            )
+        ).toBe('1.0000');
     });
 });

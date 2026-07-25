@@ -49,9 +49,11 @@ Append `&mono=1` for monochrome mode. The Settings modal (invisible click
 target in the top-left corner) lets you tweak things live and save back
 into the URL. Its **Fake Time** field freezes the clock and previews the
 matching day, night, sunrise, and sunset appearance; clear the field to resume
-live time. **Play Day** runs from 2:00 AM to 10:00 PM at a selectable Slow
-(2-minute), Medium (60-second), or Fast (30-second) speed. Fake time and
-playback are session-only and are never written to the URL.
+live time. **Play Day** runs from the selected fake time (2:00 AM by default)
+to 10:00 PM at a selectable Slow (2-minute), Medium (60-second), or Fast
+(30-second) speed. **Reset to Live** stops playback, clears fake time, and
+restores actual weather. Preview controls are session-only and are never
+written to the URL.
 
 ## Run as a Home Assistant add-on
 
@@ -113,7 +115,7 @@ default dashboard. No HACS card to install by hand, no YAML to paste.
 nvm use            # picks up .nvmrc (Node 24.x)
 npm install
 npm run dev        # http://localhost:3000
-npm test           # Vitest + RTL (112 tests)
+npm test           # Vitest + RTL (125 tests)
 npm run build      # production build
 ```
 

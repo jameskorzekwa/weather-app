@@ -4,6 +4,7 @@ import seedrandom from 'seedrandom';
 import { seededRandomNumber } from '@/lib/utils';
 import Raining from '@/components/raining';
 import { SnowId } from '@/types';
+import { getDayNightBackground } from '@/components/backgrounds/dayNightBackground';
 
 interface Props {
     id: SnowId;
@@ -78,9 +79,12 @@ export default function Snow({ id, isNight }: Props) {
     return (
         <div
             style={{
-                backgroundColor: isNight ? 'black' : '#6f7d91',
-                backgroundImage:
-                    'var(--precipitation-solar-transition-gradient, none)',
+                backgroundColor: '#6f7d91',
+                backgroundImage: getDayNightBackground(
+                    '0,0,0',
+                    isNight,
+                    'var(--precipitation-solar-transition-gradient, none)'
+                ),
                 height: '100vh',
                 width: '100vw'
             }}

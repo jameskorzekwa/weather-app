@@ -64,7 +64,7 @@ Vitest + React Testing Library (jsdom). Config: `vitest.config.ts`
 (jest-dom + matchMedia/ResizeObserver polyfills). Tests live in `test/**`.
 
 ```bash
-npm test          # vitest run  (112 tests, 12 files)
+npm test          # vitest run  (125 tests, 12 files)
 npm run test:watch
 npm run lint      # next lint
 ```
@@ -129,10 +129,12 @@ Key interactions:
   day/night art, weather icon, and solar colors without changing API/cache
   time. Clear it to return to live time. While set, it replaces the spoofed
   weather `Is Night` control.
-- **Play Day:** runs fake time from 2:00 AM to 10:00 PM in five-minute visual
-  steps. Playback Speed offers Slow (2 minutes), Medium (60 seconds, default),
-  and Fast (30 seconds). The modal closes while it plays; reopen Settings to
-  stop it. Playback ends frozen at 10:00 PM and remains session-only.
+- **Play Day:** runs fake time from the selected fake time (2:00 AM by default)
+  to 10:00 PM in five-minute visual steps. Playback Speed offers Slow (2
+  minutes), Medium (60 seconds, default), and Fast (30 seconds). The modal
+  closes while it plays; reopen Settings to stop it. **Reset to Live** stops
+  playback, clears fake time, and restores actual weather. Preview state
+  remains session-only.
 - **Color Mode:** Settings → "Color Mode" → Color / Monochrome.
 - The MT Select triggers are `<button role="combobox">`; options are `<li>`.
 
@@ -145,6 +147,10 @@ Key interactions:
   fades out 65 minutes afterward. Live mode updates every 30 seconds.
 - Each weather family inherits `--solar-transition-gradient`, so the gradient
   sits behind clouds/precipitation instead of washing out foreground art.
+- `--scene-night-strength` continuously blends scene brightness through both
+  sunrise and sunset; do not reintroduce exact-minute night/day background swaps.
+- Cloud translucency follows sunset only. Applying it during sunrise makes the
+  visible clouds fade before the sky brightens, producing a false predawn dip.
 - Monochrome sets the gradient to `none` at the source; the root
   `grayscale(1)` filter remains a second no-hue guarantee.
 

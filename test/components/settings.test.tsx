@@ -76,6 +76,7 @@ const baseProps = () => ({
     setPlaybackSpeed: vi.fn(),
     startDayPlayback: vi.fn(),
     stopDayPlayback: vi.fn(),
+    resetPreview: vi.fn(),
     mono: false,
     setMono: vi.fn(),
     addAlert: vi.fn()
@@ -159,8 +160,19 @@ describe('Settings', () => {
     it('starts the day playback and closes the dialog', () => {
         const props = baseProps();
         render(<Settings {...props} />);
+        fireEvent.change(screen.getByLabelText('Fake Time'), {
+            target: { value: '05:30' }
+        });
         fireEvent.click(screen.getByRole('button', { name: /play day/i }));
-        expect(props.startDayPlayback).toHaveBeenCalledOnce();
+        expect(props.startDayPlayback).toHaveBeenCalledWith('05:30');
+        expect(props.setSettingsOpen).toHaveBeenCalledWith(false);
+    });
+
+    it('resets fake time and spoofed weather back to live data', () => {
+        const props = baseProps();
+        render(<Settings {...props} spoofWeather="clouds" fakeTime="05:30" />);
+        fireEvent.click(screen.getByRole('button', { name: /reset to live/i }));
+        expect(props.resetPreview).toHaveBeenCalledOnce();
         expect(props.setSettingsOpen).toHaveBeenCalledWith(false);
     });
 
