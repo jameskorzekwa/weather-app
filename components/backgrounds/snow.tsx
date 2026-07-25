@@ -79,7 +79,8 @@ export default function Snow({ id, isNight }: Props) {
         <div
             style={{
                 backgroundColor: isNight ? 'black' : '#6f7d91',
-                backgroundImage: 'var(--solar-transition-gradient, none)',
+                backgroundImage:
+                    'var(--precipitation-solar-transition-gradient, none)',
                 height: '100vh',
                 width: '100vw'
             }}

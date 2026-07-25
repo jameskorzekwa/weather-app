@@ -35,37 +35,44 @@ interface Props {
 const rgba = (red: number, green: number, blue: number, opacity: number) =>
     `rgba(${red}, ${green}, ${blue}, ${Math.min(1, opacity).toFixed(3)})`;
 
-const getSunsetGradient = (tint?: SunsetTintWeights): string => {
+const getSunsetGradient = (
+    tint?: SunsetTintWeights,
+    opacityScale = 1
+): string => {
     if (!tint) return 'none';
 
     const warm = tint.warm;
     const dusk = tint.dusk;
     return [
-        `linear-gradient(180deg, ${rgba(42, 37, 79, dusk * 0.94)} 0%, ${rgba(112, 63, 125, dusk * 0.92)} 52%, ${rgba(207, 87, 121, dusk * 0.9)} 100%)`,
-        `radial-gradient(ellipse at 50% 82%, ${rgba(255, 194, 124, warm * 0.48)} 0%, ${rgba(242, 110, 115, warm * 0.3)} 45%, ${rgba(233, 54, 120, 0)} 72%)`,
-        `linear-gradient(180deg, ${rgba(233, 54, 120, warm * 0.9)} 0%, ${rgba(239, 100, 120, warm * 0.92)} 52%, ${rgba(246, 161, 124, warm * 0.95)} 100%)`
+        `linear-gradient(180deg, ${rgba(42, 37, 79, dusk * 0.94 * opacityScale)} 0%, ${rgba(112, 63, 125, dusk * 0.92 * opacityScale)} 52%, ${rgba(207, 87, 121, dusk * 0.9 * opacityScale)} 100%)`,
+        `radial-gradient(ellipse at 50% 82%, ${rgba(255, 194, 124, warm * 0.48 * opacityScale)} 0%, ${rgba(242, 110, 115, warm * 0.3 * opacityScale)} 45%, ${rgba(233, 54, 120, 0)} 72%)`,
+        `linear-gradient(180deg, ${rgba(233, 54, 120, warm * 0.9 * opacityScale)} 0%, ${rgba(239, 100, 120, warm * 0.92 * opacityScale)} 52%, ${rgba(246, 161, 124, warm * 0.95 * opacityScale)} 100%)`
     ].join(', ');
 };
 
-const getSunriseGradient = (tint?: SunriseTintWeights): string => {
+const getSunriseGradient = (
+    tint?: SunriseTintWeights,
+    opacityScale = 1
+): string => {
     if (!tint) return 'none';
 
     const predawn = tint.predawn;
     const gold = tint.gold;
     return [
-        `radial-gradient(ellipse at 50% 82%, ${rgba(255, 211, 112, gold * 0.55)} 0%, ${rgba(240, 128, 108, gold * 0.32)} 45%, ${rgba(126, 82, 139, 0)} 72%)`,
-        `linear-gradient(180deg, ${rgba(126, 82, 139, gold * 0.88)} 0%, ${rgba(229, 105, 111, gold * 0.92)} 55%, ${rgba(248, 190, 112, gold * 0.96)} 100%)`,
-        `linear-gradient(180deg, ${rgba(31, 38, 76, predawn * 0.96)} 0%, ${rgba(91, 65, 116, predawn * 0.93)} 55%, ${rgba(203, 91, 116, predawn * 0.88)} 100%)`
+        `radial-gradient(ellipse at 50% 82%, ${rgba(255, 211, 112, gold * 0.55 * opacityScale)} 0%, ${rgba(240, 128, 108, gold * 0.32 * opacityScale)} 45%, ${rgba(126, 82, 139, 0)} 72%)`,
+        `linear-gradient(180deg, ${rgba(126, 82, 139, gold * 0.88 * opacityScale)} 0%, ${rgba(229, 105, 111, gold * 0.92 * opacityScale)} 55%, ${rgba(248, 190, 112, gold * 0.96 * opacityScale)} 100%)`,
+        `linear-gradient(180deg, ${rgba(31, 38, 76, predawn * 0.96 * opacityScale)} 0%, ${rgba(91, 65, 116, predawn * 0.93 * opacityScale)} 55%, ${rgba(203, 91, 116, predawn * 0.88 * opacityScale)} 100%)`
     ].join(', ');
 };
 
 const getSkyTransitionGradient = (
     sunriseTint?: SunriseTintWeights,
-    sunsetTint?: SunsetTintWeights
+    sunsetTint?: SunsetTintWeights,
+    opacityScale = 1
 ): string => {
     const gradients = [
-        getSunriseGradient(sunriseTint),
-        getSunsetGradient(sunsetTint)
+        getSunriseGradient(sunriseTint, opacityScale),
+        getSunsetGradient(sunsetTint, opacityScale)
     ].filter((gradient) => gradient !== 'none');
     return gradients.length ? gradients.join(', ') : 'none';
 };
@@ -97,6 +104,11 @@ function SkyTransition({
         ? undefined
         : getSunsetTintWeights(sunset, fakeTime);
     const gradient = getSkyTransitionGradient(sunriseTint, sunsetTint);
+    const precipitationGradient = getSkyTransitionGradient(
+        sunriseTint,
+        sunsetTint,
+        0.12
+    );
     const solarTransitionStrength = Math.max(
         sunriseTint?.predawn ?? 0,
         sunriseTint?.gold ?? 0,
@@ -114,6 +126,8 @@ function SkyTransition({
                     height: '100vh',
                     width: '100vw',
                     '--solar-transition-gradient': gradient,
+                    '--precipitation-solar-transition-gradient':
+                        precipitationGradient,
                     '--solar-cloud-opacity': cloudOpacity.toFixed(3)
                 } as React.CSSProperties
             }

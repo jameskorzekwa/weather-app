@@ -25,7 +25,8 @@ export default function Rain({ id, isNight }: Props) {
         <div
             style={{
                 backgroundColor: isNight ? 'black' : '#5f646c',
-                backgroundImage: 'var(--solar-transition-gradient, none)',
+                backgroundImage:
+                    'var(--precipitation-solar-transition-gradient, none)',
                 height: '100vh',
                 width: '100vw'
             }}

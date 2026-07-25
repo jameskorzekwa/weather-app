@@ -119,3 +119,20 @@ describe('Rain background bg color', () => {
         ).toBe('rgb(95, 100, 108)');
     });
 });
+
+describe('precipitation solar tint', () => {
+    it.each([
+        ['Rain', <Rain key="rain" id={501 as any} isNight={false} />],
+        ['Drizzle', <Drizzle key="drizzle" id={301 as any} isNight={false} />],
+        ['Snow', <Snow key="snow" id={601 as any} isNight={false} />],
+        [
+            'Thunderstorm',
+            <Thunderstorm key="thunder" id={201 as any} isNight={false} />
+        ]
+    ])('%s uses the muted solar gradient', (_name, background) => {
+        const { container } = render(background);
+        expect(
+            (container.firstChild as HTMLElement).style.backgroundImage
+        ).toBe('var(--precipitation-solar-transition-gradient, none)');
+    });
+});

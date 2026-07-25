@@ -143,6 +143,11 @@ describe('Background solar transition colors', () => {
         expect(
             root.style.getPropertyValue('--solar-transition-gradient')
         ).toContain('linear-gradient');
+        expect(
+            root.style.getPropertyValue(
+                '--precipitation-solar-transition-gradient'
+            )
+        ).toContain('rgba(233, 54, 120, 0.108)');
         expect(root.style.getPropertyValue('--solar-cloud-opacity')).toBe(
             '0.450'
         );
@@ -163,6 +168,11 @@ describe('Background solar transition colors', () => {
         expect(
             root.style.getPropertyValue('--solar-transition-gradient')
         ).toBe('none');
+        expect(
+            root.style.getPropertyValue(
+                '--precipitation-solar-transition-gradient'
+            )
+        ).toBe('none');
         expect(root.style.getPropertyValue('--solar-cloud-opacity')).toBe(
             '1.000'
         );
@@ -179,6 +189,11 @@ describe('Background solar transition colors', () => {
         );
         const root = container.firstElementChild as HTMLElement;
         expect(root.dataset.solarTransitionActive).toBe('false');
+        expect(
+            root.style.getPropertyValue(
+                '--precipitation-solar-transition-gradient'
+            )
+        ).toBe('none');
         expect(root.style.getPropertyValue('--solar-cloud-opacity')).toBe(
             '1.000'
         );
